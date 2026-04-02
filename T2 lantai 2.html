@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A* Pathfinding</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #21262d;
+    --wall: #1a4a5c;
+    --empty: #0d1117;
+    --start: #2d7a2d;
+    --text: #c9d1d9;
+    --accent: #58a6ff;
+    --mono: 'Share Tech Mono', monospace;
+    --head: 'Exo 2', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  header { text-align: center; margin-bottom: 18px; }
+  header h1 {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  header p { font-size: 0.75rem; color: #8b949e; margin-top: 4px; letter-spacing: 1px; }
+
+  .top-bar {
+    display: flex; gap: 8px; justify-content: center;
+    margin-bottom: 14px; align-items: center;
+  }
+
+  #btnReset {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 1px;
+    padding: 7px 16px; background: var(--panel); border: 1px solid #c0392b55;
+    color: #8b949e; cursor: pointer; transition: all 0.15s;
+    border-radius: 3px; text-transform: uppercase;
+  }
+  #btnReset:hover { border-color: #c0392b; color: #c0392b; }
+
+  /* ── Popup overlay ── */
+  #popup-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: #0008;
+    z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  #popup-overlay.show { display: flex; }
+
+  #popup {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px 28px;
+    min-width: 260px;
+    box-shadow: 0 0 40px #00000088;
+    text-align: center;
+    animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  #popup-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+  }
+
+  #popup-title {
+    font-family: var(--head);
+    font-size: 1rem; font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  #popup-sub {
+    font-size: 0.68rem; color: #8b949e;
+    margin-bottom: 20px; letter-spacing: 0.5px;
+  }
+
+  .popup-actions { display: flex; gap: 10px; justify-content: center; }
+
+  #popup-confirm {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 1px;
+    padding: 8px 20px; border-radius: 3px; cursor: pointer;
+    border: 1px solid; font-weight: 600; transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  #popup-confirm:hover { filter: brightness(1.2); }
+
+  #popup-cancel {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 1px;
+    padding: 8px 16px; border-radius: 3px; cursor: pointer;
+    border: 1px solid #444; background: transparent; color: #8b949e;
+    transition: all 0.15s; text-transform: uppercase;
+  }
+  #popup-cancel:hover { border-color: #c0392b; color: #c0392b; }
+
+  /* dest cell — cursor pointer saat hover */
+  .cell.dest { cursor: pointer; }
+
+  .grid-wrapper {
+    border: 1px solid var(--border); border-radius: 4px;
+    overflow: auto; box-shadow: 0 0 30px #58a6ff18; position: relative;
+    max-width: 100%;
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    justify-content: center; margin-bottom: 14px;
+    font-size: 0.7rem; color: #8b949e;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-box  { width: 14px; height: 14px; border-radius: 2px; border: 1px solid #21262d; }
+
+  #grid { display: grid; user-select: none; gap: 0; background: #111820; line-height: 0; font-size: 0; }
+
+  .cell {
+    width: 6px; height: 6px;
+    background: var(--empty);
+    box-sizing: content-box;
+    display: block;
+  }
+  .cell.wall  { background: var(--wall); }
+  .cell.start { background: var(--start); }
+  .cell.dest  { /* color set via inline style */ }
+
+  #pathCanvas {
+    position: absolute; top: 0; left: 0;
+    pointer-events: none; z-index: 10;
+  }
+
+  .status {
+    margin-top: 12px; font-size: 0.72rem; color: #8b949e;
+    letter-spacing: 1px; min-height: 18px; text-align: center;
+  }
+  .status.ok  { color: #f39c12; }
+  .status.err { color: #c0392b; }
+  .info-bar {
+    margin-top: 6px; font-size: 0.68rem; color: #444d56;
+    text-align: center; letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>A* Pathfinding</h1>
+  <p>klik titik tujuan di peta · temukan jalur terpendek</p>
+</header>
+
+<div class="top-bar">
+  <button id="btnReset" onclick="resetPath()">⟳ Reset Jalur</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-box" style="background:#1a4a5c"></div> Dinding</div>
+  <div class="legend-item"><div class="legend-box" style="background:#2d7a2d"></div> Start</div>
+  <div class="legend-item"><div class="legend-box" style="background:#f39c12"></div> Jalur</div>
+  <div class="legend-item"><div class="legend-box" style="background:#e74c3c"></div> Titik Tujuan (klik untuk navigasi)</div>
+</div>
+
+<!-- Popup konfirmasi navigasi -->
+<div id="popup-overlay" onclick="closePopup(event)">
+  <div id="popup">
+    <div id="popup-dot"></div>
+    <div id="popup-title"></div>
+    <div id="popup-sub">Navigasi ke titik ini?</div>
+    <div class="popup-actions">
+      <button id="popup-confirm" onclick="confirmNav()">▷ Ya, Navigasi</button>
+      <button id="popup-cancel"  onclick="closePopup()">✕ Batal</button>
+    </div>
+  </div>
+</div>
+
+<div class="grid-wrapper" id="gridWrapper">
+  <div id="grid"></div>
+  <svg id="pathCanvas"></svg>
+</div>
+
+<div class="status"  id="status">Klik salah satu titik tujuan di peta untuk navigasi</div>
+<div class="info-bar" id="infoBar"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  ✏️  BAGIAN 1 — UKURAN GRID
+//  Ubah COLS dan ROWS sesuai kebutuhan peta Anda
+// ══════════════════════════════════════════════════════════════════
+const COLS = 321;
+const ROWS = 100;
+
+
+// ══════════════════════════════════════════════════════════════════
+//  ✏️  BAGIAN 2 — POSISI TITIK START (titik awal / hijau)
+//  Ubah START_R (baris) dan START_C (kolom)
+//  Baris  : 0 = atas,  ROWS-1 = bawah
+//  Kolom  : 0 = kiri,  COLS-1 = kanan
+// ══════════════════════════════════════════════════════════════════
+const START_R = 62;
+const START_C = 19;
+
+
+// ══════════════════════════════════════════════════════════════════
+//  ✏️  BAGIAN 3 — TITIK TUJUAN (DESTINATIONS)
+//
+//  Setiap objek memiliki field:
+//    id    : string unik, bebas (contoh: 'A', 'kantor', 'gudang')
+//    label : teks yang muncul di tombol pilihan
+//    r     : baris posisi titik (0 = atas)
+//    c     : kolom posisi titik (0 = kiri)
+//    color : warna titik & jalur (CSS color)
+//
+//  ➕ Menambah titik  : tambahkan objek baru di dalam array
+//  ✏️  Memindah titik  : ubah nilai r dan/atau c
+//  🎨 Mengubah warna  : ubah nilai color
+//  🏷️  Mengubah nama   : ubah nilai label
+// ══════════════════════════════════════════════════════════════════
+const DESTINATIONS = [
+  // server(red)
+  { id: 'ser1', label: 'server1', r: 74,  c: 95, color: '#e74c3c' },
+  { id: 'ser2', label: 'server2', r: 71,  c: 100, color: '#e74c3c' },
+  { id: 'ser3', label: 'server3', r: 69,  c: 100, color: '#e74c3c' },
+  { id: 'ser4', label: 'server4', r: 67,  c: 100, color: '#e74c3c' },
+
+  //kantor (biru tua)
+  { id: 'kan1', label: 'kantor1', r: 70,  c:11, color: '#3282D1' },
+  { id: 'kan2', label: 'kantor2', r: 74,  c:16, color: '#3282D1' },
+
+
+  //toilet
+  { id: 'tl1', label: 'toilet1', r: 74,  c: 14, color: '#4FC1D3' },
+  { id: 'tl2', label: 'toilet2', r: 40,  c: 52, color: '#4FC1D3' },
+  { id: 'tl3', label: 'toilet3', r: 44,  c: 116, color: '#4FC1D3' },
+  { id: 'tl4', label: 'toilet4', r: 39,  c: 116, color: '#4FC1D3' },
+  { id: 'tl5', label: 'toilet5', r: 63,  c: 201, color: '#4FC1D3' },
+  { id: 'tl6', label: 'toilet6', r: 63,  c: 241, color: '#4FC1D3' },
+  { id: 'tl7', label: 'toilet7', r: 63,  c: 281, color: '#4FC1D3' },
+  //musholla
+  { id: 'mus1', label: 'musholla1', r: 71,  c:14, color: '#EED832' },
+  { id: 'mus2', label: 'musholla2', r: 38,  c:52, color: '#EED832' },
+  { id: 'mus3', label: 'musholla3', r: 44,  c:112, color: '#EED832' },
+  { id: 'mus4', label: 'musholla4', r: 37,  c:116, color: '#EED832' },
+  { id: 'mus5', label: 'musholla5', r: 62,  c:170, color: '#EED832' },
+  { id: 'mus6', label: 'musholla6', r: 63,  c:207, color: '#EED832' },
+  { id: 'mus7', label: 'musholla7', r: 63,  c:247, color: '#EED832' },
+  { id: 'mus8', label: 'musholla8', r: 63,  c:287, color: '#EED832' },
+
+  //gate keluar landasan
+  { id: 'gd1', label: 'gate1', r: 35,  c: 58, color: '#FF0000' },
+  { id: 'gd2', label: 'gate2', r: 35,  c: 74, color: '#FF0000' },
+  { id: 'gd3', label: 'gate3', r: 35,  c: 81, color: '#FF0000' },
+  { id: 'gd4', label: 'gate4', r: 62,  c: 216, color: '#FF0000' },
+  { id: 'gd5', label: 'gate5', r: 62,  c: 256, color: '#FF0000' },
+  { id: 'gd6', label: 'gate6', r: 62,  c: 296, color: '#FF0000' },
+  { id: 'gd7', label: 'gate7', r: 29,  c: 56, color: '#FF0000' },
+  { id: 'gd8', label: 'gate8', r: 29,  c: 78, color: '#FF0000' },
+  { id: 'gd9', label: 'gate9', r: 29,  c: 110, color: '#FF0000' },
+  { id: 'gd10', label: 'gate10', r: 29,  c: 139, color: '#FF0000' },
+  { id: 'gd11', label: 'gate11', r: 29,  c: 168, color: '#FF0000' },
+
+  //retail
+  { id: 'ret1', label: 'retail1', r: 59,  c: 52, color: '#36A732' },
+  { id: 'ret2', label: 'retail2', r: 51,  c: 52, color: '#36A732' },
+  { id: 'ret3', label: 'retail3', r: 53,  c: 62, color: '#36A732' },
+  { id: 'ret4', label: 'retail4', r: 53,  c: 72, color: '#36A732' },
+  { id: 'ret5', label: 'retail5', r: 53,  c: 80, color: '#36A732' },
+  { id: 'ret6', label: 'retail6', r: 53,  c: 88, color: '#36A732' },
+  { id: 'ret7', label: 'retail7', r: 53,  c: 96, color: '#36A732' },
+  { id: 'ret8', label: 'retail8', r: 47,  c: 105, color: '#36A732' },
+  { id: 'ret8', label: 'retail8', r: 73,  c: 243, color: '#36A732' },
+
+  //fnb
+  { id: 'fnb1', label: 'food1', r: 45,  c: 52, color: '#A7329F' },
+  { id: 'fnb2', label: 'food2', r: 60,  c: 116, color: '#A7329F' },
+  { id: 'fnb3', label: 'food3', r: 53,  c: 116, color: '#A7329F' },
+  { id: 'fnb4', label: 'food4', r: 49,  c: 116, color: '#A7329F' },
+  { id: 'fnb5', label: 'food5', r: 60,  c: 107, color: '#A7329F' },
+  { id: 'fnb6', label: 'food6', r: 70,  c: 107, color: '#A7329F' },
+  { id: 'fnb7', label: 'food7', r: 73,  c: 300, color: '#A7329F' },
+  { id: 'fnb8', label: 'food8', r: 73,  c: 203, color: '#A7329F' },
+
+
+  //duty free
+  { id: 'df1', label: 'dfree1', r: 58,  c: 70, color: '#A1752F' },
+  { id: 'df2', label: 'dfree2', r: 59,  c: 65, color: '#A1752F' },
+  { id: 'df3', label: 'dfree3', r: 60,  c: 60, color: '#A1752F' },
+
+  //ruangan lain-lain (no label)
+  { id: 'nl1', label: 'nolabel1', r: 65,  c: 6, color: '#B1B1B1' },
+  { id: 'nl2', label: 'nolabel2', r: 40,  c: 55, color: '#B1B1B1' },
+  { id: 'nl3', label: 'nolabel3', r: 44,  c: 107, color: '#B1B1B1' },
+
+  //tangga
+  { id: 'ld1', label: 'tangga1', r: 61,  c: 16, color: '#B1B1B1' },
+  { id: 'ld2', label: 'tangga2', r: 61,  c: 19, color: '#B1B1B1' },
+  { id: 'ld3', label: 'tangga3', r: 65,  c: 12, color: '#B1B1B1' },
+
+  //orientation zone
+  { id: 'ori1', label: 'orientation1', r: 60,  c: 100, color: '#FD9AE1' },
+
+  //lounge
+  { id: 'lo1', label: 'lounge1', r: 63,  c: 120, color: '#A77432' },
+];
+
+
+// ══════════════════════════════════════════════════════════════════
+//  ✏️  BAGIAN 4 — PETA / DINDING
+//
+//  Gunakan helper berikut di dalam fungsi WALL_DEFINITIONS():
+//
+//    W(r, c)              — satu sel dinding
+//    row(r, c1, c2)       — dinding horizontal (baris r, kolom c1 s/d c2)
+//    col(c, r1, r2)       — dinding vertikal   (kolom c, baris r1 s/d r2)
+//    box(r1,c1, r2,c2)    — kotak padat (pojok kiri-atas s/d kanan-bawah)
+//
+//  Contoh:
+//    row(5, 10, 30)   → dinding horizontal di baris 5, kolom 10–30
+//    col(20, 3, 15)   → dinding vertikal di kolom 20, baris 3–15
+//    box(6,12, 10,18) → kotak dari (6,12) sampai (10,18)
+//    W(8, 12)         → satu sel dinding di baris 8, kolom 12
+// ══════════════════════════════════════════════════════════════════
+
+const wallSet = new Set();
+const W   = (r, c)           => wallSet.add(`${r},${c}`);
+const row = (r, c1, c2)      => { for (let c = c1; c <= c2; c++) W(r, c); };
+const col = (c, r1, r2)      => { for (let r = r1; r <= r2; r++) W(r, c); };
+const box = (r1, c1, r2, c2) => { for (let r=r1;r<=r2;r++) for (let c=c1;c<=c2;c++) W(r,c); };
+
+function WALL_DEFINITIONS() {
+  // ══════════════════════════════════════════════
+  //  OUTLINE LUAR PETA (dinding eksterior)
+  //  Ini adalah kontur/batas terluar bangunan
+  // ══════════════════════════════════════════════
+
+// ── Batas grid (wajib ada) ──
+  row(0,      0, COLS-1);
+  row(ROWS-1, 0, COLS-1);
+  col(0,      0, ROWS-1);
+  col(COLS-1, 0, ROWS-1);
+
+  // ── Sisi atas bangunan — satu garis lurus (turun 8px dari row 27 → row 35) ──
+  row(35, 50, 175);
+
+  // ── Sisi kiri (geser 5px ke kanan: col 54 → col 59) ──
+  col(49, 35, 44);
+
+  // ── Lekukan bawah-kiri ──
+  row(44, 1, 55);
+  row(72, 1, 10);
+  col(15, 61, 67);
+  col(15, 70, 76);
+
+  row(64, 1, 15);
+  row(60, 15, 20);
+  row(62, 20, 75);
+  row(61, 20, 20);
+
+  col(31, 63, 65);
+  col(31, 74, 76);
+  col(61, 63, 65);
+  col(61, 74, 76);
+
+  col(49, 45, 61);
+  col(103, 56, 60);
+  col(103, 63, 76);
+  row(56, 58, 102);
+
+  // ── Sisi bawah ──
+  row(77, 1, 320);
+
+  // ── Koridor kanan ──
+  row(62, 175, 320);
+  col(175, 36, 61);
+  row(42, 111, 118)
+
+  col(55, 41, 44)
+  col(118, 36, 37)
+  col(118, 39, 62)
+  row(62, 118, 160)
+  col(160, 42, 62)
+  col(106, 54, 63)
+  row(63, 104, 105)
+
+  //lorong utara
+  col(57, 32, 34)
+  col(59, 32, 34)
+  col(73, 32, 34)
+  col(75, 32, 34)
+  col(80, 32, 34)
+  col(82, 32, 34)
+
+  row(32, 53, 56)
+  row(32, 60, 72)
+  row(32, 76, 79)
+  row(32, 83, 172)
+  // row(32, 114, 172) pintu belum pasti
+  row(29, 53, 172)
+  col(172, 30, 31)
+  col(53, 30, 31)
+
+  // ══════════════════════════════════════════════
+  //  INTERIOR — dinding dalam, partisi, ruangan
+  //  (pisahkan ke fungsi sendiri untuk lantai 2)
+  // ══════════════════════════════════════════════
+
+  // col(65, 33, 36); col(65, 40, 44);
+  // col(185, 37, 42); col(188, 67, 73);
+  // col(181, 68, 73); col(173, 69, 76);
+  // col(169, 38, 43); col(169, 47, 48);
+  // col(169, 50, 52); col(169, 54, 60);
+  // col(167, 38, 43); col(158, 68, 74);
+  // col(132, 68, 73); col(137, 68, 69);
+  // col(127, 65, 69); col(121, 45, 59);
+  // col(121, 65, 69); col(117, 34, 45);
+  // col(116, 45, 49); col(91, 45, 52);
+  // col(84, 45, 52);  col(56, 45, 51);
+  // col(14, 62, 72);
+  // row(75, 155, 169); row(73, 133, 144);
+  // row(72, 18, 49);   row(70, 121, 127);
+  // row(69, 137, 158); row(68, 56, 84);
+  // row(68, 106, 120); row(68, 160, 180);
+  // row(67, 132, 137); row(65, 1, 13);
+  // row(64, 121, 127); row(61, 160, 169);
+  // row(60, 119, 132); row(52, 56, 110);
+  // row(45, 117, 121); row(45, 156, 157);
+  // row(46, 156, 157); row(34, 117, 126);
+}
+
+
+// ══════════════════════════════════════════════════════════════════
+//  ENGINE — tidak perlu diubah di bawah ini
+// ══════════════════════════════════════════════════════════════════
+
+let grid = [];
+let running = false;
+let pendingDestId = null;  // dest yang sedang dikonfirmasi di popup
+
+const gridEl   = document.getElementById('grid');
+const statusEl = document.getElementById('status');
+const infoEl   = document.getElementById('infoBar');
+const svgEl    = document.getElementById('pathCanvas');
+
+// ── Init grid ──
+function initGrid() {
+  WALL_DEFINITIONS();
+  gridEl.style.gridTemplateColumns = `repeat(${COLS}, 6px)`;
+  gridEl.style.gridAutoRows = '6px';
+  grid = [];
+  gridEl.innerHTML = '';
+
+  for (let r = 0; r < ROWS; r++) {
+    grid[r] = [];
+    for (let c = 0; c < COLS; c++) {
+      const isWall = wallSet.has(`${r},${c}`);
+      const cell = { r, c, el: document.createElement('div'), wall: isWall };
+      cell.el.className = 'cell' + (isWall ? ' wall' : '');
+      gridEl.appendChild(cell.el);
+      grid[r][c] = cell;
+    }
+  }
+
+  // Start
+  const sc = grid[START_R][START_C];
+  sc.isStart = true; sc.wall = false;
+  sc.el.className = 'cell start';
+  sc.el.title = 'Posisi Anda';
+
+  // Destinations — pasang click handler di setiap titik
+  DESTINATIONS.forEach(dest => {
+    if (dest.r < 0 || dest.r >= ROWS || dest.c < 0 || dest.c >= COLS) return;
+    const dc = grid[dest.r][dest.c];
+    dc.isDest = dest.id; dc.wall = false;
+    dc.el.className = 'cell dest';
+    dc.el.style.background = dest.color;
+    dc.el.title = dest.label;
+    dc.el.addEventListener('click', () => openPopup(dest.id));
+  });
+
+  // SVG overlay
+  const W = COLS * 6, H = ROWS * 6;
+  svgEl.setAttribute('width',   W);
+  svgEl.setAttribute('height',  H);
+  svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  document.getElementById('gridWrapper').style.width = (W + 2) + 'px';
+
+  clearSVG();
+}
+
+// ── Popup ──
+function openPopup(destId) {
+  if (running) return;
+  const dest = DESTINATIONS.find(d => d.id === destId);
+  pendingDestId = destId;
+
+  document.getElementById('popup-dot').style.background   = dest.color;
+  document.getElementById('popup-title').textContent       = dest.label;
+  document.getElementById('popup-confirm').style.color     = dest.color;
+  document.getElementById('popup-confirm').style.borderColor = dest.color;
+  document.getElementById('popup-confirm').style.background  = dest.color + '22';
+
+  document.getElementById('popup-overlay').classList.add('show');
+}
+
+function closePopup(e) {
+  // Jika dipanggil dari klik overlay, tutup hanya jika klik di luar popup
+  if (e && e.target !== document.getElementById('popup-overlay')) return;
+  document.getElementById('popup-overlay').classList.remove('show');
+  pendingDestId = null;
+}
+
+function confirmNav() {
+  document.getElementById('popup-overlay').classList.remove('show');
+  if (pendingDestId) runAStar(pendingDestId);
+  pendingDestId = null;
+}
+
+// Tutup popup dengan tombol Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePopup();
+});
+
+// ── SVG helpers ──
+function clearSVG() { svgEl.innerHTML = ''; }
+
+function cellCenter(r, c) {
+  return { x: c * 6 + 3, y: r * 6 + 3 };
+}
+
+async function animatePath(path, color) {
+  clearSVG();
+  if (path.length < 2) return;
+
+  const pts = path.map(n => cellCenter(n.r, n.c));
+  const d   = pts.map((p, i) => (i === 0 ? `M${p.x} ${p.y}` : `L${p.x} ${p.y}`)).join(' ');
+
+  let totalLen = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i-1].x, dy = pts[i].y - pts[i-1].y;
+    totalLen += Math.sqrt(dx*dx + dy*dy);
+  }
+
+  const mkPath = (strokeW, opacity) => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.setAttribute('d', d);
+    el.setAttribute('fill', 'none');
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-width', strokeW);
+    el.setAttribute('stroke-opacity', opacity);
+    el.setAttribute('stroke-linecap', 'round');
+    el.setAttribute('stroke-linejoin', 'round');
+    el.setAttribute('stroke-dasharray',  totalLen);
+    el.setAttribute('stroke-dashoffset', totalLen);
+    svgEl.appendChild(el);
+    return el;
+  };
+
+  const glow = mkPath(8, 0.2);
+  const line = mkPath(2.5, 1);
+
+  const dur = Math.min(900, Math.max(300, path.length * 10));
+  await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(() => {
+    [glow, line].forEach(el => {
+      el.style.transition = `stroke-dashoffset ${dur}ms cubic-bezier(0.4,0,0.2,1)`;
+      el.setAttribute('stroke-dashoffset', '0');
+    });
+    setTimeout(res, dur + 60);
+  })));
+
+  const mkCirc = (cx, cy, r, fill) => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    el.setAttribute('cx', cx); el.setAttribute('cy', cy);
+    el.setAttribute('r',  r);  el.setAttribute('fill', fill);
+    svgEl.appendChild(el);
+  };
+  mkCirc(pts[pts.length-1].x, pts[pts.length-1].y, 5, color);
+  mkCirc(pts[0].x, pts[0].y, 4, '#2d7a2d');
+}
+
+// ── A* ──
+function astar(sr, sc2, er, ec2) {
+  const key = (r,c) => r * 1000 + c;
+  const nodes = new Map();
+  const node  = (r,c) => {
+    const k = key(r,c);
+    if (!nodes.has(k)) nodes.set(k, { r, c, g: Infinity, f: Infinity, parent: null });
+    return nodes.get(k);
+  };
+
+  const open   = [];
+  const closed = new Set();
+  const sn = node(sr, sc2);
+  sn.g = 0; sn.f = Math.abs(sr-er)+Math.abs(sc2-ec2);
+  open.push(sn);
+
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
+
+  while (open.length > 0) {
+    open.sort((a,b) => a.f - b.f);
+    const cur = open.shift();
+    const ck  = key(cur.r, cur.c);
+    if (closed.has(ck)) continue;
+    closed.add(ck);
+
+    if (cur.r === er && cur.c === ec2) {
+      const path = [];
+      let n = cur;
+      while (n) { path.unshift(n); n = n.parent; }
+      return path;
+    }
+
+    for (const [dr, dc] of dirs) {
+      const nr = cur.r+dr, nc = cur.c+dc;
+      if (nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+      if (grid[nr][nc].wall) continue;
+      const nk = key(nr,nc);
+      if (closed.has(nk)) continue;
+      const cost = (dr&&dc) ? 1.414 : 1;
+      const tg   = cur.g + cost;
+      const nb   = node(nr, nc);
+      if (tg < nb.g) {
+        nb.parent = cur;
+        nb.g = tg;
+        nb.f = tg + Math.abs(nr-er)+Math.abs(nc-ec2);
+        if (!open.includes(nb)) open.push(nb);
+      }
+    }
+  }
+  return null;
+}
+
+async function runAStar(destId) {
+  if (running) return;
+  running = true;
+  clearSVG();
+  setStatus('Mencari jalur...', '');
+
+  const dest = DESTINATIONS.find(d => d.id === destId);
+  const path = astar(START_R, START_C, dest.r, dest.c);
+
+  if (!path) {
+    setStatus('❌ Tidak ada jalur yang ditemukan!', 'err');
+    running = false; return;
+  }
+
+  await animatePath(path, dest.color);
+  setStatus(`✔ Jalur ke "${dest.label}" ditemukan!`, 'ok');
+  infoEl.textContent = `Panjang jalur: ${path.length - 1} langkah`;
+  running = false;
+}
+
+function resetPath() {
+  if (running) return;
+  clearSVG();
+  setStatus('Klik salah satu titik tujuan di peta untuk navigasi', '');
+  infoEl.textContent = '';
+}
+
+function setStatus(msg, type) {
+  statusEl.textContent = msg;
+  statusEl.className = 'status ' + (type||'');
+}
+
+// Boot
+initGrid();
+</script>
+</body>
+</html>
