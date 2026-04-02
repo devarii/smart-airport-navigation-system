@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id         Int        @id @default(autoincrement())
+  name       String
+  icon       String
+  color      String
+  createdAt  DateTime   @default(now())
+  facilities Facility[]
+}
+
+model Floor {
+  id          Int        @id @default(autoincrement())
+  terminal    String
+  floorNumber Int
+  label       String
+  facilities  Facility[]
+  nodes       MapNode[]
+}
+
+model Facility {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique
+  description String?
+  categoryId  Int
+  floorId     Int
+  nodeId      Int?     @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category    Category  @relation(fields: [categoryId], references: [id])
+  floor       Floor     @relation(fields: [floorId], references: [id])
+  node        MapNode?  @relation(fields: [nodeId], references: [id])
+}
+
+model MapNode {
+  id       Int     @id @default(autoincrement())
+  x        Float
+  y        Float
+  label    String?
+  floorId  Int
+
+  floor      Floor      @relation(fields: [floorId], references: [id])
+  facility   Facility?
+  edgesFrom  MapEdge[]  @relation("EdgeFrom")
+  edgesTo    MapEdge[]  @relation("EdgeTo")
+}
+
+model MapEdge {
+  id           Int     @id @default(autoincrement())
+  fromNodeId   Int
+  toNodeId     Int
+  distance     Float
+  isAccessible Boolean @default(true)
+
+  fromNode     MapNode @relation("EdgeFrom", fields: [fromNodeId], references: [id])
+  toNode       MapNode @relation("EdgeTo",   fields: [toNodeId],   references: [id])
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
