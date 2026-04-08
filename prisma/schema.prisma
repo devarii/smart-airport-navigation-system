@@ -13,7 +13,7 @@ datasource db {
 
 model Category {
   id         Int        @id @default(autoincrement())
-  name       String
+  name       String     @unique
   icon       String
   color      String
   createdAt  DateTime   @default(now())
@@ -27,6 +27,8 @@ model Floor {
   label       String
   facilities  Facility[]
   nodes       MapNode[]
+  
+  @@unique([terminal, floorNumber])
 }
 
 model Facility {
