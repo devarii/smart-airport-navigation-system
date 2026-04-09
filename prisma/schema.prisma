@@ -1,7 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// =============================================================================
+// PRISMA SCHEMA — Smart Airport Navigation System
+// =============================================================================
 
 generator client {
   provider = "prisma-client-js"
@@ -10,6 +9,10 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// =============================================================================
+// MODELS
+// =============================================================================
 
 model Category {
   id         Int        @id @default(autoincrement())
@@ -27,38 +30,50 @@ model Floor {
   label       String
   facilities  Facility[]
   nodes       MapNode[]
-  
+
   @@unique([terminal, floorNumber])
 }
 
 model Facility {
-  id          Int      @id @default(autoincrement())
-  name        String
-  code        String   @unique
-  description String?
-  categoryId  Int
-  floorId     Int
-  nodeId      Int?     @unique
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               Int                @id @default(autoincrement())
+  name             String
+  code             String             @unique
+  description      String?
+  categoryId       Int
+  floorId          Int
+  nodeId           Int?               @unique
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  category         Category           @relation(fields: [categoryId], references: [id])
+  floor            Floor              @relation(fields: [floorId], references: [id])
+  node             MapNode?           @relation(fields: [nodeId], references: [id])
+  operationalHours OperationalHour[]
+}
 
-  category    Category  @relation(fields: [categoryId], references: [id])
-  floor       Floor     @relation(fields: [floorId], references: [id])
-  node        MapNode?  @relation(fields: [nodeId], references: [id])
+model OperationalHour {
+  id         Int      @id @default(autoincrement())
+  facilityId Int
+  day        Int      // 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu, 7=Minggu
+  isOpen     Boolean  @default(true)
+  is24Hours  Boolean  @default(false)
+  openTime   String?  // format "HH:mm", null kalau tutup atau 24 jam
+  closeTime  String?  // format "HH:mm", null kalau tutup atau 24 jam
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@unique([facilityId, day])
 }
 
 model MapNode {
-  id       Int     @id @default(autoincrement())
-  x        Float
-  y        Float
-  label    String?
-  floorId  Int
-
-  floor      Floor      @relation(fields: [floorId], references: [id])
+  id         Int       @id @default(autoincrement())
+  x          Float
+  y          Float
+  label      String?
+  floorId    Int
+  floor      Floor     @relation(fields: [floorId], references: [id])
   facility   Facility?
-  edgesFrom  MapEdge[]  @relation("EdgeFrom")
-  edgesTo    MapEdge[]  @relation("EdgeTo")
+  edgesFrom  MapEdge[] @relation("EdgeFrom")
+  edgesTo    MapEdge[] @relation("EdgeTo")
 }
 
 model MapEdge {
@@ -67,7 +82,6 @@ model MapEdge {
   toNodeId     Int
   distance     Float
   isAccessible Boolean @default(true)
-
   fromNode     MapNode @relation("EdgeFrom", fields: [fromNodeId], references: [id])
   toNode       MapNode @relation("EdgeTo",   fields: [toNodeId],   references: [id])
 }

@@ -1,6 +1,3 @@
-// types/ → TypeScript type definitions
-// index.ts → Semua tipe data: Facility, Category, MapNode, MapEdge, dll
-
 // =============================================================================
 // BASE ENTITY TYPES (mirror Prisma models)
 // =============================================================================
@@ -15,7 +12,7 @@ export interface Category {
 
 export interface Floor {
   id: number;
-  terminal: string;   // "T1" | "T2"
+  terminal: string;    // "T1" | "T2"
   floorNumber: number; // 1 | 2
   label: string;       // e.g. "Terminal 1 - Lantai 1"
 }
@@ -56,6 +53,16 @@ export interface Admin {
   createdAt: Date;
 }
 
+export interface OperationalHour {
+  id: number;
+  facilityId: number;
+  day: number;       // 1=Senin, 2=Selasa, ..., 7=Minggu
+  isOpen: boolean;
+  is24Hours: boolean;
+  openTime: string | null;   // format "HH:mm"
+  closeTime: string | null;  // format "HH:mm"
+}
+
 // =============================================================================
 // RELATION / POPULATED TYPES
 // =============================================================================
@@ -68,6 +75,7 @@ export interface FacilityWithRelations extends Facility {
   category: Category;
   floor: Floor;
   node: MapNode | null;
+  operationalHours: OperationalHour[];
 }
 
 export interface MapNodeWithEdges extends MapNode {
@@ -87,6 +95,19 @@ export interface MapEdgeWithNodes extends MapEdge {
 
 export type TerminalId = "T1" | "T2";
 export type FloorNumber = 1 | 2;
+
+/** 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu, 7=Minggu */
+export type DayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export const DAY_LABELS: Record<DayOfWeek, string> = {
+  1: "Senin",
+  2: "Selasa",
+  3: "Rabu",
+  4: "Kamis",
+  5: "Jumat",
+  6: "Sabtu",
+  7: "Minggu",
+};
 
 export interface FloorKey {
   terminal: TerminalId;
@@ -217,11 +238,13 @@ export interface MapState {
 // =============================================================================
 
 export interface ApiSuccess<T> {
+  success: true;
   data: T;
   message?: string;
 }
 
 export interface ApiError {
+  success: false;
   error: string;
   details?: string;
 }
@@ -269,3 +292,14 @@ export interface CreateCategoryPayload {
 }
 
 export type UpdateCategoryPayload = Partial<CreateCategoryPayload>;
+
+export interface CreateOperationalHourPayload {
+  facilityId: number;
+  day: DayOfWeek;
+  isOpen: boolean;
+  is24Hours: boolean;
+  openTime?: string;   // format "HH:mm"
+  closeTime?: string;  // format "HH:mm"
+}
+
+export type UpdateOperationalHourPayload = Partial<Omit<CreateOperationalHourPayload, "facilityId" | "day">>;
