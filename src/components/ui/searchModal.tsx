@@ -173,7 +173,7 @@ export default function SearchModal() {
               "ring-1 ring-black/5",
             ].join(" ")}
           >
-            <div className="overflow-y-auto h-[220px] p-2 pr-1 [&::-webkit-scrollbar]:hidden">
+            <div className="overflow-y-auto h-55 p-2 pr-1 [&::-webkit-scrollbar]:hidden">
               {/* Loading skeleton */}
               {isLoading && (
                 <div className="grid grid-cols-5 gap-1.5">
@@ -290,7 +290,7 @@ export default function SearchModal() {
                       "shadow-[0_3px_0_#94a3b8,0_1px_3px_rgba(0,0,0,0.15)]",
                       "border border-gray-200/80",
                       // Tekan = turun
-                      "active:translate-y-[2px] active:shadow-[0_1px_0_#94a3b8]",
+                      "active:translate-y-0.5 active:shadow-[0_1px_0_#94a3b8]",
                       "transition-all duration-75",
                     ].join(" ")}
                   >
