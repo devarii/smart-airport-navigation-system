@@ -1,65 +1,87 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Image from "next/image";
+import { useMapStore } from "@/store/mapStore";
+import TerminalFloorSelector from "@/components/ui/terminalFloorSelector";
+import CategoryBar from "@/components/ui/categoryBar";
+import RealtimeClock from "@/components/ui/realtimeClock";
+import SearchModal from "@/components/ui/searchModal";
+import POIDetailPopup from "@/components/ui/POIDetailPopup";
+
+// TODO: useIdleTimer
+
+export default function HomePage() {
+  const isSearchOpen = useMapStore((s) => s.isSearchOpen);
+  const selectedFacility = useMapStore((s) => s.selectedFacility);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="relative w-full min-h-screen flex flex-col bg-gray-100 overflow-hidden">
+
+      {/* ── Top bar ── */}
+      <div
+        className={[
+          "flex justify-center px-6 py-3",
+          "bg-white",
+          "shadow-[0_1px_0_#e5e7eb,0_2px_12px_rgba(0,0,0,0.06)]",
+        ].join(" ")}
+      >
+        <TerminalFloorSelector />
+      </div>
+
+      {/* ── Map area ── */}
+      <div className="flex-1 flex items-center justify-center px-8 py-4">
+        {/* Ganti dengan <MapCanvas /> setelah SVG final */}
+        <div
+          className={[
+            "w-full max-w-283.25 aspect-1133/172",
+            "bg-white rounded-2xl",
+            "shadow-[0_2px_24px_rgba(0,0,0,0.08),0_1px_4px_rgba(0,0,0,0.04)]",
+            "border border-gray-200/80",
+            "flex items-center justify-center",
+            "text-gray-300 text-[clamp(14px,1.6vw,18px)] font-medium tracking-wide",
+          ].join(" ")}
+          aria-label="Area peta bandara"
+        >
+          Peta akan ditampilkan di sini
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* ── Bottom bar ── */}
+      <div
+        className={[
+          "flex items-center justify-between px-6 py-2",
+          "bg-white",
+          "shadow-[0_-1px_0_#e5e7eb,0_-2px_12px_rgba(0,0,0,0.06)]",
+        ].join(" ")}
+      >
+        {/* Kiri: Logo */}
+        <div className="flex items-center min-w-30">
+          <Image
+            src="/logo.png"
+            alt="InJourney Airports"
+            width={120}
+            height={60}
+            className="object-contain"
+            draggable={false}
+            priority
+          />
         </div>
-      </main>
-    </div>
+
+        {/* Tengah: CategoryBar */}
+        <div className="flex-1 flex justify-center">
+          <CategoryBar />
+        </div>
+
+        {/* Kanan: RealtimeClock */}
+        <div className="flex items-center justify-end min-w-30">
+          <RealtimeClock />
+        </div>
+      </div>
+
+      {/* ── Overlays ── */}
+      {isSearchOpen && <SearchModal />}
+      {selectedFacility && <POIDetailPopup />}
+
+    </main>
   );
 }
