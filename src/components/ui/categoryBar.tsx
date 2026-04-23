@@ -10,92 +10,137 @@ export default function CategoryBar() {
 
   const activeCategories = useMapStore((s) => s.activeCategories);
   const toggleCategory = useMapStore((s) => s.toggleCategory);
-  const clearCategories = useMapStore((s) => s.clearCategories);
+  const setIsSearchOpen = useMapStore((s) => s.setIsSearchOpen);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch("/api/categories");
         const json = await res.json();
-        if (json.success) {
-          setCategories(json.data as Category[]);
-        }
+        if (json.success) setCategories(json.data as Category[]);
       } catch (err) {
         console.error("Failed to fetch categories:", err);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
 
-  const isAllActive = activeCategories.length === 0;
-
   if (isLoading) {
     return (
-      <div className="flex gap-3 overflow-x-auto px-4 py-3 [&::-webkit-scrollbar]:hidden">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="shrink-0 w-18 h-18 rounded-2xl bg-white/10 animate-pulse"
-          />
+      <div className="flex flex-wrap justify-center gap-3 px-4 py-2">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <div className="w-12 h-12 rounded-2xl bg-gray-200 animate-pulse" />
+            <div className="w-10 h-2.5 rounded bg-gray-200 animate-pulse" />
+          </div>
         ))}
       </div>
     );
   }
 
-  return (
-    <div className="flex gap-3 overflow-x-auto px-4 py-3 [&::-webkit-scrollbar]:hidden">
-      {/* Tombol "Semua" */}
-      <button
-        onClick={clearCategories}
-        aria-label="Tampilkan semua kategori"
-        aria-pressed={isAllActive}
+  const allItems = [
+    { type: "search" as const },
+    ...categories.map((c) => ({ type: "category" as const, data: c })),
+  ];
+
+  const half = Math.ceil(allItems.length / 2);
+  const rowOne = allItems.slice(0, half);
+  const rowTwo = allItems.slice(half);
+
+  const renderSearchButton = () => (
+    <button
+      key="search"
+      onClick={() => setIsSearchOpen(true)}
+      aria-label="Buka pencarian fasilitas"
+      className="flex flex-col items-center gap-1 transition-all duration-150 active:scale-95"
+    >
+      <div
         className={[
-          "shrink-0 flex flex-col items-center justify-center gap-1",
-          "min-w-18 min-h-15 px-3 py-2 rounded-2xl",
-          "transition-colors duration-150",
-          "text-[clamp(11px,1.2vw,14px)] font-medium",
-          isAllActive
-            ? "bg-sky-500 text-white shadow-md"
-            : "bg-white/10 text-white/80 border border-white/20",
+          "w-12 h-12 rounded-2xl flex items-center justify-center",
+          "bg-orange-500",
+          "shadow-[0_3px_8px_rgba(249,115,22,0.40)]",
+          "hover:scale-105 transition-transform duration-150",
         ].join(" ")}
       >
-        <span className="text-[clamp(20px,2.5vw,28px)] leading-none">🗺️</span>
-        <span className="leading-tight text-center whitespace-nowrap">Semua</span>
+        <svg
+          className="w-6 h-6 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2.5}
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+          />
+        </svg>
+      </div>
+      <span className="text-[10px] text-gray-500 font-medium leading-tight text-center">
+        Search
+      </span>
+    </button>
+  );
+
+  const renderCategoryButton = (category: Category) => {
+    const isActive = activeCategories.includes(category.id);
+    return (
+      <button
+        key={category.id}
+        onClick={() => toggleCategory(category.id)}
+        aria-label={`Filter kategori ${category.name}`}
+        aria-pressed={isActive}
+        className="flex flex-col items-center gap-1 transition-all duration-150 active:scale-95"
+      >
+        <div
+          className={[
+            "w-12 h-12 rounded-2xl flex items-center justify-center text-2xl",
+            "transition-all duration-150 hover:scale-105",
+            isActive
+              ? "shadow-[0_3px_10px_rgba(0,0,0,0.22)] ring-2 ring-white ring-offset-1 ring-offset-gray-100 scale-110"
+              : "shadow-[0_2px_6px_rgba(0,0,0,0.14)]",
+          ].join(" ")}
+          style={{ backgroundColor: category.color }}
+        >
+          {category.icon}
+        </div>
+        <span
+          className={[
+            "text-[10px] font-medium leading-tight text-center w-12 line-clamp-1",
+            isActive ? "text-gray-800" : "text-gray-500",
+          ].join(" ")}
+        >
+          {category.name}
+        </span>
       </button>
+    );
+  };
 
-      {/* Tombol tiap kategori */}
-      {categories.map((category) => {
-        const isActive = activeCategories.includes(category.id);
+  return (
+    <div className="flex flex-col items-center gap-2 px-4 py-2">
+      {/* Baris 1 */}
+      <div className="flex gap-3 justify-center">
+        {rowOne.map((item) =>
+          item.type === "search"
+            ? renderSearchButton()
+            : renderCategoryButton(item.data)
+        )}
+      </div>
 
-        return (
-          <button
-            key={category.id}
-            onClick={() => toggleCategory(category.id)}
-            aria-label={`Filter kategori ${category.name}`}
-            aria-pressed={isActive}
-            className={[
-              "shrink-0 flex flex-col items-center justify-center gap-1",
-              "min-w-18 min-h-15 px-3 py-2 rounded-2xl",
-              "transition-colors duration-150",
-              "text-[clamp(11px,1.2vw,14px)] font-medium",
-              isActive
-                ? "bg-sky-500 text-white shadow-md"
-                : "bg-white/10 text-white/80 border border-white/20",
-            ].join(" ")}
-            style={isActive ? { backgroundColor: category.color } : undefined}
-          >
-            <span className="text-[clamp(20px,2.5vw,28px)] leading-none">
-              {category.icon}
-            </span>
-            <span className="leading-tight text-center whitespace-nowrap">
-              {category.name}
-            </span>
-          </button>
-        );
-      })}
+      {/* Baris 2 */}
+      {rowTwo.length > 0 && (
+        <div className="flex gap-3 justify-center">
+          {rowTwo.map((item) =>
+            item.type === "search"
+              ? renderSearchButton()
+              : renderCategoryButton(item.data)
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useMapStore } from "@/store/mapStore";
-import type { FacilityWithRelations } from "@/types";
+import type { Category, FacilityWithRelations } from "@/types";
+
+const KEYBOARD_ROW_ONE = ["A","B","C","D","E","F","G","H","I","J","K","L","M"] as const;
+const KEYBOARD_ROW_TWO = ["N","O","P","Q","R","S","T","U","V","W","X","Y","Z"] as const;
 
 export default function SearchModal() {
   const isSearchOpen = useMapStore((s) => s.isSearchOpen);
@@ -14,81 +17,68 @@ export default function SearchModal() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FacilityWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasFetched, setHasFetched] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Reset + auto focus saat modal terbuka
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/categories");
+        const json = await res.json();
+        if (json.success) setCategories(json.data as Category[]);
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   useEffect(() => {
     if (isSearchOpen) {
       setQuery("");
-      setResults([]);
-      setHasFetched(false);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setActiveCategoryId(null);
     }
   }, [isSearchOpen]);
 
-  // Debounce + fetch
   useEffect(() => {
+    if (!isSearchOpen) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    if (query.length < 2) {
-      setResults([]);
-      setHasFetched(false);
-      return;
-    }
 
     debounceRef.current = setTimeout(async () => {
       setIsLoading(true);
       try {
         const params = new URLSearchParams({
-          search: query,
           terminal: activeTerminal,
           floor: String(activeFloor),
         });
+        if (query.length > 0) params.set("search", query);
+        if (activeCategoryId !== null) params.set("category", String(activeCategoryId));
+
         const res = await fetch(`/api/facilities?${params.toString()}`);
         const json = await res.json();
-        if (json.success) {
-          setResults(json.data as FacilityWithRelations[]);
-        }
+        if (json.success) setResults(json.data as FacilityWithRelations[]);
       } catch (err) {
         console.error("Failed to fetch facilities:", err);
         setResults([]);
       } finally {
         setIsLoading(false);
-        setHasFetched(true);
       }
     }, 300);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, activeTerminal, activeFloor]);
+  }, [query, activeCategoryId, activeTerminal, activeFloor, isSearchOpen]);
+
+  const handleKeyPress = (letter: string) => setQuery((prev) => prev + letter);
+  const handleClose = () => setIsSearchOpen(false);
+  const handleClearQuery = () => setQuery("");
 
   const handleSelectFacility = (facility: FacilityWithRelations) => {
     setSelectedFacility(facility);
     setIsSearchOpen(false);
-  };
-
-  const handleClose = () => {
-    setIsSearchOpen(false);
-  };
-
-  const highlightMatch = (text: string, keyword: string): React.ReactNode => {
-    if (!keyword.trim()) return text;
-    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`(${escapedKeyword})`, "gi");
-    const parts = text.split(regex);
-    return parts.map((part, i) =>
-      regex.test(part) ? (
-        <mark key={i} className="bg-sky-400/40 text-white rounded px-0.5 not-italic">
-          {part}
-        </mark>
-      ) : (
-        part
-      )
-    );
   };
 
   if (!isSearchOpen) return null;
@@ -101,170 +91,245 @@ export default function SearchModal() {
       aria-label="Cari fasilitas"
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
 
-      {/* Modal */}
-      <div
-        className={[
-          "relative z-10 w-[clamp(480px,90vw,720px)]",
-          "bg-gray-900 rounded-2xl shadow-2xl",
-          "flex flex-col overflow-hidden",
-          "animate-in fade-in zoom-in-95 duration-150",
-        ].join(" ")}
-      >
-        {/* Input header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
-          {/* Icon search */}
+      {/* Wrapper modal + tombol close */}
+      <div className="relative z-10 flex items-start gap-3">
+
+        {/* ── Modal utama ── */}
+        <div
+          className={[
+            "w-[clamp(480px,80vw,660px)]",
+            "bg-[#dce9f5] rounded-2xl overflow-hidden",
+            "flex flex-col",
+            // Shadow dramatis + ring tipis
+            "shadow-[0_24px_60px_-8px_rgba(0,0,0,0.45),0_8px_20px_-4px_rgba(0,0,0,0.25)]",
+            "ring-1 ring-white/50",
+            "animate-in fade-in zoom-in-95 duration-150",
+          ].join(" ")}
+        >
+          {/* ── Baris kategori ── */}
+          <div className="flex gap-3 overflow-x-auto px-4 pt-4 pb-3 [&::-webkit-scrollbar]:hidden">
+            {/* Semua */}
+            <button
+              onClick={() => setActiveCategoryId(null)}
+              aria-pressed={activeCategoryId === null}
+              className="shrink-0 flex flex-col items-center gap-1 transition-transform duration-150 active:scale-95"
+            >
+              <div
+                className={[
+                  "w-14 h-14 rounded-2xl flex items-center justify-center text-3xl",
+                  "shadow-[0_4px_10px_rgba(0,0,0,0.18)]",
+                  "transition-all duration-150",
+                  activeCategoryId === null
+                    ? "bg-sky-500 ring-2 ring-sky-300 ring-offset-2 ring-offset-[#dce9f5] scale-110"
+                    : "bg-sky-400 hover:scale-105",
+                ].join(" ")}
+              >
+                🗺️
+              </div>
+              <span className="text-[11px] text-gray-600 font-medium leading-tight text-center w-14 truncate">
+                Semua
+              </span>
+            </button>
+
+            {categories.map((category) => {
+              const isActive = activeCategoryId === category.id;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategoryId(isActive ? null : category.id)}
+                  aria-pressed={isActive}
+                  className="shrink-0 flex flex-col items-center gap-1 transition-transform duration-150 active:scale-95"
+                >
+                  <div
+                    className={[
+                      "w-14 h-14 rounded-2xl flex items-center justify-center text-3xl",
+                      "shadow-[0_4px_10px_rgba(0,0,0,0.18)]",
+                      "transition-all duration-150",
+                      isActive
+                        ? "ring-2 ring-white ring-offset-2 ring-offset-[#dce9f5] scale-110"
+                        : "hover:scale-105",
+                    ].join(" ")}
+                    style={{ backgroundColor: category.color }}
+                  >
+                    {category.icon}
+                  </div>
+                  <span className="text-[11px] text-gray-600 font-medium leading-tight text-center w-14 line-clamp-2">
+                    {category.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── Grid hasil ── */}
+          <div
+            className={[
+              "mx-3 mb-2 rounded-xl overflow-hidden",
+              "bg-[#e8f1f9]",
+              // Recessed / terbenam
+              "shadow-[inset_0_2px_8px_rgba(0,0,0,0.12),inset_0_1px_3px_rgba(0,0,0,0.08)]",
+              "ring-1 ring-black/5",
+            ].join(" ")}
+          >
+            <div className="overflow-y-auto h-[220px] p-2 pr-1 [&::-webkit-scrollbar]:hidden">
+              {/* Loading skeleton */}
+              {isLoading && (
+                <div className="grid grid-cols-5 gap-1.5">
+                  {Array.from({ length: 15 }).map((_, i) => (
+                    <div key={i} className="h-16 rounded-lg bg-white/70 animate-pulse" />
+                  ))}
+                </div>
+              )}
+
+              {/* Hasil */}
+              {!isLoading && results.length > 0 && (
+                <div className="grid grid-cols-5 gap-1.5">
+                  {results.map((facility) => (
+                    <button
+                      key={facility.id}
+                      onClick={() => handleSelectFacility(facility)}
+                      className={[
+                        "flex flex-col items-center justify-center gap-1",
+                        "h-16 px-1 py-2 rounded-lg",
+                        "bg-white hover:bg-sky-50 active:bg-sky-100",
+                        // Lift on hover
+                        "shadow-[0_2px_6px_rgba(0,0,0,0.10)]",
+                        "hover:-translate-y-0.5 hover:shadow-[0_4px_10px_rgba(0,0,0,0.15)]",
+                        "active:translate-y-0 active:shadow-sm",
+                        "transition-all duration-150 text-center",
+                      ].join(" ")}
+                    >
+                      <span className="text-xl leading-none" aria-hidden="true">
+                        {facility.category.icon}
+                      </span>
+                      <span className="text-gray-700 text-[10px] font-medium leading-tight line-clamp-2 w-full px-0.5">
+                        {facility.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Tidak ditemukan */}
+              {!isLoading && results.length === 0 && (
+                <div className="flex flex-col items-center justify-center gap-2 h-full text-gray-400">
+                  <span className="text-3xl" aria-hidden="true">🔍</span>
+                  <p className="text-sm text-center">Fasilitas tidak ditemukan</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Search bar ── */}
+          <div className="flex justify-center px-4 mb-3">
+            <div
+              className={[
+                "flex items-center gap-2 px-4 py-2.5 w-[55%]",
+                "bg-white rounded-full",
+                "shadow-[0_2px_8px_rgba(0,0,0,0.12),inset_0_1px_3px_rgba(0,0,0,0.06)]",
+                "ring-1 ring-black/5",
+              ].join(" ")}
+            >
+              <svg
+                className="shrink-0 w-4 h-4 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                />
+              </svg>
+              <span className="flex-1 text-[clamp(13px,1.5vw,16px)] text-gray-700 min-w-0 truncate">
+                {query || <span className="text-gray-400">Search</span>}
+              </span>
+              {query.length > 0 && (
+                <button
+                  onClick={handleClearQuery}
+                  aria-label="Hapus pencarian"
+                  className="shrink-0 w-6 h-6 rounded-full bg-gray-400 hover:bg-gray-500 flex items-center justify-center shadow-sm transition-colors duration-150"
+                >
+                  <svg
+                    className="w-3.5 h-3.5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={3}
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ── Virtual keyboard ── */}
+          <div className="bg-[#b8cfe0] px-3 pb-4 pt-3 flex flex-col gap-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+            {[KEYBOARD_ROW_ONE, KEYBOARD_ROW_TWO].map((row, rowIndex) => (
+              <div key={rowIndex} className="flex gap-1.5 justify-center">
+                {row.map((letter) => (
+                  <button
+                    key={letter}
+                    onClick={() => handleKeyPress(letter)}
+                    aria-label={`Ketik ${letter}`}
+                    className={[
+                      "flex-1 min-h-11 rounded-lg",
+                      "bg-white hover:bg-sky-50",
+                      "text-gray-800 font-bold",
+                      "text-[clamp(12px,1.4vw,16px)]",
+                      // Shadow bawah = efek tombol fisik
+                      "shadow-[0_3px_0_#94a3b8,0_1px_3px_rgba(0,0,0,0.15)]",
+                      "border border-gray-200/80",
+                      // Tekan = turun
+                      "active:translate-y-[2px] active:shadow-[0_1px_0_#94a3b8]",
+                      "transition-all duration-75",
+                    ].join(" ")}
+                  >
+                    {letter}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Tombol Close — di luar modal ── */}
+        <button
+          onClick={handleClose}
+          aria-label="Tutup pencarian"
+          className={[
+            "flex flex-col items-center justify-center gap-1",
+            "w-16 min-h-16 rounded-2xl mt-1",
+            "bg-white hover:bg-gray-50 text-gray-700",
+            "shadow-[0_8px_24px_rgba(0,0,0,0.20),0_2px_6px_rgba(0,0,0,0.12)]",
+            "ring-1 ring-white/60",
+            "transition-all duration-150 active:scale-95",
+            "text-[12px] font-semibold",
+          ].join(" ")}
+        >
           <svg
-            className="shrink-0 w-6 h-6 text-white/50"
+            className="w-7 h-7"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth={2}
+            strokeWidth={2.5}
             stroke="currentColor"
             aria-hidden="true"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
+          Close
+        </button>
 
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari fasilitas..."
-            aria-label="Cari fasilitas"
-            className={[
-              "flex-1 bg-transparent outline-none",
-              "text-white placeholder:text-white/40",
-              "text-[clamp(16px,2vw,22px)]",
-            ].join(" ")}
-          />
-
-          {/* Tombol tutup */}
-          <button
-            onClick={handleClose}
-            aria-label="Tutup pencarian"
-            className={[
-              "shrink-0 flex items-center justify-center",
-              "min-w-15 min-h-15 rounded-xl",
-              "text-white/60 hover:text-white hover:bg-white/10",
-              "transition-colors duration-150",
-            ].join(" ")}
-          >
-            <svg
-              className="w-6 h-6"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Body hasil */}
-        <div className="overflow-y-auto max-h-[60vh] [&::-webkit-scrollbar]:hidden">
-
-          {/* Loading skeleton */}
-          {isLoading && (
-            <div className="flex flex-col gap-2 px-5 py-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-16 rounded-xl bg-white/10 animate-pulse"
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Hasil ditemukan */}
-          {!isLoading && results.length > 0 && (
-            <ul role="listbox" aria-label="Hasil pencarian">
-              {results.map((facility) => (
-                <li key={facility.id} role="option" aria-selected={false}>
-                  <button
-                    onClick={() => handleSelectFacility(facility)}
-                    className={[
-                      "w-full flex items-center gap-4 px-5 py-4",
-                      "min-h-15 text-left",
-                      "hover:bg-white/10 active:bg-white/20",
-                      "transition-colors duration-100",
-                      "border-b border-white/5 last:border-0",
-                    ].join(" ")}
-                  >
-                    {/* Icon kategori */}
-                    <span
-                      className="shrink-0 text-[clamp(24px,3vw,32px)] leading-none"
-                      aria-hidden="true"
-                    >
-                      {facility.category?.icon ?? "📍"}
-                    </span>
-
-                    {/* Info fasilitas */}
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-white font-medium text-[clamp(15px,1.8vw,20px)] truncate">
-                        {highlightMatch(facility.name, query)}
-                      </span>
-                      <span className="text-white/50 text-[clamp(12px,1.3vw,15px)] truncate">
-                        {facility.floor.label}
-                        {facility.category?.name
-                          ? ` · ${facility.category.name}`
-                          : ""}
-                      </span>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* Tidak ditemukan */}
-          {!isLoading && hasFetched && results.length === 0 && (
-            <div className="flex flex-col items-center gap-3 px-5 py-10 text-white/50">
-              <span
-                className="text-[clamp(28px,4vw,40px)]"
-                aria-hidden="true"
-              >
-                🔍
-              </span>
-              <p className="text-[clamp(14px,1.6vw,18px)] text-center">
-                Fasilitas tidak ditemukan
-              </p>
-            </div>
-          )}
-
-          {/* Prompt awal belum ketik */}
-          {!isLoading && !hasFetched && query.length === 0 && (
-            <div className="flex flex-col items-center gap-3 px-5 py-10 text-white/40">
-              <span
-                className="text-[clamp(28px,4vw,40px)]"
-                aria-hidden="true"
-              >
-                ✈️
-              </span>
-              <p className="text-[clamp(14px,1.6vw,18px)] text-center">
-                Ketik minimal 2 karakter untuk mencari
-              </p>
-            </div>
-          )}
-
-        </div>
       </div>
     </div>
   );
