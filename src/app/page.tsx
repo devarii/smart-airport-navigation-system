@@ -8,11 +8,11 @@ import RealtimeClock from "@/components/ui/realtimeClock";
 import SearchModal from "@/components/ui/searchModal";
 import POIDetailPopup from "@/components/ui/POIDetailPopup";
 
-// TODO: useIdleTimer
-
 export default function HomePage() {
   const isSearchOpen = useMapStore((s) => s.isSearchOpen);
   const selectedFacility = useMapStore((s) => s.selectedFacility);
+  // Tambahkan ini jika kamu butuh fungsi membuka search dari tombol/elemen lain
+  const setIsSearchOpen = useMapStore((s) => s.setIsSearchOpen);
 
   return (
     <main className="relative w-full min-h-screen flex flex-col bg-gray-100 overflow-hidden">
@@ -30,7 +30,6 @@ export default function HomePage() {
 
       {/* ── Map area ── */}
       <div className="flex-1 flex items-center justify-center px-8 py-4">
-        {/* Ganti dengan <MapCanvas /> setelah SVG final */}
         <div
           className={[
             "w-full max-w-283.25 aspect-1133/172",

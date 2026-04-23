@@ -1,7 +1,6 @@
 // store/ → State management global (Zustand)
 // mapStore.ts → Semua state: POI dipilih, mode admin, rute aktif, filter kategori
 
-// dapat diubah masi tahap perencanaan
 import { create } from "zustand";
 import type {
   TerminalId,
@@ -40,6 +39,11 @@ interface SearchState {
   setSearchResults: (results: FacilityWithRelations[]) => void;
 }
 
+interface SearchModalState {
+  isSearchOpen: boolean;
+  setIsSearchOpen: (val: boolean) => void;
+}
+
 interface CategoryFilterState {
   activeCategories: number[];
   toggleCategory: (id: number) => void;
@@ -47,6 +51,8 @@ interface CategoryFilterState {
 }
 
 interface RouteState {
+  isRouteOpen: boolean;
+  setIsRouteOpen: (val: boolean) => void;
   routeFrom: FacilityWithRelations | null;
   routeTo: FacilityWithRelations | null;
   routeResult: RouteResult | null;
@@ -70,6 +76,7 @@ type MapStore = TerminalFloorState &
   MapModeState &
   SelectedPOIState &
   SearchState &
+  SearchModalState &
   CategoryFilterState &
   RouteState &
   NearbyState;
@@ -124,6 +131,14 @@ export const useMapStore = create<MapStore>((set) => ({
     set({ searchResults: results }),
 
   // ---------------------------------------------------------------------------
+  // Search Modal
+  // ---------------------------------------------------------------------------
+  isSearchOpen: false,
+
+  setIsSearchOpen: (val) =>
+    set({ isSearchOpen: val }),
+
+  // ---------------------------------------------------------------------------
   // Filter Kategori
   // ---------------------------------------------------------------------------
   activeCategories: [],
@@ -141,6 +156,11 @@ export const useMapStore = create<MapStore>((set) => ({
   // ---------------------------------------------------------------------------
   // Route
   // ---------------------------------------------------------------------------
+  isRouteOpen: false,
+
+  setIsRouteOpen: (val) =>
+    set({ isRouteOpen: val }),
+
   routeFrom: null,
   routeTo: null,
   routeResult: null,
