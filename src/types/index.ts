@@ -12,9 +12,14 @@ export interface Category {
 
 export interface Floor {
   id: number;
-  terminal: string;    // "T1" | "T2"
-  floorNumber: number; // 1 | 2
-  label: string;       // e.g. "Terminal 1 - Lantai 1"
+  terminal: string;
+  floorNumber: number;
+  label: string;
+  gridRows: number | null; 
+  gridCols: number | null; 
+  startRow: number | null; 
+  startCol: number | null; 
+  wallData: unknown | null; 
 }
 
 export interface Facility {
@@ -26,6 +31,8 @@ export interface Facility {
   floorId: number;
   nodeId: number | null;
   isActive: boolean;
+  gridRow: number | null; 
+  gridCol: number | null; 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -140,15 +147,67 @@ export interface SearchSuggestion {
 // ROUTE / PATHFINDING TYPES
 // =============================================================================
 
+// Legacy node-based (simpan untuk kompatibilitas API nodes/edges)
 export interface RouteRequest {
   fromNodeId: number;
   toNodeId: number;
 }
 
+// =============================================================================
+// GRID / A* PATHFINDING TYPES
+// =============================================================================
+
+export interface GridPoint {
+  r: number;
+  c: number;
+}
+
+export interface AStarNode {
+  r: number;
+  c: number;
+  g: number;
+  f: number;
+  parent: AStarNode | null;
+}
+
+export interface PathResult {
+  path: GridPoint[];
+  stepCount: number;
+}
+
+export interface PathSegment {
+  path: GridPoint[];
+  color: string;
+}
+
+export interface MultiPathResult {
+  segments: PathSegment[];
+  totalSteps: number;
+  usedStairs: boolean;
+  stairsLabel?: string;
+}
+
+export interface DestinationPoint {
+  id: string;
+  label: string;
+  r: number;
+  c: number;
+  color: string;
+}
+
+export interface WallDataJson {
+  rows: number;
+  cols: number;
+  startRow: number;
+  startCol: number;
+  walls: string[]; // format "r,c"
+}
+
+// RouteResult sekarang grid-based
 export interface RouteResult {
-  path: number[];        // ordered list of node IDs
-  totalDistance: number;
-  nodes: MapNode[];      // populated nodes along the path
+  multiPath: MultiPathResult;
+  destId: string;
+  destLabel: string;
 }
 
 // =============================================================================
