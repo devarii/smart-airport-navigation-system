@@ -12,7 +12,7 @@ export default function SearchModal() {
   const setIsSearchOpen = useMapStore((s) => s.setIsSearchOpen);
   const setSelectedFacility = useMapStore((s) => s.setSelectedFacility);
   const activeTerminal = useMapStore((s) => s.activeTerminal);
-  const activeFloor = useMapStore((s) => s.activeFloor);
+  // activeFloor dihapus dari store — tidak dipakai lagi
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FacilityWithRelations[]>([]);
@@ -51,7 +51,7 @@ export default function SearchModal() {
       try {
         const params = new URLSearchParams({
           terminal: activeTerminal,
-          floor: String(activeFloor),
+          // floor parameter dihapus — activeFloor tidak ada di store
         });
         if (query.length > 0) params.set("search", query);
         if (activeCategoryId !== null) params.set("category", String(activeCategoryId));
@@ -70,7 +70,7 @@ export default function SearchModal() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, activeCategoryId, activeTerminal, activeFloor, isSearchOpen]);
+  }, [query, activeCategoryId, activeTerminal, isSearchOpen]);
 
   const handleKeyPress = (letter: string) => setQuery((prev) => prev + letter);
   const handleClose = () => setIsSearchOpen(false);
@@ -102,7 +102,6 @@ export default function SearchModal() {
             "w-[clamp(480px,80vw,660px)]",
             "bg-[#dce9f5] rounded-2xl overflow-hidden",
             "flex flex-col",
-            // Shadow dramatis + ring tipis
             "shadow-[0_24px_60px_-8px_rgba(0,0,0,0.45),0_8px_20px_-4px_rgba(0,0,0,0.25)]",
             "ring-1 ring-white/50",
             "animate-in fade-in zoom-in-95 duration-150",
@@ -168,7 +167,6 @@ export default function SearchModal() {
             className={[
               "mx-3 mb-2 rounded-xl overflow-hidden",
               "bg-[#e8f1f9]",
-              // Recessed / terbenam
               "shadow-[inset_0_2px_8px_rgba(0,0,0,0.12),inset_0_1px_3px_rgba(0,0,0,0.08)]",
               "ring-1 ring-black/5",
             ].join(" ")}
@@ -194,7 +192,6 @@ export default function SearchModal() {
                         "flex flex-col items-center justify-center gap-1",
                         "h-16 px-1 py-2 rounded-lg",
                         "bg-white hover:bg-sky-50 active:bg-sky-100",
-                        // Lift on hover
                         "shadow-[0_2px_6px_rgba(0,0,0,0.10)]",
                         "hover:-translate-y-0.5 hover:shadow-[0_4px_10px_rgba(0,0,0,0.15)]",
                         "active:translate-y-0 active:shadow-sm",
@@ -286,10 +283,8 @@ export default function SearchModal() {
                       "bg-white hover:bg-sky-50",
                       "text-gray-800 font-bold",
                       "text-[clamp(12px,1.4vw,16px)]",
-                      // Shadow bawah = efek tombol fisik
                       "shadow-[0_3px_0_#94a3b8,0_1px_3px_rgba(0,0,0,0.15)]",
                       "border border-gray-200/80",
-                      // Tekan = turun
                       "active:translate-y-0.5 active:shadow-[0_1px_0_#94a3b8]",
                       "transition-all duration-75",
                     ].join(" ")}

@@ -28,6 +28,11 @@ model Floor {
   terminal    String
   floorNumber Int
   label       String
+  gridRows    Int?
+  gridCols    Int?
+  startRow    Int?
+  startCol    Int?
+  wallData    Json?
   facilities  Facility[]
   nodes       MapNode[]
 
@@ -42,6 +47,8 @@ model Facility {
   categoryId       Int
   floorId          Int
   nodeId           Int?               @unique
+  gridRow          Int?
+  gridCol          Int?
   isActive         Boolean            @default(true)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt

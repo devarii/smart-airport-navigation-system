@@ -1,10 +1,11 @@
-// store/ → State management global (Zustand)
-// mapStore.ts → Semua state: POI dipilih, mode admin, rute aktif, filter kategori
+// store/mapStore.ts
+// State management global via Zustand.
+// activeFloor DIHAPUS — T1 dan T2 masing-masing punya 1 grid vertikal berisi
+// 2 lantai sekaligus; tidak ada toggle lantai.
 
 import { create } from "zustand";
 import type {
   TerminalId,
-  FloorNumber,
   MapMode,
   FacilityWithRelations,
   RouteResult,
@@ -14,11 +15,9 @@ import type {
 // STATE & ACTION TYPES
 // =============================================================================
 
-interface TerminalFloorState {
+interface TerminalState {
   activeTerminal: TerminalId;
-  activeFloor: FloorNumber;
   setActiveTerminal: (terminal: TerminalId) => void;
-  setActiveFloor: (floor: FloorNumber) => void;
 }
 
 interface MapModeState {
@@ -62,6 +61,10 @@ interface RouteState {
   clearRoute: () => void;
 }
 
+interface IdleState {
+  resetToIdle: () => void;
+}
+
 interface NearbyState {
   nearbyMode: boolean;
   userPin: { x: number; y: number } | null;
@@ -72,14 +75,15 @@ interface NearbyState {
 }
 
 // Gabungan semua state & action
-type MapStore = TerminalFloorState &
+type MapStore = TerminalState &
   MapModeState &
   SelectedPOIState &
   SearchState &
   SearchModalState &
   CategoryFilterState &
   RouteState &
-  NearbyState;
+  NearbyState &
+  IdleState;
 
 // =============================================================================
 // STORE
@@ -88,16 +92,13 @@ type MapStore = TerminalFloorState &
 export const useMapStore = create<MapStore>((set) => ({
 
   // ---------------------------------------------------------------------------
-  // Terminal & Lantai
+  // Terminal aktif (T1 / T2)
+  // activeFloor dihapus: kedua lantai selalu tampil bersamaan dalam 1 grid.
   // ---------------------------------------------------------------------------
   activeTerminal: "T1",
-  activeFloor: 1,
 
   setActiveTerminal: (terminal) =>
     set({ activeTerminal: terminal }),
-
-  setActiveFloor: (floor) =>
-    set({ activeFloor: floor }),
 
   // ---------------------------------------------------------------------------
   // Map Mode
@@ -139,7 +140,7 @@ export const useMapStore = create<MapStore>((set) => ({
     set({ isSearchOpen: val }),
 
   // ---------------------------------------------------------------------------
-  // Filter Kategori
+  // Filter Kategori (activeCategories: number[])
   // ---------------------------------------------------------------------------
   activeCategories: [],
 
@@ -192,4 +193,27 @@ export const useMapStore = create<MapStore>((set) => ({
 
   setNearbyFacilities: (facilities) =>
     set({ nearbyFacilities: facilities }),
+
+  // ---------------------------------------------------------------------------
+  // Idle Reset
+  // Dipanggil oleh useIdleTimer setelah X menit tidak ada interaksi.
+  // activeTerminal TIDAK direset — user mungkin sudah pilih terminal tertentu.
+  // isSearchOpen + isRouteOpen juga direset agar overlay tertutup.
+  // ---------------------------------------------------------------------------
+  resetToIdle: () =>
+    set({
+      selectedFacility: null,
+      searchQuery:       "",
+      searchResults:     [],
+      isSearchOpen:      false,
+      activeCategories:  [],
+      isRouteOpen:       false,
+      routeFrom:         null,
+      routeTo:           null,
+      routeResult:       null,
+      mapMode:           "view",
+      nearbyMode:        false,
+      userPin:           null,
+      nearbyFacilities:  [],
+    }),
 }));
