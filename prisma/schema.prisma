@@ -17,7 +17,7 @@ datasource db {
 model Category {
   id         Int        @id @default(autoincrement())
   name       String     @unique
-  icon       String
+  icon       String?
   color      String
   createdAt  DateTime   @default(now())
   facilities Facility[]
@@ -49,6 +49,7 @@ model Facility {
   nodeId           Int?               @unique
   gridRow          Int?
   gridCol          Int?
+  photo            String?
   isActive         Boolean            @default(true)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
