@@ -1,8 +1,4 @@
 // store/mapStore.ts
-// State management global via Zustand.
-// activeFloor DIHAPUS — T1 dan T2 masing-masing punya 1 grid vertikal berisi
-// 2 lantai sekaligus; tidak ada toggle lantai.
-
 import { create } from "zustand";
 import type {
   TerminalId,
@@ -29,6 +25,18 @@ interface SelectedPOIState {
   selectedFacility: FacilityWithRelations | null;
   setSelectedFacility: (facility: FacilityWithRelations) => void;
   clearSelectedFacility: () => void;
+}
+
+interface AdminSelectedPOIState {
+  adminSelectedFacility: FacilityWithRelations | null;
+  setAdminSelectedFacility: (facility: FacilityWithRelations | null) => void;
+}
+
+// Counter — naik setiap kali ada perubahan data fasilitas
+// MapCanvas watch ini untuk trigger re-fetch otomatis
+interface FacilitiesVersionState {
+  facilitiesVersion: number;
+  incrementFacilitiesVersion: () => void;
 }
 
 interface SearchState {
@@ -74,10 +82,11 @@ interface NearbyState {
   setNearbyFacilities: (facilities: FacilityWithRelations[]) => void;
 }
 
-// Gabungan semua state & action
 type MapStore = TerminalState &
   MapModeState &
   SelectedPOIState &
+  AdminSelectedPOIState &
+  FacilitiesVersionState &
   SearchState &
   SearchModalState &
   CategoryFilterState &
@@ -92,91 +101,76 @@ type MapStore = TerminalState &
 export const useMapStore = create<MapStore>((set) => ({
 
   // ---------------------------------------------------------------------------
-  // Terminal aktif (T1 / T2)
-  // activeFloor dihapus: kedua lantai selalu tampil bersamaan dalam 1 grid.
+  // Terminal
   // ---------------------------------------------------------------------------
   activeTerminal: "T1",
-
-  setActiveTerminal: (terminal) =>
-    set({ activeTerminal: terminal }),
+  setActiveTerminal: (terminal) => set({ activeTerminal: terminal }),
 
   // ---------------------------------------------------------------------------
   // Map Mode
   // ---------------------------------------------------------------------------
   mapMode: "view",
-
-  setMapMode: (mode) =>
-    set({ mapMode: mode }),
+  setMapMode: (mode) => set({ mapMode: mode }),
 
   // ---------------------------------------------------------------------------
-  // Selected POI
+  // Selected POI — user (POIDetailPopup)
   // ---------------------------------------------------------------------------
   selectedFacility: null,
+  setSelectedFacility: (facility) => set({ selectedFacility: facility }),
+  clearSelectedFacility: () => set({ selectedFacility: null }),
 
-  setSelectedFacility: (facility) =>
-    set({ selectedFacility: facility }),
+  // ---------------------------------------------------------------------------
+  // Admin Selected POI — admin (EditFacilityModal)
+  // ---------------------------------------------------------------------------
+  adminSelectedFacility: null,
+  setAdminSelectedFacility: (facility) => set({ adminSelectedFacility: facility }),
 
-  clearSelectedFacility: () =>
-    set({ selectedFacility: null }),
+  // ---------------------------------------------------------------------------
+  // Facilities Version
+  // Increment setiap kali edit/delete fasilitas berhasil → MapCanvas re-fetch
+  // ---------------------------------------------------------------------------
+  facilitiesVersion: 0,
+  incrementFacilitiesVersion: () =>
+    set((state) => ({ facilitiesVersion: state.facilitiesVersion + 1 })),
 
   // ---------------------------------------------------------------------------
   // Search
   // ---------------------------------------------------------------------------
   searchQuery: "",
   searchResults: [],
-
-  setSearchQuery: (query) =>
-    set({ searchQuery: query }),
-
-  setSearchResults: (results) =>
-    set({ searchResults: results }),
+  setSearchQuery: (query) => set({ searchQuery: query }),
+  setSearchResults: (results) => set({ searchResults: results }),
 
   // ---------------------------------------------------------------------------
   // Search Modal
   // ---------------------------------------------------------------------------
   isSearchOpen: false,
-
-  setIsSearchOpen: (val) =>
-    set({ isSearchOpen: val }),
+  setIsSearchOpen: (val) => set({ isSearchOpen: val }),
 
   // ---------------------------------------------------------------------------
-  // Filter Kategori (activeCategories: number[])
+  // Filter Kategori
   // ---------------------------------------------------------------------------
   activeCategories: [],
-
   toggleCategory: (id) =>
     set((state) => ({
       activeCategories: state.activeCategories.includes(id)
         ? state.activeCategories.filter((c) => c !== id)
         : [...state.activeCategories, id],
     })),
-
-  clearCategories: () =>
-    set({ activeCategories: [] }),
+  clearCategories: () => set({ activeCategories: [] }),
 
   // ---------------------------------------------------------------------------
   // Route
   // ---------------------------------------------------------------------------
   isRouteOpen: false,
-
-  setIsRouteOpen: (val) =>
-    set({ isRouteOpen: val }),
-
+  setIsRouteOpen: (val) => set({ isRouteOpen: val }),
   routeFrom: null,
   routeTo: null,
   routeResult: null,
-
-  setRouteFrom: (facility) =>
-    set({ routeFrom: facility }),
-
-  setRouteTo: (facility) =>
-    set({ routeTo: facility }),
-
-  setRouteResult: (result) =>
-    set({ routeResult: result }),
-
-  clearRoute: () =>
-    set({ routeFrom: null, routeTo: null, routeResult: null }),
+  setRouteFrom: (facility) => set({ routeFrom: facility }),
+  setRouteTo: (facility) => set({ routeTo: facility }),
+  setRouteResult: (result) => set({ routeResult: result }),
+  clearRoute: () => set({ routeFrom: null, routeTo: null, routeResult: null }),
 
   // ---------------------------------------------------------------------------
   // Nearby
@@ -184,36 +178,28 @@ export const useMapStore = create<MapStore>((set) => ({
   nearbyMode: false,
   userPin: null,
   nearbyFacilities: [],
-
-  setNearbyMode: (mode) =>
-    set({ nearbyMode: mode }),
-
-  setUserPin: (pin) =>
-    set({ userPin: pin }),
-
-  setNearbyFacilities: (facilities) =>
-    set({ nearbyFacilities: facilities }),
+  setNearbyMode: (mode) => set({ nearbyMode: mode }),
+  setUserPin: (pin) => set({ userPin: pin }),
+  setNearbyFacilities: (facilities) => set({ nearbyFacilities: facilities }),
 
   // ---------------------------------------------------------------------------
   // Idle Reset
-  // Dipanggil oleh useIdleTimer setelah X menit tidak ada interaksi.
-  // activeTerminal TIDAK direset — user mungkin sudah pilih terminal tertentu.
-  // isSearchOpen + isRouteOpen juga direset agar overlay tertutup.
   // ---------------------------------------------------------------------------
   resetToIdle: () =>
     set({
-      selectedFacility: null,
-      searchQuery:       "",
-      searchResults:     [],
-      isSearchOpen:      false,
-      activeCategories:  [],
-      isRouteOpen:       false,
-      routeFrom:         null,
-      routeTo:           null,
-      routeResult:       null,
-      mapMode:           "view",
-      nearbyMode:        false,
-      userPin:           null,
-      nearbyFacilities:  [],
+      selectedFacility:      null,
+      adminSelectedFacility: null,
+      searchQuery:           "",
+      searchResults:         [],
+      isSearchOpen:          false,
+      activeCategories:      [],
+      isRouteOpen:           false,
+      routeFrom:             null,
+      routeTo:               null,
+      routeResult:           null,
+      mapMode:               "view",
+      nearbyMode:            false,
+      userPin:               null,
+      nearbyFacilities:      [],
     }),
 }));

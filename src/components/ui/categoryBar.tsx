@@ -4,6 +4,42 @@ import { useEffect, useState } from "react";
 import { useMapStore } from "@/store/mapStore";
 import type { Category } from "@/types";
 
+
+// =============================================================================
+// HELPER — render icon sesuai tipe konten
+// =============================================================================
+
+function CategoryIcon({ icon, name }: { icon: string | null; name: string }) {
+  if (!icon) {
+    return (
+      <span className="text-white text-xs font-bold text-center leading-tight px-1">
+        {name.slice(0, 3).toUpperCase()}
+      </span>
+    );
+  }
+
+  if (icon.trimStart().startsWith("<svg")) {
+    return (
+      <div
+        className="w-7 h-7 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-white"
+        dangerouslySetInnerHTML={{ __html: icon }}
+      />
+    );
+  }
+
+  if (icon.startsWith("data:") || icon.startsWith("http") || icon.startsWith("/")) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={icon} alt={name} className="w-7 h-7 object-contain" />
+    );
+  }
+
+  // Emoji atau teks pendek
+  return (
+    <span className="text-2xl leading-none">{icon}</span>
+  );
+}
+
 export default function CategoryBar() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,7 +142,7 @@ export default function CategoryBar() {
           ].join(" ")}
           style={{ backgroundColor: category.color }}
         >
-          {category.icon}
+          <CategoryIcon icon={category.icon} name={category.name} />
         </div>
         <span
           className={[

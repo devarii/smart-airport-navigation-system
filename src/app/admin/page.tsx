@@ -12,21 +12,17 @@ import RealtimeClock from "@/components/ui/realtimeClock";
 import AdminToggle from "@/components/admin/adminToggle";
 import AdminCategoryBar from "@/components/admin/adminCategoryBar";
 import EditCategoryModal from "@/components/admin/category/editCategoryModal";
-
-// Modal-modal ini akan dibuat di tahap berikutnya
-// import EditCategoryModal from "@/components/admin/category/EditCategoryModal";
-// import DeleteConfirm from "@/components/admin/category/DeleteConfirm";
-// import EditFacilityModal from "@/components/admin/facility/EditFacilityModal";
+import EditFacilityModal from "@/components/admin/facility/editFacilityModal";
 
 export default function AdminPage() {
-  const { data: session } = useSession();
-  const mapMode = useMapStore((s) => s.mapMode);
-  const isAdmin = mapMode === "admin";
+  const { data: session }     = useSession();
+  const mapMode               = useMapStore((s) => s.mapMode);
+  const isAdmin               = mapMode === "admin";
+  const adminSelectedFacility = useMapStore((s) => s.adminSelectedFacility);
 
-  // State untuk modal — akan dipakai saat modal sudah dibuat
-  const [showAddCategory, setShowAddCategory]   = useState(false);
+  const [showAddCategory,    setShowAddCategory]    = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
-  const [categoryBarKey, setCategoryBarKey] = useState(0);
+  const [categoryBarKey,     setCategoryBarKey]     = useState(0);
 
   return (
     <main className="relative w-full h-screen flex flex-col overflow-hidden bg-gray-100">
@@ -87,7 +83,7 @@ export default function AdminPage() {
           />
         </div>
 
-        {/* Category bar (versi admin dengan badge edit/delete) */}
+        {/* Category bar versi admin */}
         <div className="flex-1 flex justify-center">
           <AdminCategoryBar key={categoryBarKey} />
         </div>
@@ -109,7 +105,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* ── FAB + (Add Facility — disabled sampai modal selesai) ── */}
+      {/* ── FAB + ── */}
       {isAdmin && (
         <button
           className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-gray-900 text-white text-3xl flex items-center justify-center shadow-lg hover:bg-gray-700 active:scale-95 transition z-50"
@@ -145,16 +141,20 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ── Modals (uncomment setelah dibuat) ── */}
+      {/* ── Add Kategori Modal ── */}
       {showAddCategory && (
         <EditCategoryModal
           onClose={() => setShowAddCategory(false)}
           onSaved={() => {
             setShowAddCategory(false);
-            setCategoryBarKey((k) => k + 1); // force refetch
+            setCategoryBarKey((k) => k + 1);
           }}
         />
       )}
+
+      {/* ── Edit Facility Modal ── */}
+      {adminSelectedFacility && <EditFacilityModal />}
+
     </main>
   );
 }
