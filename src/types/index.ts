@@ -5,7 +5,7 @@
 export interface Category {
   id: number;
   name: string;
-  icon: string;
+  icon: string | null;
   color: string;
   createdAt: Date;
 }
@@ -33,6 +33,7 @@ export interface Facility {
   isActive: boolean;
   gridRow: number | null; 
   gridCol: number | null; 
+  photo: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -138,7 +139,7 @@ export interface SearchSuggestion {
   name: string;
   code: string;
   categoryName: string;
-  categoryIcon: string;
+  categoryIcon: string | null;
   categoryColor: string;
   floorLabel: string;
 }
@@ -322,6 +323,9 @@ export interface CreateFacilityPayload {
   floorId: number;
   nodeId?: number;
   isActive?: boolean;
+  gridRow?: number;
+  gridCol?: number;
+  photo?: string;
 }
 
 export type UpdateFacilityPayload = Partial<CreateFacilityPayload>;
@@ -346,7 +350,7 @@ export type UpdateEdgePayload = Partial<CreateEdgePayload>;
 
 export interface CreateCategoryPayload {
   name: string;
-  icon: string;
+  icon?: string;
   color: string;
 }
 

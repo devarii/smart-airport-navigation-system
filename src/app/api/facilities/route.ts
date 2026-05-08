@@ -96,7 +96,7 @@ export async function POST(
 
   try {
     const body: CreateFacilityPayload = await req.json();
-    const { name, code, description, categoryId, floorId, nodeId, isActive } = body;
+    const { name, code, description, categoryId, floorId, nodeId, isActive, photo, gridRow, gridCol } = body;
 
     // Validasi field wajib
     if (!name || !code || !categoryId || !floorId) {
@@ -122,8 +122,11 @@ export async function POST(
         description: description ?? null,
         categoryId,
         floorId,
-        nodeId: nodeId ?? null,
+        nodeId:   nodeId   ?? null,
         isActive: isActive ?? true,
+        photo:    photo    ?? null,
+        gridRow:  gridRow  ?? null,
+        gridCol:  gridCol  ?? null,
       },
       include: {
         category: true,

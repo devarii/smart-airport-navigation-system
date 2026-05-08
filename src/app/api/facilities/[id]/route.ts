@@ -121,6 +121,7 @@ export async function PUT(
         ...(body.name        !== undefined && { name: body.name }),
         ...(body.code        !== undefined && { code: body.code }),
         ...(body.description !== undefined && { description: body.description }),
+        ...(body.photo       !== undefined && { photo: body.photo }),
         ...(body.categoryId  !== undefined && { categoryId: body.categoryId }),
         ...(body.floorId     !== undefined && { floorId: body.floorId }),
         ...(body.nodeId      !== undefined && { nodeId: body.nodeId }),
