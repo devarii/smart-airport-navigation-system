@@ -63,7 +63,7 @@ export default function AdminPage() {
       </div>
 
       {/* ── Map area ── */}
-      <div className="flex-1 overflow-auto flex items-center justify-center px-8 py-4">
+      <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center px-8 py-4">
         <MapCanvas />
       </div>
 
