@@ -35,6 +35,13 @@ const C_KIOSK = "#00b4d8" as const;
 const TOUCH_R = 30;
 
 // =============================================================================
+// TYPES
+// =============================================================================
+
+type RoomBox = { r1: number; c1: number; r2: number; c2: number };
+type DestinationWithRoom = DestinationPoint & { room?: RoomBox };
+
+// =============================================================================
 // TERMINAL CONFIG
 // =============================================================================
 
@@ -69,6 +76,97 @@ const T2_CFG: TerminalConfig = {
 };
 
 // =============================================================================
+// HELPER — nearest walkable cell
+// Jika r,c tepat di wall, cari sel bebas terdekat (spiral search)
+// =============================================================================
+
+function nearestWalkable(
+  r: number,
+  c: number,
+  rows: number,
+  cols: number,
+  wallSet: Set<string>,
+  maxDist = 6
+): { r: number; c: number } {
+  if (!wallSet.has(`${r},${c}`)) return { r, c };
+
+  for (let d = 1; d <= maxDist; d++) {
+    for (let dr = -d; dr <= d; dr++) {
+      for (let dc = -d; dc <= d; dc++) {
+        // Hanya cek "edge" dari kotak, bukan isi dalam
+        if (Math.abs(dr) !== d && Math.abs(dc) !== d) continue;
+        const nr = r + dr;
+        const nc = c + dc;
+        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+        if (!wallSet.has(`${nr},${nc}`)) return { r: nr, c: nc };
+      }
+    }
+  }
+  // Fallback: kembalikan titik asli, biarkan A* handle
+  return { r, c };
+}
+
+// =============================================================================
+// HELPER — buat synthetic FacilityWithRelations dari DestinationPoint
+// Dipakai ketika facility tidak ada di DB (tidak di-seed)
+// =============================================================================
+
+let _syntheticIdCounter = -1;
+
+function makeSyntheticFacility(
+  dest: DestinationWithRoom,
+  walkableR: number,
+  walkableC: number,
+  floorId: number,
+  categoryId: number
+): FacilityWithRelations {
+  _syntheticIdCounter--;
+  return {
+    id: _syntheticIdCounter,
+    name: dest.label,
+    code: dest.id,
+    description: null,
+    categoryId,
+    floorId,
+    nodeId: null,
+    isActive: true,
+    gridRow: walkableR,
+    gridCol: walkableC,
+    photo: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    // Relations minimal
+    category: {
+      id: categoryId,
+      name: dest.id.includes("_tl") ? "Toilet & Nursery"
+          : dest.id.includes("_fnb") ? "Food & Beverages"
+          : dest.id.includes("_ret") ? "Retail"
+          : dest.id.includes("_mus") ? "Musholla"
+          : dest.id.includes("_gd") ? "Gate"
+          : dest.id.includes("_lo") ? "Lounge"
+          : dest.id.includes("_kan") ? "Services"
+          : "Services",
+      icon: null,
+      color: dest.color,
+      createdAt: new Date(),
+    },
+    floor: {
+      id: floorId,
+      terminal: dest.id.startsWith("l1_") || !dest.id.includes("_") ? "T1" : "T1",
+      floorNumber: dest.id.startsWith("l2_") ? 2 : 1,
+      label: dest.id.startsWith("l2_") ? "Lantai 2" : "Lantai 1",
+      gridRows: null,
+      gridCols: null,
+      startRow: null,
+      startCol: null,
+      wallData: null,
+    },
+    node: null,
+    operationalHours: [],
+  } as FacilityWithRelations;
+}
+
+// =============================================================================
 // COMPONENT
 // =============================================================================
 
@@ -82,9 +180,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   const mapMode                  = useMapStore((s) => s.mapMode);
   const adminSelectedFacility    = useMapStore((s) => s.adminSelectedFacility);
   const setAdminSelectedFacility = useMapStore((s) => s.setAdminSelectedFacility);
-
-  // ── Watch facilitiesVersion → re-fetch saat ada perubahan data ───────────
-  const facilitiesVersion = useMapStore((s) => s.facilitiesVersion);
+  const facilitiesVersion        = useMapStore((s) => s.facilitiesVersion);
 
   const [facilities, setFacilities] = useState<FacilityWithRelations[]>([]);
   const [isLoading,  setIsLoading]  = useState(true);
@@ -97,19 +193,30 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   const wallSet = useMemo(() => buildWallSet(cfg.wallData.walls), [cfg]);
 
+  // ── facilityMap: key = "r,c" → FacilityWithRelations (dari DB)
   const facilityMap = useMemo(() => {
     const map = new Map<string, FacilityWithRelations>();
     for (const f of facilities) {
+
+      
       if (f.gridRow != null && f.gridCol != null) {
         map.set(`${f.gridRow},${f.gridCol}`, f);
       }
-    }
+      }
     return map;
   }, [facilities]);
 
+        console.log(
+    "Active terminal:",
+    activeTerminal,
+    "Room count:",
+    (cfg.destinations as DestinationWithRoom[]).filter((d) => d.room).length
+  );
+
+
   const activeCatSet = useMemo(() => new Set(activeCategories), [activeCategories]);
 
-  // ── Fetch fasilitas — re-fetch saat terminal berganti ATAU facilitiesVersion naik
+  // ── Fetch fasilitas dari DB
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
@@ -123,7 +230,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
         };
         if (!cancelled && body.success) setFacilities(body.data);
       } catch {
-        // Peta tetap tampil tanpa POI interaktif
+        // Peta tetap tampil tanpa POI interaktif dari DB
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -131,9 +238,9 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
     void load();
     return () => { cancelled = true; };
-  }, [activeTerminal, facilitiesVersion]); // ← facilitiesVersion ditambah di sini
+  }, [activeTerminal, facilitiesVersion]);
 
-  // ── Draw canvas ────────────────────────────────────────────────────────────
+  // ── Draw canvas
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -160,11 +267,37 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   useEffect(() => { drawCanvas(); }, [drawCanvas]);
 
-  // ── Klik POI ──────────────────────────────────────────────────────────────
+  // ── Klik POI — dengan fallback synthetic facility
   const handleDestinationClick = useCallback(
     (dest: DestinationPoint) => {
-      const facility = facilityMap.get(`${dest.r},${dest.c}`);
-      if (!facility) return;
+      // 1. Cari titik walkable untuk dest ini (jika r,c di wall)
+      const walkable = nearestWalkable(
+        dest.r, dest.c,
+        cfg.rows, cfg.cols,
+        wallSet
+      );
+
+      // 2. Cari facility dari DB berdasarkan koordinat dest (r,c asli) dulu,
+      //    lalu coba koordinat walkable jika tidak ketemu
+      let facility =
+        facilityMap.get(`${dest.r},${dest.c}`) ??
+        facilityMap.get(`${walkable.r},${walkable.c}`);
+
+      // 3. Jika tidak ada di DB sama sekali → buat synthetic facility
+      //    agar klik tetap bisa membuka popup & navigasi tetap jalan
+      if (!facility) {
+        // Deteksi floorId: gunakan 1 untuk L1, 2 untuk L2 (ID dummy)
+        const floorId  = dest.id.startsWith("l2_") ? 2 : 1;
+        const catId    = 1; // default, tidak terlalu penting untuk navigasi
+        facility = makeSyntheticFacility(dest, walkable.r, walkable.c, floorId, catId);
+      } else if (walkable.r !== dest.r || walkable.c !== dest.c) {
+        // 4. Facility ada di DB tapi gridRow/Col di wall → koreksi ke walkable
+        facility = {
+          ...facility,
+          gridRow: walkable.r,
+          gridCol: walkable.c,
+        };
+      }
 
       if (mapMode === "admin") {
         setAdminSelectedFacility(facility);
@@ -175,7 +308,8 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       clearRoute();
       setSelectedFacility(facility);
     },
-    [facilityMap, mapMode, setAdminSelectedFacility, setSelectedFacility, setIsRouteOpen, clearRoute]
+    [facilityMap, wallSet, cfg.rows, cfg.cols, mapMode,
+     setAdminSelectedFacility, setSelectedFacility, setIsRouteOpen, clearRoute]
   );
 
   const svgW = cfg.cols * CELL;
@@ -210,7 +344,54 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           opacity={0.3} pointerEvents="none"
         />
 
-        {cfg.destinations.map((dest) => {
+        {/* Room / tenant boxes */}
+        {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
+          if (!dest.room) return null;
+          const { r1, c1, r2, c2 } = dest.room;
+          const x = c1 * CELL;
+          const y = r1 * CELL;
+          const w = (c2 - c1 + 1) * CELL;
+          const h = (r2 - r1 + 1) * CELL;
+          const showLabel = w >= 30 && h >= 14;
+
+          return (
+            <g
+              key={`room-${dest.id}`}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDestinationClick(dest);
+              }}
+            >
+              <rect
+                x={x} y={y} width={w} height={h} rx={3}
+                fill={dest.color} fillOpacity={0.35}
+                stroke={dest.color} strokeWidth={1.4}
+              />
+              <rect
+                x={x + 1} y={y + 1}
+                width={Math.max(0, w - 2)} height={Math.max(0, h - 2)}
+                rx={2} fill="none"
+                stroke="white" strokeOpacity={0.45} strokeWidth={0.8}
+                pointerEvents="none"
+              />
+              {showLabel && (
+                <text
+                  x={x + w / 2} y={y + h / 2}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={Math.min(9, Math.max(5, h * 0.32))}
+                  fontWeight={700} fill="#111827"
+                  pointerEvents="none" className="select-none"
+                >
+                  {dest.label}
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Destination dot markers */}
+        {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
           const cx = dest.c * CELL + CELL / 2;
           const cy = dest.r * CELL + CELL / 2;
           const facility = facilityMap.get(`${dest.r},${dest.c}`);
@@ -218,8 +399,9 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           const isSelected = mapMode === "admin"
             ? adminSelectedFacility?.gridRow === dest.r &&
               adminSelectedFacility?.gridCol === dest.c
-            : selectedFacility?.gridRow === dest.r &&
-              selectedFacility?.gridCol === dest.c;
+            : selectedFacility?.code === dest.id ||
+              (selectedFacility?.gridRow === dest.r &&
+               selectedFacility?.gridCol === dest.c);
 
           const isDimmed =
             activeCatSet.size > 0 &&
@@ -232,7 +414,8 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
               color={dest.color}
               isSelected={isSelected}
               isDimmed={isDimmed}
-              isInteractive={facility != null}
+              // Semua dest bisa diklik — tidak perlu facility ada di DB
+              isInteractive={true}
               onClick={() => handleDestinationClick(dest)}
             />
           );
