@@ -34,6 +34,10 @@ const C_GAP   = "#b8d4de" as const;
 const C_KIOSK = "#00b4d8" as const;
 const TOUCH_R = 30;
 
+// Batas zoom: 0.5× sampai 4×
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 4;
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -77,7 +81,6 @@ const T2_CFG: TerminalConfig = {
 
 // =============================================================================
 // HELPER — nearest walkable cell
-// Jika r,c tepat di wall, cari sel bebas terdekat (spiral search)
 // =============================================================================
 
 function nearestWalkable(
@@ -93,7 +96,6 @@ function nearestWalkable(
   for (let d = 1; d <= maxDist; d++) {
     for (let dr = -d; dr <= d; dr++) {
       for (let dc = -d; dc <= d; dc++) {
-        // Hanya cek "edge" dari kotak, bukan isi dalam
         if (Math.abs(dr) !== d && Math.abs(dc) !== d) continue;
         const nr = r + dr;
         const nc = c + dc;
@@ -102,13 +104,11 @@ function nearestWalkable(
       }
     }
   }
-  // Fallback: kembalikan titik asli, biarkan A* handle
   return { r, c };
 }
 
 // =============================================================================
 // HELPER — buat synthetic FacilityWithRelations dari DestinationPoint
-// Dipakai ketika facility tidak ada di DB (tidak di-seed)
 // =============================================================================
 
 let _syntheticIdCounter = -1;
@@ -135,7 +135,6 @@ function makeSyntheticFacility(
     photo: null,
     createdAt: new Date(),
     updatedAt: new Date(),
-    // Relations minimal
     category: {
       id: categoryId,
       name: dest.id.includes("_tl") ? "Toilet & Nursery"
@@ -185,7 +184,38 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   const [facilities, setFacilities] = useState<FacilityWithRelations[]>([]);
   const [isLoading,  setIsLoading]  = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const outerRef  = useRef<HTMLDivElement>(null);
 
+  // ── Pan & Zoom state ────────────────────────────────────────────────────────
+  const [pan,   setPan]   = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+
+  // Refs — tidak perlu trigger re-render
+  const isDragging    = useRef(false);
+  const lastPos       = useRef({ x: 0, y: 0 });
+  const pinchDist     = useRef<number | null>(null);
+  const lastTapTime   = useRef(0);
+  const didDrag       = useRef(false); // membedakan drag vs tap
+
+  // Reset ke posisi & zoom awal
+  const resetView = useCallback(() => {
+    setPan({ x: 0, y: 0 });
+    setScale(1);
+  }, []);
+
+  // Reset view setiap ganti terminal
+  useEffect(() => { resetView(); }, [activeTerminal, resetView]);
+
+  // ── Prevent native scroll/zoom saat touch di dalam peta ────────────────────
+  useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
+    const prevent = (e: TouchEvent) => e.preventDefault();
+    el.addEventListener("touchmove", prevent, { passive: false });
+    return () => el.removeEventListener("touchmove", prevent);
+  }, []);
+
+  // ── Terminal config & wall set ──────────────────────────────────────────────
   const cfg = useMemo<TerminalConfig>(
     () => (activeTerminal === "T1" ? T1_CFG : T2_CFG),
     [activeTerminal]
@@ -193,30 +223,26 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   const wallSet = useMemo(() => buildWallSet(cfg.wallData.walls), [cfg]);
 
-  // ── facilityMap: key = "r,c" → FacilityWithRelations (dari DB)
   const facilityMap = useMemo(() => {
     const map = new Map<string, FacilityWithRelations>();
     for (const f of facilities) {
-
-      
       if (f.gridRow != null && f.gridCol != null) {
         map.set(`${f.gridRow},${f.gridCol}`, f);
       }
-      }
+    }
     return map;
   }, [facilities]);
 
-        console.log(
+  console.log(
     "Active terminal:",
     activeTerminal,
     "Room count:",
     (cfg.destinations as DestinationWithRoom[]).filter((d) => d.room).length
   );
 
-
   const activeCatSet = useMemo(() => new Set(activeCategories), [activeCategories]);
 
-  // ── Fetch fasilitas dari DB
+  // ── Fetch fasilitas dari DB ─────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
@@ -240,7 +266,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return () => { cancelled = true; };
   }, [activeTerminal, facilitiesVersion]);
 
-  // ── Draw canvas
+  // ── Draw canvas ─────────────────────────────────────────────────────────────
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -267,31 +293,27 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   useEffect(() => { drawCanvas(); }, [drawCanvas]);
 
-  // ── Klik POI — dengan fallback synthetic facility
+  // ── Klik POI ────────────────────────────────────────────────────────────────
   const handleDestinationClick = useCallback(
     (dest: DestinationPoint) => {
-      // 1. Cari titik walkable untuk dest ini (jika r,c di wall)
+      // Abaikan jika user sedang drag (bukan tap)
+      if (didDrag.current) return;
+
       const walkable = nearestWalkable(
         dest.r, dest.c,
         cfg.rows, cfg.cols,
         wallSet
       );
 
-      // 2. Cari facility dari DB berdasarkan koordinat dest (r,c asli) dulu,
-      //    lalu coba koordinat walkable jika tidak ketemu
       let facility =
         facilityMap.get(`${dest.r},${dest.c}`) ??
         facilityMap.get(`${walkable.r},${walkable.c}`);
 
-      // 3. Jika tidak ada di DB sama sekali → buat synthetic facility
-      //    agar klik tetap bisa membuka popup & navigasi tetap jalan
       if (!facility) {
-        // Deteksi floorId: gunakan 1 untuk L1, 2 untuk L2 (ID dummy)
         const floorId  = dest.id.startsWith("l2_") ? 2 : 1;
-        const catId    = 1; // default, tidak terlalu penting untuk navigasi
+        const catId    = 1;
         facility = makeSyntheticFacility(dest, walkable.r, walkable.c, floorId, catId);
       } else if (walkable.r !== dest.r || walkable.c !== dest.c) {
-        // 4. Facility ada di DB tapi gridRow/Col di wall → koreksi ke walkable
         facility = {
           ...facility,
           gridRow: walkable.r,
@@ -312,125 +334,233 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
      setAdminSelectedFacility, setSelectedFacility, setIsRouteOpen, clearRoute]
   );
 
+  // ── Mouse event handlers (desktop / testing) ────────────────────────────────
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    isDragging.current = true;
+    didDrag.current    = false;
+    lastPos.current    = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging.current) return;
+    const dx = e.clientX - lastPos.current.x;
+    const dy = e.clientY - lastPos.current.y;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag.current = true;
+    lastPos.current = { x: e.clientX, y: e.clientY };
+    setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+  }, []);
+
+  const onMouseUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
+
+  // Scroll wheel zoom (desktop)
+  const onWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    setScale(s => Math.min(Math.max(s - e.deltaY * 0.001, MIN_SCALE), MAX_SCALE));
+  }, []);
+
+  // ── Touch event handlers (kiosk touchscreen) ────────────────────────────────
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      isDragging.current = true;
+      didDrag.current    = false;
+      lastPos.current    = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+
+      // Double-tap → reset view
+      const now = Date.now();
+      if (now - lastTapTime.current < 300) resetView();
+      lastTapTime.current = now;
+    }
+
+    if (e.touches.length === 2) {
+      isDragging.current = false;
+      pinchDist.current  = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+    }
+  }, [resetView]);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    // 1 jari → pan
+    if (e.touches.length === 1 && isDragging.current) {
+      const dx = e.touches[0].clientX - lastPos.current.x;
+      const dy = e.touches[0].clientY - lastPos.current.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag.current = true;
+      lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+    }
+
+    // 2 jari → pinch zoom
+    if (e.touches.length === 2 && pinchDist.current !== null) {
+      const newDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      const ratio = newDist / pinchDist.current;
+      setScale(s => Math.min(Math.max(s * ratio, MIN_SCALE), MAX_SCALE));
+      pinchDist.current = newDist;
+    }
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    isDragging.current = false;
+    pinchDist.current  = null;
+  }, []);
+
+  // ── Derived ─────────────────────────────────────────────────────────────────
   const svgW = cfg.cols * CELL;
   const svgH = cfg.rows * CELL;
 
+  // =============================================================================
+  // RENDER
+  // =============================================================================
+
   return (
     <div
+      ref={outerRef}
       className="relative h-full w-auto max-w-full rounded-2xl overflow-hidden shadow-[0_2px_24px_rgba(0,0,0,0.08)]"
-      style={{ aspectRatio: `${cfg.cols} / ${cfg.rows}` }}
+      style={{
+        aspectRatio: `${cfg.cols} / ${cfg.rows}`,
+        cursor: isDragging.current ? "grabbing" : "grab",
+        userSelect: "none",
+        touchAction: "none", // matikan gesture browser bawaan
+      }}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+      onWheel={onWheel}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />
-
-      <svg
-        className="absolute inset-0 w-full h-full"
-        viewBox={`0 0 ${svgW} ${svgH}`}
-        preserveAspectRatio="none"
-        aria-label={`Peta Terminal ${activeTerminal} Bandara Juanda`}
+      {/* ── Transform layer — semua konten peta bergerak di sini ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+          transformOrigin: "center center",
+          willChange: "transform",
+        }}
       >
-        <FloorLabel x={12} y={cfg.labelL2Y} label="LANTAI 2" />
-        <FloorLabel x={12} y={cfg.labelL1Y} label="LANTAI 1" />
-
-        <line
-          x1={0}
-          y1={cfg.gapMin !== -1
-            ? (cfg.gapMin + (cfg.gapMax - cfg.gapMin + 1) / 2) * CELL
-            : cfg.f1Min * CELL}
-          x2={svgW}
-          y2={cfg.gapMin !== -1
-            ? (cfg.gapMin + (cfg.gapMax - cfg.gapMin + 1) / 2) * CELL
-            : cfg.f1Min * CELL}
-          stroke="#1a4a5c" strokeWidth={1.5} strokeDasharray="8 5"
-          opacity={0.3} pointerEvents="none"
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full"
+          aria-hidden="true"
         />
 
-        {/* Room / tenant boxes */}
-        {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
-          if (!dest.room) return null;
-          const { r1, c1, r2, c2 } = dest.room;
-          const x = c1 * CELL;
-          const y = r1 * CELL;
-          const w = (c2 - c1 + 1) * CELL;
-          const h = (r2 - r1 + 1) * CELL;
-          const showLabel = w >= 30 && h >= 14;
+        <svg
+          className="absolute inset-0 w-full h-full"
+          viewBox={`0 0 ${svgW} ${svgH}`}
+          preserveAspectRatio="none"
+          aria-label={`Peta Terminal ${activeTerminal} Bandara Juanda`}
+        >
+          <FloorLabel x={12} y={cfg.labelL2Y} label="LANTAI 2" />
+          <FloorLabel x={12} y={cfg.labelL1Y} label="LANTAI 1" />
 
-          return (
-            <g
-              key={`room-${dest.id}`}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDestinationClick(dest);
-              }}
-            >
-              <rect
-                x={x} y={y} width={w} height={h} rx={3}
-                fill={dest.color} fillOpacity={0.35}
-                stroke={dest.color} strokeWidth={1.4}
+          <line
+            x1={0}
+            y1={cfg.gapMin !== -1
+              ? (cfg.gapMin + (cfg.gapMax - cfg.gapMin + 1) / 2) * CELL
+              : cfg.f1Min * CELL}
+            x2={svgW}
+            y2={cfg.gapMin !== -1
+              ? (cfg.gapMin + (cfg.gapMax - cfg.gapMin + 1) / 2) * CELL
+              : cfg.f1Min * CELL}
+            stroke="#1a4a5c" strokeWidth={1.5} strokeDasharray="8 5"
+            opacity={0.3} pointerEvents="none"
+          />
+
+          {/* Room / tenant boxes */}
+          {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
+            if (!dest.room) return null;
+            const { r1, c1, r2, c2 } = dest.room;
+            const x = c1 * CELL;
+            const y = r1 * CELL;
+            const w = (c2 - c1 + 1) * CELL;
+            const h = (r2 - r1 + 1) * CELL;
+            const showLabel = w >= 30 && h >= 14;
+
+            return (
+              <g
+                key={`room-${dest.id}`}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDestinationClick(dest);
+                }}
+              >
+                <rect
+                  x={x} y={y} width={w} height={h} rx={3}
+                  fill={dest.color} fillOpacity={0.35}
+                  stroke={dest.color} strokeWidth={1.4}
+                />
+                <rect
+                  x={x + 1} y={y + 1}
+                  width={Math.max(0, w - 2)} height={Math.max(0, h - 2)}
+                  rx={2} fill="none"
+                  stroke="white" strokeOpacity={0.45} strokeWidth={0.8}
+                  pointerEvents="none"
+                />
+                {showLabel && (
+                  <text
+                    x={x + w / 2} y={y + h / 2}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize={Math.min(9, Math.max(5, h * 0.32))}
+                    fontWeight={700} fill="#111827"
+                    pointerEvents="none" className="select-none"
+                  >
+                    {dest.label}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Destination dot markers */}
+          {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
+            const cx = dest.c * CELL + CELL / 2;
+            const cy = dest.r * CELL + CELL / 2;
+            const facility = facilityMap.get(`${dest.r},${dest.c}`);
+
+            const isSelected = mapMode === "admin"
+              ? adminSelectedFacility?.gridRow === dest.r &&
+                adminSelectedFacility?.gridCol === dest.c
+              : selectedFacility?.code === dest.id ||
+                (selectedFacility?.gridRow === dest.r &&
+                 selectedFacility?.gridCol === dest.c);
+
+            const isDimmed =
+              activeCatSet.size > 0 &&
+              (!facility || !activeCatSet.has(facility.category.id));
+
+            return (
+              <DestMarker
+                key={dest.id}
+                cx={cx} cy={cy}
+                color={dest.color}
+                isSelected={isSelected}
+                isDimmed={isDimmed}
+                isInteractive={true}
+                onClick={() => handleDestinationClick(dest)}
               />
-              <rect
-                x={x + 1} y={y + 1}
-                width={Math.max(0, w - 2)} height={Math.max(0, h - 2)}
-                rx={2} fill="none"
-                stroke="white" strokeOpacity={0.45} strokeWidth={0.8}
-                pointerEvents="none"
-              />
-              {showLabel && (
-                <text
-                  x={x + w / 2} y={y + h / 2}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={Math.min(9, Math.max(5, h * 0.32))}
-                  fontWeight={700} fill="#111827"
-                  pointerEvents="none" className="select-none"
-                >
-                  {dest.label}
-                </text>
-              )}
-            </g>
-          );
-        })}
+            );
+          })}
 
-        {/* Destination dot markers */}
-        {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
-          const cx = dest.c * CELL + CELL / 2;
-          const cy = dest.r * CELL + CELL / 2;
-          const facility = facilityMap.get(`${dest.r},${dest.c}`);
+          <KioskMarker
+            cx={cfg.startC * CELL + CELL / 2}
+            cy={cfg.startR * CELL + CELL / 2}
+            color={C_KIOSK}
+          />
 
-          const isSelected = mapMode === "admin"
-            ? adminSelectedFacility?.gridRow === dest.r &&
-              adminSelectedFacility?.gridCol === dest.c
-            : selectedFacility?.code === dest.id ||
-              (selectedFacility?.gridRow === dest.r &&
-               selectedFacility?.gridCol === dest.c);
+          <PathRenderer />
+          {children}
+        </svg>
+      </div>
 
-          const isDimmed =
-            activeCatSet.size > 0 &&
-            (!facility || !activeCatSet.has(facility.category.id));
-
-          return (
-            <DestMarker
-              key={dest.id}
-              cx={cx} cy={cy}
-              color={dest.color}
-              isSelected={isSelected}
-              isDimmed={isDimmed}
-              // Semua dest bisa diklik — tidak perlu facility ada di DB
-              isInteractive={true}
-              onClick={() => handleDestinationClick(dest)}
-            />
-          );
-        })}
-
-        <KioskMarker
-          cx={cfg.startC * CELL + CELL / 2}
-          cy={cfg.startR * CELL + CELL / 2}
-          color={C_KIOSK}
-        />
-
-        <PathRenderer />
-        {children}
-      </svg>
-
+      {/* Loading overlay — di luar transform agar tidak ikut geser */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#e8f4f8]/60 rounded-2xl">
           <span className="text-[#1a4a5c]/70 text-[clamp(13px,1.2vw,15px)] font-medium animate-pulse">

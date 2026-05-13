@@ -42,7 +42,8 @@ export default function HomePage() {
       <div
         className={[
           "flex-1",
-          "overflow-auto",
+          "min-h-0",
+          "overflow-hidden",
           "flex items-center justify-center",
           "px-8 py-4",
         ].join(" ")}
