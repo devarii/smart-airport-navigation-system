@@ -16,749 +16,1391 @@
       "label": "server1",
       "r": 69,
       "c": 98,
-      "color": "#e74c3c"
+      "color": "#e74c3c",
+      "room": {
+        "r1": 69,
+        "c1": 92,
+        "r2": 75,
+        "c2": 104
+      }
     },
     {
       "id": "l1_ser2",
       "label": "server2",
       "r": 69,
       "c": 105,
-      "color": "#e74c3c"
+      "color": "#e74c3c",
+      "room": {
+        "r1": 69,
+        "c1": 99,
+        "r2": 75,
+        "c2": 109
+      }
     },
     {
       "id": "l1_ser3",
       "label": "server3",
       "r": 81,
       "c": 92,
-      "color": "#e74c3c"
+      "color": "#e74c3c",
+      "room": {
+        "r1": 81,
+        "c1": 88,
+        "r2": 87,
+        "c2": 97
+      }
     },
     {
       "id": "l1_ser4",
       "label": "server4",
       "r": 81,
       "c": 82,
-      "color": "#e74c3c"
+      "color": "#e74c3c",
+      "room": {
+        "r1": 81,
+        "c1": 77,
+        "r2": 87,
+        "c2": 88
+      }
     },
     {
       "id": "l1_kan1",
       "label": "kantor1",
       "r": 81,
       "c": 76,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 81,
+        "c1": 73,
+        "r2": 87,
+        "c2": 79
+      }
     },
     {
       "id": "l1_kan2",
       "label": "kantor2",
       "r": 81,
       "c": 72,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 81,
+        "c1": 69,
+        "r2": 87,
+        "c2": 75
+      }
     },
     {
       "id": "l1_kan3",
       "label": "kantor3",
       "r": 81,
       "c": 68,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 81,
+        "c1": 65,
+        "r2": 87,
+        "c2": 71
+      }
     },
     {
       "id": "l1_kan4",
       "label": "kantor4",
       "r": 81,
       "c": 64,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 81,
+        "c1": 57,
+        "r2": 87,
+        "c2": 64
+      }
     },
     {
       "id": "l1_kan5",
       "label": "kantor5",
       "r": 87,
       "c": 81,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 81,
+        "c1": 73,
+        "r2": 87,
+        "c2": 84
+      }
     },
     {
       "id": "l1_kan6",
       "label": "kantor6",
       "r": 81,
       "c": 96,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 81,
+        "c1": 92,
+        "r2": 87,
+        "c2": 100
+      }
     },
     {
       "id": "l1_kan7",
       "label": "kantor7",
       "r": 73,
       "c": 121,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 71,
+        "c1": 118,
+        "r2": 78,
+        "c2": 123
+      }
     },
     {
       "id": "l1_kan8",
       "label": "kantor8",
       "r": 73,
       "c": 123,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 71,
+        "c1": 121,
+        "r2": 78,
+        "c2": 124
+      }
     },
     {
       "id": "l1_kan9",
       "label": "kantor9",
       "r": 73,
       "c": 125,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 71,
+        "c1": 123,
+        "r2": 78,
+        "c2": 126
+      }
     },
     {
       "id": "l1_kan10",
       "label": "kantor10",
       "r": 73,
       "c": 133,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 129,
+        "r2": 79,
+        "c2": 135
+      }
     },
     {
       "id": "l1_kan11",
       "label": "kanto11",
       "r": 73,
       "c": 136,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 133,
+        "r2": 79,
+        "c2": 138
+      }
     },
     {
       "id": "l1_kan12",
       "label": "kantor12",
       "r": 73,
       "c": 139,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 136,
+        "r2": 79,
+        "c2": 141
+      }
     },
     {
       "id": "l1_kan13",
       "label": "kantor13",
       "r": 73,
       "c": 142,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 139,
+        "r2": 79,
+        "c2": 144
+      }
     },
     {
       "id": "l1_kan14",
       "label": "kantor14",
       "r": 73,
       "c": 145,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 142,
+        "r2": 79,
+        "c2": 147
+      }
     },
     {
       "id": "l1_kan15",
       "label": "kantor15",
       "r": 73,
       "c": 148,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 145,
+        "r2": 79,
+        "c2": 150
+      }
     },
     {
       "id": "l1_kan16",
       "label": "kantor16",
       "r": 73,
       "c": 151,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 148,
+        "r2": 79,
+        "c2": 153
+      }
     },
     {
       "id": "l1_kan17",
       "label": "kantor17",
       "r": 73,
       "c": 154,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 151,
+        "r2": 79,
+        "c2": 157
+      }
     },
     {
       "id": "l1_kan18",
       "label": "kantor18",
       "r": 94,
       "c": 1,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 86,
+        "c1": 0,
+        "r2": 96,
+        "c2": 7
+      }
     },
     {
       "id": "l1_kan19",
       "label": "kantor19",
       "r": 90,
       "c": 125,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 82,
+        "c1": 121,
+        "r2": 95,
+        "c2": 131
+      }
     },
     {
       "id": "l1_kan20",
       "label": "kantor20",
       "r": 110,
       "c": 214,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 210,
+        "r2": 116,
+        "c2": 217
+      }
     },
     {
       "id": "l1_kan21",
       "label": "kantor21",
       "r": 110,
       "c": 237,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 233,
+        "r2": 116,
+        "c2": 239
+      }
     },
     {
       "id": "l1_kan22",
       "label": "kantor22",
       "r": 110,
       "c": 240,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 237,
+        "r2": 116,
+        "c2": 242
+      }
     },
     {
       "id": "l1_kan23",
       "label": "kantor23",
       "r": 110,
       "c": 243,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 240,
+        "r2": 116,
+        "c2": 245
+      }
     },
     {
       "id": "l1_kan24",
       "label": "kantor24",
       "r": 110,
       "c": 246,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 243,
+        "r2": 116,
+        "c2": 248
+      }
     },
     {
       "id": "l1_kan25",
       "label": "kantor25",
       "r": 110,
       "c": 249,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 246,
+        "r2": 116,
+        "c2": 251
+      }
     },
     {
       "id": "l1_kan26",
       "label": "kantor26",
       "r": 110,
       "c": 252,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 249,
+        "r2": 116,
+        "c2": 254
+      }
     },
     {
       "id": "l1_kan27",
       "label": "kantor27",
       "r": 110,
       "c": 255,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 252,
+        "r2": 116,
+        "c2": 257
+      }
     },
     {
       "id": "l1_kan28",
       "label": "kantor28",
       "r": 110,
       "c": 258,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 255,
+        "r2": 116,
+        "c2": 260
+      }
     },
     {
       "id": "l1_kan29",
       "label": "kantor29",
       "r": 110,
       "c": 261,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 258,
+        "r2": 116,
+        "c2": 263
+      }
     },
     {
       "id": "l1_kan30",
       "label": "kantor30",
       "r": 110,
       "c": 279,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 276,
+        "r2": 116,
+        "c2": 281
+      }
     },
     {
       "id": "l1_kan31",
       "label": "kantor31",
       "r": 110,
       "c": 282,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 279,
+        "r2": 116,
+        "c2": 284
+      }
     },
     {
       "id": "l1_kan32",
       "label": "kantor32",
       "r": 110,
       "c": 285,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 282,
+        "r2": 116,
+        "c2": 287
+      }
     },
     {
       "id": "l1_kan33",
       "label": "kantor33",
       "r": 110,
       "c": 288,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 285,
+        "r2": 116,
+        "c2": 290
+      }
     },
     {
       "id": "l1_kan34",
       "label": "kantor34",
       "r": 110,
       "c": 291,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 288,
+        "r2": 116,
+        "c2": 293
+      }
     },
     {
       "id": "l1_kan35",
       "label": "kantor35",
       "r": 110,
       "c": 294,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 291,
+        "r2": 116,
+        "c2": 296
+      }
     },
     {
       "id": "l1_kan36",
       "label": "kantor36",
       "r": 110,
       "c": 297,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 294,
+        "r2": 116,
+        "c2": 299
+      }
     },
     {
       "id": "l1_kan37",
       "label": "kantor37",
       "r": 110,
       "c": 300,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 297,
+        "r2": 116,
+        "c2": 302
+      }
     },
     {
       "id": "l1_kan38",
       "label": "kantor38",
       "r": 110,
       "c": 303,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 110,
+        "c1": 300,
+        "r2": 116,
+        "c2": 307
+      }
     },
     {
       "id": "l1_kan39",
       "label": "kantor39",
       "r": 70,
       "c": 169,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 68,
+        "c1": 163,
+        "r2": 78,
+        "c2": 172
+      }
     },
     {
       "id": "l1_kan40",
       "label": "kantor40",
       "r": 66,
       "c": 165,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 64,
+        "c1": 157,
+        "r2": 74,
+        "c2": 167
+      }
     },
     {
       "id": "l1_kan41",
       "label": "kantor41",
       "r": 70,
       "c": 12,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 64,
+        "c1": 6,
+        "r2": 76,
+        "c2": 14
+      }
     },
     {
       "id": "l1_kan42",
       "label": "kantor42",
       "r": 70,
       "c": 16,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 64,
+        "c1": 13,
+        "r2": 76,
+        "c2": 18
+      }
     },
     {
       "id": "l1_kan43",
       "label": "kantor43",
       "r": 70,
       "c": 20,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 64,
+        "c1": 17,
+        "r2": 76,
+        "c2": 22
+      }
     },
     {
       "id": "l1_kan44",
       "label": "kantor44",
       "r": 70,
       "c": 24,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 64,
+        "c1": 21,
+        "r2": 76,
+        "c2": 26
+      }
     },
     {
       "id": "l1_kan45",
       "label": "kantor45",
       "r": 70,
       "c": 35,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 64,
+        "c1": 31,
+        "r2": 76,
+        "c2": 38
+      }
     },
     {
       "id": "l1_kan46",
       "label": "kantor46",
       "r": 70,
       "c": 39,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 64,
+        "c1": 36,
+        "r2": 76,
+        "c2": 41
+      }
     },
     {
       "id": "l1_kan47",
       "label": "kantor47",
       "r": 70,
       "c": 43,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 64,
+        "c1": 40,
+        "r2": 76,
+        "c2": 47
+      }
     },
     {
       "id": "l1_tl1",
       "label": "toilet1",
       "r": 84,
       "c": 62,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 81,
+        "c1": 55,
+        "r2": 87,
+        "c2": 65
+      }
     },
     {
       "id": "l1_tl2",
       "label": "toilet2",
       "r": 84,
       "c": 118,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 82,
+        "c1": 117,
+        "r2": 90,
+        "c2": 121
+      }
     },
     {
       "id": "l1_tl3",
       "label": "toilet3",
       "r": 76,
       "c": 120,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 71,
+        "c1": 118,
+        "r2": 79,
+        "c2": 126
+      }
     },
     {
       "id": "l1_tl4",
       "label": "toilet4",
       "r": 110,
       "c": 14,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 109,
+        "c1": 8,
+        "r2": 112,
+        "c2": 16
+      }
     },
     {
       "id": "l1_tl5",
       "label": "toilet5",
       "r": 111,
       "c": 20,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 109,
+        "c1": 18,
+        "r2": 112,
+        "c2": 26
+      }
     },
     {
       "id": "l1_tl6",
       "label": "toilet6",
       "r": 74,
       "c": 3,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 68,
+        "c1": 0,
+        "r2": 79,
+        "c2": 8
+      }
     },
     {
       "id": "l1_tl7",
       "label": "toilet7",
       "r": 109,
       "c": 156,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 106,
+        "c1": 150,
+        "r2": 110,
+        "c2": 158
+      }
     },
     {
       "id": "l1_tl8",
       "label": "toilet8",
       "r": 109,
       "c": 163,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 105,
+        "c1": 159,
+        "r2": 110,
+        "c2": 168
+      }
     },
     {
       "id": "l1_tl9",
       "label": "toilet9",
       "r": 106,
       "c": 195,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 100,
+        "c1": 191,
+        "r2": 108,
+        "c2": 199
+      }
     },
     {
       "id": "l1_tl10",
       "label": "toilet10",
       "r": 110,
       "c": 204,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 110,
+        "c1": 200,
+        "r2": 116,
+        "c2": 208
+      }
     },
     {
       "id": "l1_tl11",
       "label": "toilet11",
       "r": 106,
       "c": 229,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 100,
+        "c1": 223,
+        "r2": 108,
+        "c2": 231
+      }
     },
     {
       "id": "l1_tl12",
       "label": "toilet12",
       "r": 110,
       "c": 234,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 110,
+        "c1": 228,
+        "r2": 116,
+        "c2": 236
+      }
     },
     {
       "id": "l1_tl13",
       "label": "toilet13",
       "r": 106,
       "c": 271,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 100,
+        "c1": 265,
+        "r2": 108,
+        "c2": 273
+      }
     },
     {
       "id": "l1_tl14",
       "label": "toilet14",
       "r": 110,
       "c": 276,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 110,
+        "c1": 270,
+        "r2": 116,
+        "c2": 278
+      }
     },
     {
       "id": "l1_mus1",
       "label": "musholla1",
       "r": 75,
       "c": 105,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 69,
+        "c1": 97,
+        "r2": 79,
+        "c2": 109
+      }
     },
     {
       "id": "l1_mus2",
       "label": "musholla2",
       "r": 111,
       "c": 15,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 104,
+        "c1": 8,
+        "r2": 112,
+        "c2": 16
+      }
     },
     {
       "id": "l1_mus3",
       "label": "musholla3",
       "r": 109,
       "c": 20,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 109,
+        "c1": 18,
+        "r2": 112,
+        "c2": 26
+      }
     },
     {
       "id": "l1_mus4",
       "label": "musholla4",
       "r": 107,
       "c": 156,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 106,
+        "c1": 150,
+        "r2": 110,
+        "c2": 158
+      }
     },
     {
       "id": "l1_mus5",
       "label": "musholla5",
       "r": 109,
       "c": 159,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 101,
+        "c1": 159,
+        "r2": 110,
+        "c2": 167
+      }
     },
     {
       "id": "l1_mus6",
       "label": "musholla6",
       "r": 106,
       "c": 200,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 98,
+        "c1": 192,
+        "r2": 108,
+        "c2": 208
+      }
     },
     {
       "id": "l1_mus7",
       "label": "musholla7",
       "r": 106,
       "c": 224,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 98,
+        "c1": 216,
+        "r2": 108,
+        "c2": 232
+      }
     },
     {
       "id": "l1_mus8",
       "label": "musholla8",
       "r": 106,
       "c": 266,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 98,
+        "c1": 258,
+        "r2": 108,
+        "c2": 274
+      }
     },
     {
       "id": "l1_gd1",
       "label": "gate1",
       "r": 96,
       "c": 231,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 92,
+        "c1": 229,
+        "r2": 96,
+        "c2": 233
+      }
     },
     {
       "id": "l1_gd2",
       "label": "gate2",
       "r": 96,
       "c": 273,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 92,
+        "c1": 271,
+        "r2": 96,
+        "c2": 275
+      }
     },
     {
       "id": "l1_gd3",
       "label": "gate3",
       "r": 96,
       "c": 315,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 92,
+        "c1": 313,
+        "r2": 96,
+        "c2": 317
+      }
     },
     {
       "id": "l1_ret1",
       "label": "retail1",
       "r": 87,
       "c": 75,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 81,
+        "c1": 70,
+        "r2": 87,
+        "c2": 79
+      }
     },
     {
       "id": "l1_ret2",
       "label": "retail2",
       "r": 87,
       "c": 68,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 81,
+        "c1": 63,
+        "r2": 87,
+        "c2": 73
+      }
     },
     {
       "id": "l1_ret3",
       "label": "retail3",
       "r": 87,
       "c": 95,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 81,
+        "c1": 89,
+        "r2": 87,
+        "c2": 100
+      }
     },
     {
       "id": "l1_ret4",
       "label": "retail4",
       "r": 105,
       "c": 55,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 97,
+        "c1": 49,
+        "r2": 112,
+        "c2": 61
+      }
     },
     {
       "id": "l1_fnb1",
       "label": "food1",
       "r": 84,
       "c": 107,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 81,
+        "c1": 100,
+        "r2": 87,
+        "c2": 109
+      }
     },
     {
       "id": "l1_fnb2",
       "label": "food2",
       "r": 107,
       "c": 49,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 100,
+        "c1": 41,
+        "r2": 107,
+        "c2": 55
+      }
     },
     {
       "id": "l1_fnb3",
       "label": "food3",
       "r": 103,
       "c": 70,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 97,
+        "c1": 63,
+        "r2": 103,
+        "c2": 76
+      }
     },
     {
-      "id": "l1_fnb3",
+      "id": "l1_fnb3_2",
       "label": "food3",
       "r": 105,
       "c": 70,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 105,
+        "c1": 63,
+        "r2": 112,
+        "c2": 76
+      }
     },
     {
       "id": "l1_fnb4",
       "label": "food4",
       "r": 103,
       "c": 113,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 97,
+        "c1": 107,
+        "r2": 103,
+        "c2": 119
+      }
     },
     {
-      "id": "l1_fnb4",
+      "id": "l1_fnb4_2",
       "label": "food4",
       "r": 105,
       "c": 113,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 105,
+        "c1": 107,
+        "r2": 112,
+        "c2": 119
+      }
     },
     {
       "id": "l1_df1",
       "label": "dfree1",
       "r": 83,
       "c": 157,
-      "color": "#A1752F"
+      "color": "#A1752F",
+      "room": {
+        "r1": 82,
+        "c1": 153,
+        "r2": 88,
+        "c2": 163
+      }
     },
     {
       "id": "l1_nl1",
       "label": "nolabel1",
       "r": 67,
       "c": 105,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 64,
+        "c1": 99,
+        "r2": 67,
+        "c2": 109
+      }
     },
     {
       "id": "l1_nl2",
       "label": "nolabel2",
       "r": 67,
       "c": 100,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 64,
+        "c1": 94,
+        "r2": 67,
+        "c2": 105
+      }
     },
     {
       "id": "l1_nl3",
       "label": "nolabel3",
       "r": 73,
       "c": 157,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 68,
+        "c1": 154,
+        "r2": 79,
+        "c2": 160
+      }
     },
     {
       "id": "l1_nl4",
       "label": "nolabel4",
       "r": 73,
       "c": 160,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 68,
+        "c1": 157,
+        "r2": 79,
+        "c2": 163
+      }
     },
     {
       "id": "l1_nl5",
       "label": "nolabel5",
       "r": 81,
       "c": 163,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 81,
+        "c1": 160,
+        "r2": 87,
+        "c2": 166
+      }
     },
     {
       "id": "l1_nl6",
       "label": "nolabel6",
       "r": 81,
       "c": 166,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 81,
+        "c1": 163,
+        "r2": 87,
+        "c2": 169
+      }
     },
     {
       "id": "l1_nl7",
       "label": "nolabel7",
       "r": 81,
       "c": 169,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 81,
+        "c1": 166,
+        "r2": 82,
+        "c2": 172
+      }
     },
     {
       "id": "l1_nl8",
       "label": "nolabel8",
       "r": 81,
       "c": 172,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 81,
+        "c1": 169,
+        "r2": 87,
+        "c2": 175
+      }
     },
     {
       "id": "l1_nl9",
       "label": "nolabel9",
       "r": 81,
       "c": 175,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 81,
+        "c1": 172,
+        "r2": 87,
+        "c2": 178
+      }
     },
     {
       "id": "l1_nl10",
       "label": "nolabel10",
       "r": 81,
       "c": 178,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 81,
+        "c1": 175,
+        "r2": 87,
+        "c2": 180
+      }
     },
     {
       "id": "l1_nl11",
       "label": "nolabel11",
       "r": 79,
       "c": 166,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 73,
+        "c1": 160,
+        "r2": 79,
+        "c2": 166
+      }
     },
     {
       "id": "l1_nl12",
       "label": "nolabel12",
       "r": 74,
       "c": 171,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 68,
+        "c1": 168,
+        "r2": 79,
+        "c2": 174
+      }
     },
     {
       "id": "l1_nl13",
       "label": "nolabel13",
       "r": 74,
       "c": 175,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 68,
+        "c1": 172,
+        "r2": 79,
+        "c2": 177
+      }
     },
     {
       "id": "l1_nl14",
       "label": "nolabel14",
       "r": 74,
       "c": 179,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 68,
+        "c1": 175,
+        "r2": 79,
+        "c2": 179
+      }
     },
     {
       "id": "l1_nl15",
       "label": "nolabel15",
       "r": 102,
       "c": 3,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 102,
+        "c1": 0,
+        "r2": 107,
+        "c2": 7
+      }
     },
     {
       "id": "l1_nl16",
       "label": "nolabel16",
       "r": 81,
       "c": 1,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 81,
+        "c1": 0,
+        "r2": 87,
+        "c2": 5
+      }
     },
     {
       "id": "l1_nl17",
       "label": "nolabel17",
       "r": 107,
       "c": 25,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 101,
+        "c1": 21,
+        "r2": 107,
+        "c2": 29
+      }
     },
     {
       "id": "l1_nl18",
       "label": "nolabel18",
       "r": 107,
       "c": 30,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 101,
+        "c1": 26,
+        "r2": 107,
+        "c2": 34
+      }
     },
     {
       "id": "l1_nl19",
       "label": "nolabel19",
       "r": 109,
       "c": 40,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 109,
+        "c1": 36,
+        "r2": 112,
+        "c2": 44
+      }
     },
     {
       "id": "l1_nl20",
       "label": "nolabel20",
       "r": 95,
       "c": 120,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 89,
+        "c1": 114,
+        "r2": 95,
+        "c2": 120
+      }
     },
     {
       "id": "l1_nl21",
@@ -772,7 +1414,13 @@
       "label": "nolabel22",
       "r": 97,
       "c": 132,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 97,
+        "c1": 127,
+        "r2": 102,
+        "c2": 136
+      }
     },
     {
       "id": "l1_nl23",
@@ -793,518 +1441,962 @@
       "label": "nolabel25",
       "r": 104,
       "c": 150,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 98,
+        "c1": 145,
+        "r2": 104,
+        "c2": 153
+      }
     },
     {
       "id": "l1_nl26",
       "label": "nolabel26",
       "r": 104,
       "c": 146,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 98,
+        "c1": 141,
+        "r2": 104,
+        "c2": 149
+      }
     },
     {
       "id": "l1_nl27",
       "label": "nolabel27",
       "r": 98,
       "c": 161,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 98,
+        "c1": 157,
+        "r2": 103,
+        "c2": 165
+      }
     },
     {
       "id": "l1_nl28",
       "label": "nolabel28",
       "r": 98,
       "c": 167,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 98,
+        "c1": 163,
+        "r2": 103,
+        "c2": 168
+      }
     },
     {
       "id": "l1_nl29",
       "label": "nolabel29",
       "r": 108,
       "c": 178,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 105,
+        "c1": 174,
+        "r2": 112,
+        "c2": 180
+      }
     },
     {
       "id": "l1_nl30",
       "label": "nolabel30",
       "r": 110,
       "c": 178,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 105,
+        "c1": 174,
+        "r2": 112,
+        "c2": 182
+      }
     },
     {
       "id": "l1_nl31",
       "label": "nolabel31",
       "r": 107,
       "c": 176,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 105,
+        "c1": 174,
+        "r2": 112,
+        "c2": 179
+      }
     },
     {
       "id": "l1_nl32",
       "label": "nolabel32",
       "r": 109,
       "c": 176,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 105,
+        "c1": 174,
+        "r2": 112,
+        "c2": 179
+      }
     },
     {
       "id": "l1_nl33",
       "label": "nolabel33",
       "r": 110,
       "c": 187,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 104,
+        "c1": 182,
+        "r2": 112,
+        "c2": 189
+      }
     },
     {
       "id": "l1_nl34",
       "label": "nolabel34",
       "r": 108,
       "c": 184,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 104,
+        "c1": 182,
+        "r2": 112,
+        "c2": 187
+      }
     },
     {
       "id": "l1_nl35",
       "label": "nolabel35",
       "r": 104,
       "c": 186,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 98,
+        "c1": 182,
+        "r2": 110,
+        "c2": 187
+      }
     },
     {
       "id": "l1_ld1",
       "label": "tangga1",
       "r": 97,
       "c": 16,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 93,
+        "c1": 13,
+        "r2": 101,
+        "c2": 19
+      }
     },
     {
       "id": "l1_ld2",
       "label": "tangga2",
       "r": 97,
       "c": 19,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 93,
+        "c1": 16,
+        "r2": 101,
+        "c2": 22
+      }
     },
     {
       "id": "l1_ld3",
       "label": "tangga3",
       "r": 98,
       "c": 163,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 98,
+        "c1": 158,
+        "r2": 104,
+        "c2": 168
+      }
     },
     {
       "id": "l2_ser1",
       "label": "server1",
       "r": 46,
       "c": 95,
-      "color": "#e74c3c"
+      "color": "#e74c3c",
+      "room": {
+        "r1": 41,
+        "c1": 89,
+        "r2": 48,
+        "c2": 100
+      }
     },
     {
       "id": "l2_ser2",
       "label": "server2",
       "r": 43,
       "c": 100,
-      "color": "#e74c3c"
+      "color": "#e74c3c",
+      "room": {
+        "r1": 38,
+        "c1": 95,
+        "r2": 47,
+        "c2": 103
+      }
     },
     {
       "id": "l2_ser3",
       "label": "server3",
       "r": 41,
       "c": 100,
-      "color": "#e74c3c"
+      "color": "#e74c3c",
+      "room": {
+        "r1": 36,
+        "c1": 95,
+        "r2": 46,
+        "c2": 103
+      }
     },
     {
       "id": "l2_ser4",
       "label": "server4",
       "r": 39,
       "c": 100,
-      "color": "#e74c3c"
+      "color": "#e74c3c",
+      "room": {
+        "r1": 34,
+        "c1": 95,
+        "r2": 44,
+        "c2": 103
+      }
     },
     {
       "id": "l2_kan1",
       "label": "kantor1",
       "r": 42,
       "c": 11,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 37,
+        "c1": 3,
+        "r2": 48,
+        "c2": 13
+      }
     },
     {
       "id": "l2_kan2",
       "label": "kantor2",
       "r": 46,
       "c": 16,
-      "color": "#3282D1"
+      "color": "#3282D1",
+      "room": {
+        "r1": 38,
+        "c1": 16,
+        "r2": 48,
+        "c2": 22
+      }
     },
     {
       "id": "l2_tl1",
       "label": "toilet1",
       "r": 46,
       "c": 14,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 38,
+        "c1": 6,
+        "r2": 48,
+        "c2": 15
+      }
     },
     {
       "id": "l2_tl2",
       "label": "toilet2",
       "r": 12,
       "c": 52,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 8,
+        "c1": 50,
+        "r2": 15,
+        "c2": 59
+      }
     },
     {
       "id": "l2_tl3",
       "label": "toilet3",
       "r": 16,
       "c": 116,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 15,
+        "c1": 108,
+        "r2": 23,
+        "c2": 117
+      }
     },
     {
       "id": "l2_tl4",
       "label": "toilet4",
       "r": 11,
       "c": 116,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 8,
+        "c1": 108,
+        "r2": 14,
+        "c2": 117
+      }
     },
     {
       "id": "l2_tl5",
       "label": "toilet5",
       "r": 35,
       "c": 201,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 35,
+        "c1": 193,
+        "r2": 43,
+        "c2": 209
+      }
     },
     {
       "id": "l2_tl6",
       "label": "toilet6",
       "r": 35,
       "c": 241,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 35,
+        "c1": 233,
+        "r2": 43,
+        "c2": 249
+      }
     },
     {
       "id": "l2_tl7",
       "label": "toilet7",
       "r": 35,
       "c": 281,
-      "color": "#4FC1D3"
+      "color": "#4FC1D3",
+      "room": {
+        "r1": 35,
+        "c1": 273,
+        "r2": 43,
+        "c2": 289
+      }
     },
     {
       "id": "l2_mus1",
       "label": "musholla1",
       "r": 43,
       "c": 14,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 37,
+        "c1": 6,
+        "r2": 48,
+        "c2": 14
+      }
     },
     {
       "id": "l2_mus2",
       "label": "musholla2",
       "r": 10,
       "c": 52,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 8,
+        "c1": 50,
+        "r2": 15,
+        "c2": 59
+      }
     },
     {
       "id": "l2_mus3",
       "label": "musholla3",
       "r": 16,
       "c": 112,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 15,
+        "c1": 104,
+        "r2": 24,
+        "c2": 117
+      }
     },
     {
       "id": "l2_mus4",
       "label": "musholla4",
       "r": 9,
       "c": 116,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 8,
+        "c1": 108,
+        "r2": 13,
+        "c2": 117
+      }
     },
     {
       "id": "l2_mus5",
       "label": "musholla5",
       "r": 34,
       "c": 170,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 26,
+        "c1": 162,
+        "r2": 43,
+        "c2": 175
+      }
     },
     {
       "id": "l2_mus6",
       "label": "musholla6",
       "r": 35,
       "c": 207,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 35,
+        "c1": 199,
+        "r2": 43,
+        "c2": 215
+      }
     },
     {
       "id": "l2_mus7",
       "label": "musholla7",
       "r": 35,
       "c": 247,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 35,
+        "c1": 239,
+        "r2": 43,
+        "c2": 255
+      }
     },
     {
       "id": "l2_mus8",
       "label": "musholla8",
       "r": 35,
       "c": 287,
-      "color": "#EED832"
+      "color": "#EED832",
+      "room": {
+        "r1": 35,
+        "c1": 279,
+        "r2": 43,
+        "c2": 295
+      }
     },
     {
       "id": "l2_gd1",
       "label": "gate1",
       "r": 7,
       "c": 58,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 2,
+        "c1": 55,
+        "r2": 13,
+        "c2": 62
+      }
     },
     {
       "id": "l2_gd2",
       "label": "gate2",
       "r": 7,
       "c": 74,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 2,
+        "c1": 71,
+        "r2": 13,
+        "c2": 78
+      }
     },
     {
       "id": "l2_gd3",
       "label": "gate3",
       "r": 7,
       "c": 81,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 2,
+        "c1": 78,
+        "r2": 13,
+        "c2": 85
+      }
     },
     {
       "id": "l2_gd4",
       "label": "gate4",
       "r": 34,
       "c": 216,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 28,
+        "c1": 213,
+        "r2": 34,
+        "c2": 219
+      }
     },
     {
       "id": "l2_gd5",
       "label": "gate5",
       "r": 34,
       "c": 256,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 28,
+        "c1": 253,
+        "r2": 34,
+        "c2": 259
+      }
     },
     {
       "id": "l2_gd6",
       "label": "gate6",
       "r": 34,
       "c": 296,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 28,
+        "c1": 293,
+        "r2": 34,
+        "c2": 299
+      }
     },
     {
       "id": "l2_gd7",
       "label": "gate7",
       "r": 1,
       "c": 56,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 0,
+        "c1": 53,
+        "r2": 4,
+        "c2": 60
+      }
     },
     {
       "id": "l2_gd8",
       "label": "gate8",
       "r": 1,
       "c": 78,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 0,
+        "c1": 75,
+        "r2": 4,
+        "c2": 82
+      }
     },
     {
       "id": "l2_gd9",
       "label": "gate9",
       "r": 1,
       "c": 110,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 0,
+        "c1": 107,
+        "r2": 4,
+        "c2": 114
+      }
     },
     {
       "id": "l2_gd10",
       "label": "gate10",
       "r": 1,
       "c": 139,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 0,
+        "c1": 136,
+        "r2": 4,
+        "c2": 143
+      }
     },
     {
       "id": "l2_gd11",
       "label": "gate11",
       "r": 1,
       "c": 168,
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "room": {
+        "r1": 0,
+        "c1": 165,
+        "r2": 4,
+        "c2": 172
+      }
     },
     {
       "id": "l2_ret1",
       "label": "retail1",
       "r": 31,
       "c": 52,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 24,
+        "c1": 50,
+        "r2": 33,
+        "c2": 59
+      }
     },
     {
       "id": "l2_ret2",
       "label": "retail2",
       "r": 23,
       "c": 52,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 17,
+        "c1": 50,
+        "r2": 26,
+        "c2": 59
+      }
     },
     {
       "id": "l2_ret3",
       "label": "retail3",
       "r": 25,
       "c": 62,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 17,
+        "c1": 55,
+        "r2": 27,
+        "c2": 68
+      }
     },
     {
       "id": "l2_ret4",
       "label": "retail4",
       "r": 25,
       "c": 72,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 17,
+        "c1": 65,
+        "r2": 27,
+        "c2": 78
+      }
     },
     {
       "id": "l2_ret5",
       "label": "retail5",
       "r": 25,
       "c": 80,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 17,
+        "c1": 73,
+        "r2": 27,
+        "c2": 87
+      }
     },
     {
       "id": "l2_ret6",
       "label": "retail6",
       "r": 25,
       "c": 88,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 17,
+        "c1": 81,
+        "r2": 27,
+        "c2": 95
+      }
     },
     {
       "id": "l2_ret7",
       "label": "retail7",
       "r": 25,
       "c": 96,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 17,
+        "c1": 89,
+        "r2": 27,
+        "c2": 103
+      }
     },
     {
       "id": "l2_ret8",
       "label": "retail8",
       "r": 19,
       "c": 105,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 12,
+        "c1": 98,
+        "r2": 27,
+        "c2": 112
+      }
     },
     {
-      "id": "l2_ret8",
+      "id": "l2_ret8_2",
       "label": "retail8",
       "r": 45,
       "c": 243,
-      "color": "#36A732"
+      "color": "#36A732",
+      "room": {
+        "r1": 37,
+        "c1": 236,
+        "r2": 48,
+        "c2": 250
+      }
     },
     {
       "id": "l2_fnb1",
       "label": "food1",
       "r": 17,
       "c": 52,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 8,
+        "c1": 50,
+        "r2": 25,
+        "c2": 59
+      }
     },
     {
       "id": "l2_fnb2",
       "label": "food2",
       "r": 32,
       "c": 116,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 25,
+        "c1": 108,
+        "r2": 33,
+        "c2": 117
+      }
     },
     {
       "id": "l2_fnb3",
       "label": "food3",
       "r": 25,
       "c": 116,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 18,
+        "c1": 108,
+        "r2": 33,
+        "c2": 117
+      }
     },
     {
       "id": "l2_fnb4",
       "label": "food4",
       "r": 21,
       "c": 116,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 15,
+        "c1": 108,
+        "r2": 28,
+        "c2": 117
+      }
     },
     {
       "id": "l2_fnb5",
       "label": "food5",
       "r": 32,
       "c": 107,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 25,
+        "c1": 104,
+        "r2": 40,
+        "c2": 114
+      }
     },
     {
       "id": "l2_fnb6",
       "label": "food6",
       "r": 42,
       "c": 107,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 35,
+        "c1": 104,
+        "r2": 48,
+        "c2": 114
+      }
     },
     {
       "id": "l2_fnb7",
       "label": "food7",
       "r": 45,
       "c": 300,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 35,
+        "c1": 294,
+        "r2": 48,
+        "c2": 306
+      }
     },
     {
       "id": "l2_fnb8",
       "label": "food8",
       "r": 45,
       "c": 203,
-      "color": "#A7329F"
+      "color": "#A7329F",
+      "room": {
+        "r1": 35,
+        "c1": 196,
+        "r2": 48,
+        "c2": 210
+      }
     },
     {
       "id": "l2_df1",
       "label": "dfree1",
       "r": 30,
       "c": 70,
-      "color": "#A1752F"
+      "color": "#A1752F",
+      "room": {
+        "r1": 28,
+        "c1": 63,
+        "r2": 33,
+        "c2": 75
+      }
     },
     {
       "id": "l2_df2",
       "label": "dfree2",
       "r": 31,
       "c": 65,
-      "color": "#A1752F"
+      "color": "#A1752F",
+      "room": {
+        "r1": 28,
+        "c1": 58,
+        "r2": 33,
+        "c2": 70
+      }
     },
     {
       "id": "l2_df3",
       "label": "dfree3",
       "r": 32,
       "c": 60,
-      "color": "#A1752F"
+      "color": "#A1752F",
+      "room": {
+        "r1": 28,
+        "c1": 53,
+        "r2": 33,
+        "c2": 65
+      }
     },
     {
       "id": "l2_nl1",
       "label": "nolabel1",
       "r": 37,
       "c": 6,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 37,
+        "c1": 0,
+        "r2": 43,
+        "c2": 11
+      }
     },
     {
       "id": "l2_nl2",
       "label": "nolabel2",
       "r": 12,
       "c": 55,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 8,
+        "c1": 50,
+        "r2": 12,
+        "c2": 60
+      }
     },
     {
       "id": "l2_nl3",
       "label": "nolabel3",
       "r": 16,
       "c": 107,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 10,
+        "c1": 101,
+        "r2": 22,
+        "c2": 113
+      }
     },
     {
       "id": "l2_ld1",
       "label": "tangga1",
       "r": 33,
       "c": 16,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 33,
+        "c1": 14,
+        "r2": 40,
+        "c2": 19
+      }
     },
     {
       "id": "l2_ld2",
       "label": "tangga2",
       "r": 33,
       "c": 19,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 33,
+        "c1": 17,
+        "r2": 40,
+        "c2": 21
+      }
     },
     {
       "id": "l2_ld3",
       "label": "tangga3",
       "r": 37,
       "c": 12,
-      "color": "#B1B1B1"
+      "color": "#B1B1B1",
+      "room": {
+        "r1": 37,
+        "c1": 5,
+        "r2": 45,
+        "c2": 14
+      }
     },
     {
       "id": "l2_ori1",
       "label": "orientation1",
       "r": 32,
       "c": 100,
-      "color": "#FD9AE1"
+      "color": "#FD9AE1",
+      "room": {
+        "r1": 29,
+        "c1": 94,
+        "r2": 38,
+        "c2": 104
+      }
     },
     {
       "id": "l2_lo1",
       "label": "lounge1",
       "r": 35,
       "c": 120,
-      "color": "#A77432"
+      "color": "#A77432",
+      "room": {
+        "r1": 35,
+        "c1": 113,
+        "r2": 43,
+        "c2": 127
+      }
     }
   ],
   "walls": {
