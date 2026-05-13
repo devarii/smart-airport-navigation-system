@@ -317,7 +317,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   return (
     <div
-      className="relative w-full rounded-2xl overflow-hidden shadow-[0_2px_24px_rgba(0,0,0,0.08)]"
+      className="relative h-full w-auto max-w-full rounded-2xl overflow-hidden shadow-[0_2px_24px_rgba(0,0,0,0.08)]"
       style={{ aspectRatio: `${cfg.cols} / ${cfg.rows}` }}
     >
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />
