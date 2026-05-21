@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useMapStore } from "@/store/mapStore";
-import type { Category, FacilityWithRelations, OperationalHour } from "@/types";
+import type { Category, Floor, FacilityWithRelations, OperationalHour } from "@/types";
 import OperationalHoursModal from "@/components/admin/facility/operationalHoursModal";
 
 // =============================================================================
@@ -29,16 +29,21 @@ export default function EditFacilityModal() {
 
   const facility = adminSelectedFacility!;
 
+  // id === 0 → create mode (POI belum terdaftar di DB)
+  const isCreate = facility?.id === 0;
+
   // ── Form state ─────────────────────────────────────────────────────────────
   const [name,        setName]        = useState("");
   const [code,        setCode]        = useState("");
   const [description, setDescription] = useState("");
   const [categoryId,  setCategoryId]  = useState<number>(0);
+  const [floorId,     setFloorId]     = useState<number>(0);
   const [photo,       setPhoto]       = useState<string | null>(null);
   const [hours,       setHours]       = useState<OperationalHour[]>([]);
 
   // ── UI state ───────────────────────────────────────────────────────────────
   const [categories,     setCategories]     = useState<Category[]>([]);
+  const [floors,         setFloors]         = useState<Floor[]>([]);
   const [showHoursModal, setShowHoursModal] = useState(false);
   const [loading,        setLoading]        = useState(false);
   const [error,          setError]          = useState<string | null>(null);
@@ -50,6 +55,7 @@ export default function EditFacilityModal() {
     setCode(facility.code);
     setDescription(facility.description ?? "");
     setCategoryId(facility.categoryId);
+    setFloorId(facility.floorId);
     setPhoto(facility.photo ?? null);
     setHours(facility.operationalHours);
     setError(null);
@@ -64,6 +70,18 @@ export default function EditFacilityModal() {
     }
     load();
   }, []);
+
+  // Fetch floors — hanya di create mode, filter per terminal dari template
+  useEffect(() => {
+    if (!isCreate || !facility) return;
+    async function loadFloors() {
+      const terminal = facility.floor.terminal;
+      const res  = await fetch(`/api/floors?terminal=${terminal}`);
+      const json = await res.json();
+      if (json.success) setFloors(json.data as Floor[]);
+    }
+    loadFloors();
+  }, [isCreate, facility]);
 
   if (!facility) return null;
 
@@ -83,24 +101,50 @@ export default function EditFacilityModal() {
   async function handleSave() {
     setError(null);
 
-    if (!name.trim()) { setError("Nama fasilitas wajib diisi."); return; }
-    if (!code.trim()) { setError("Kode tempat wajib diisi.");    return; }
-    if (!categoryId)  { setError("Kategori wajib dipilih.");     return; }
+    if (!name.trim())   { setError("Nama fasilitas wajib diisi."); return; }
+    if (!code.trim())   { setError("Kode tempat wajib diisi.");    return; }
+    if (!categoryId)    { setError("Kategori wajib dipilih.");     return; }
+    if (isCreate && !floorId) { setError("Lantai wajib dipilih."); return; }
 
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/facilities/${facility.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name:        name.trim(),
-          code:        code.trim(),
-          description: description.trim() || null,
-          categoryId,
-          photo:       photo ?? null,
-        }),
-      });
+      let res: Response;
+
+      if (isCreate) {
+        // ── POST — tambah fasilitas baru ──────────────────────────────────
+        res = await fetch("/api/facilities", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name:        name.trim(),
+            code:        code.trim(),
+            description: description.trim() || null,
+            categoryId,
+            floorId,
+            gridRow:     facility.gridRow,
+            gridCol:     facility.gridCol,
+            photo:       photo ?? null,
+            isActive:    true,
+          }),
+        });
+      } else {
+        // ── PUT — edit fasilitas yang ada ─────────────────────────────────
+        res = await fetch(`/api/facilities/${facility.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name:        name.trim(),
+            code:        code.trim(),
+            description: description.trim() || null,
+            categoryId,
+            photo:       photo ?? null,
+            // Patch gridRow/gridCol jika sebelumnya null (data lama sebelum migrasi grid)
+            ...(facility.gridRow != null && { gridRow: facility.gridRow }),
+            ...(facility.gridCol != null && { gridCol: facility.gridCol }),
+          }),
+        });
+      }
 
       const json = await res.json();
 
@@ -109,9 +153,7 @@ export default function EditFacilityModal() {
         return;
       }
 
-      // Trigger re-fetch di MapCanvas — marker langsung update tanpa refresh
       incrementFacilitiesVersion();
-
       setAdminSelectedFacility(null);
     } catch {
       setError("Terjadi kesalahan. Coba lagi.");
@@ -145,9 +187,21 @@ export default function EditFacilityModal() {
           </button>
 
           {/* Title */}
-          <h2 className="text-xl font-bold text-gray-800 border-b border-gray-300 pb-3">
-            Edit Detail Lokasi
-          </h2>
+          <div className="border-b border-gray-300 pb-3">
+            <h2 className="text-xl font-bold text-gray-800">
+              {isCreate ? "Tambah Fasilitas" : "Edit Detail Lokasi"}
+            </h2>
+            {isCreate && (
+              <p className="text-xs text-gray-500 mt-1">
+                Posisi grid:{" "}
+                <span className="font-mono font-medium text-blue-600">
+                  ({facility.gridRow}, {facility.gridCol})
+                </span>
+                {" — "}
+                {facility.floor.terminal} {facility.floor.label}
+              </p>
+            )}
+          </div>
 
           <div className="flex gap-5">
 
@@ -190,6 +244,7 @@ export default function EditFacilityModal() {
             {/* ── Kanan: form ── */}
             <div className="flex-1 flex flex-col gap-3">
 
+              {/* Nama */}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
                   Nama lokasi <span className="text-red-500">*</span>
@@ -199,6 +254,7 @@ export default function EditFacilityModal() {
                   className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition" />
               </div>
 
+              {/* Kode */}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
                   Kode tempat <span className="text-red-500">*</span>
@@ -208,26 +264,56 @@ export default function EditFacilityModal() {
                   className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition" />
               </div>
 
+              {/* Lantai — hanya create mode */}
+              {isCreate && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-700">
+                    Lantai <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={floorId}
+                    onChange={(e) => setFloorId(Number(e.target.value))}
+                    className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  >
+                    <option value={0} disabled>Pilih lantai</option>
+                    {floors.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.label} (ID: {f.id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Jam Operasional — disabled di create mode */}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Jam Operasional <span className="text-red-500">*</span>
+                  Jam Operasional
                 </label>
-                <button type="button" onClick={() => setShowHoursModal(true)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm text-left text-gray-600 hover:border-blue-400 transition flex items-center justify-between">
-                  <span>{renderHoursSummary()}</span>
-                  <span className="text-gray-400">✎</span>
-                </button>
+                {isCreate ? (
+                  <p className="text-xs text-gray-400 italic px-1">
+                    Simpan fasilitas terlebih dahulu untuk mengatur jam operasional.
+                  </p>
+                ) : (
+                  <button type="button" onClick={() => setShowHoursModal(true)}
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm text-left text-gray-600 hover:border-blue-400 transition flex items-center justify-between">
+                    <span>{renderHoursSummary()}</span>
+                    <span className="text-gray-400">✎</span>
+                  </button>
+                )}
               </div>
 
+              {/* Deskripsi */}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Deskripsi Fasilitas <span className="text-red-500">*</span>
+                  Deskripsi Fasilitas
                 </label>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)}
                   placeholder="Tuliskan detail fasilitas di sini.." rows={3}
                   className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition" />
               </div>
 
+              {/* Kategori */}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
                   Kategori Tempat <span className="text-red-500">*</span>
@@ -252,13 +338,14 @@ export default function EditFacilityModal() {
             </button>
             <button onClick={handleSave} disabled={loading}
               className="px-5 py-2 rounded-xl bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition disabled:opacity-60">
-              {loading ? "Menyimpan..." : "Save"}
+              {loading ? "Menyimpan..." : isCreate ? "Tambah" : "Save"}
             </button>
           </div>
         </div>
       </div>
 
-      {showHoursModal && (
+      {/* Hours modal — hanya edit mode */}
+      {!isCreate && showHoursModal && (
         <OperationalHoursModal
           facilityId={facility.id}
           initialHours={hours}

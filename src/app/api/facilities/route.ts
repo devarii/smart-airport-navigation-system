@@ -107,12 +107,30 @@ export async function POST(
     }
 
     // Cek code unik
-    const existing = await prisma.facility.findUnique({ where: { code } });
-    if (existing) {
+    const codeConflict = await prisma.facility.findUnique({ where: { code } });
+    if (codeConflict) {
       return NextResponse.json(
         { success: false, error: `Code "${code}" sudah dipakai fasilitas lain` },
         { status: 409 }
       );
+    }
+
+    // Guard duplikat posisi grid: cegah dua facility di gridRow+gridCol+floor yang sama.
+    // Ini bisa terjadi jika admin tidak sengaja masuk ke create mode padahal facility
+    // sudah ada (misalnya data lama yang gridRow/gridCol-nya masih null).
+    if (gridRow != null && gridCol != null) {
+      const gridConflict = await prisma.facility.findFirst({
+        where: { gridRow, gridCol, floorId },
+      });
+      if (gridConflict) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Sudah ada fasilitas "${gridConflict.name}" di posisi ini (ID: ${gridConflict.id}). Gunakan fitur edit untuk mengubahnya.`,
+          },
+          { status: 409 }
+        );
+      }
     }
 
     const facility = await prisma.facility.create({
