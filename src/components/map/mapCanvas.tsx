@@ -1,3 +1,4 @@
+// mapcanvas — merged (punyaku + temanku)
 "use client";
 
 import { useEffect, useRef, useMemo, useCallback, useState } from "react";
@@ -28,15 +29,59 @@ import {
 // =============================================================================
 
 const CELL    = 6;
-const C_WALL  = "#1a4a5c" as const;
-const C_FLOOR = "#e8f4f8" as const;
-const C_GAP   = "#b8d4de" as const;
 const C_KIOSK = "#00b4d8" as const;
-const TOUCH_R = 30;
+const TOUCH_R = 10;   // radius hit area dot marker
+const MIN_HIT = 18;   // minimum hit padding untuk room kecil
 
-// Batas zoom: 0.5× sampai 4×
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 4;
+
+// =============================================================================
+// BACKGROUND & ROOM CALIBRATION
+// Sesuaikan nilai ini sampai overlay pas dengan gambar Figma.
+// =============================================================================
+
+const BG_CALIBRATION = {
+  T1: { x: 0, y: 0, widthScale: 1.0, heightScale: 1.0 },
+  T2: { x: 0, y: 0, widthScale: 1.0, heightScale: 1.0 },
+} as const;
+
+const T1_ROOM_CALIBRATION = {
+  floor2: { offsetX: 7, offsetY: 23, scaleX: 1, scaleY: 1 },
+  floor1: { offsetX: 7, offsetY: 23, scaleX: 1, scaleY: 1 },
+} as const;
+
+const T2_ROOM_CALIBRATION = {
+  floor2: { offsetX: 5, offsetY: 4, scaleX: 1, scaleY: 1 },
+  floor1: { offsetX: 0, offsetY: 10, scaleX: 1, scaleY: 1 },
+} as const;
+
+// =============================================================================
+// CATEGORY MAPPING
+// Mapping dari prefix ID destination → nama kategori DB.
+// =============================================================================
+
+const PREFIX_TO_CATEGORY: Record<string, string> = {
+  fnb: "Food & Beverages",
+  gd:  "Gate",
+  lo:  "Lounge",
+  pr:  "Lounge",
+  tl:  "Toilet & Nursery",
+  ret: "Retail",
+  ser: "Services",
+  kan: "Services",
+  mus: "Musholla",
+  df:  "Duty Free",
+  arr: "Arrival",
+  // nl, ld, lf, ll, ori → tidak ada kategori spesifik (selalu tampil)
+};
+
+/** Ambil nama kategori dari dest.id. null = selalu tampil (tidak difilter). */
+function getCategoryName(destId: string): string | null {
+  const clean  = destId.replace(/^l[12]_/, "");
+  const prefix = clean.match(/^([a-z]+)/)?.[1] ?? "";
+  return PREFIX_TO_CATEGORY[prefix] ?? null;
+}
 
 // =============================================================================
 // TYPES
@@ -44,6 +89,13 @@ const MAX_SCALE = 4;
 
 type RoomBox = { r1: number; c1: number; r2: number; c2: number };
 type DestinationWithRoom = DestinationPoint & { room?: RoomBox };
+
+interface Category {
+  id: number;
+  name: string;
+  color: string | null;
+  icon: string | null;
+}
 
 // =============================================================================
 // TERMINAL CONFIG
@@ -56,7 +108,10 @@ interface TerminalConfig {
   startR: number; startC: number;
   f1Min: number; f2Min: number; f2Max: number;
   gapMin: number; gapMax: number;
-  labelL2Y: number; labelL1Y: number;
+  bgSvg: string;
+  calibKey: "T1" | "T2";
+  labelL2Y: number;
+  labelL1Y: number;
 }
 
 const T1_CFG: TerminalConfig = {
@@ -65,6 +120,8 @@ const T1_CFG: TerminalConfig = {
   startR: T1_START_R, startC: T1_START_C,
   f1Min: T1_F1_MIN, f2Min: T1_F2_MIN, f2Max: T1_F2_MAX,
   gapMin: T1_F2_MAX + 1, gapMax: T1_F1_MIN - 1,
+  bgSvg: "/map/t1_gabungan.svg",
+  calibKey: "T1",
   labelL2Y: Math.round((T1_F2_MIN + T1_F2_MAX) / 2) * CELL + CELL / 2,
   labelL1Y: Math.round((T1_F1_MIN + T1_ROWS - 1) / 2) * CELL + CELL / 2,
 };
@@ -75,6 +132,8 @@ const T2_CFG: TerminalConfig = {
   startR: T2_START_R, startC: T2_START_C,
   f1Min: T2_F1_MIN, f2Min: T2_F2_MIN, f2Max: T2_F2_MAX,
   gapMin: -1, gapMax: -1,
+  bgSvg: "/map/t2_gabungan.svg",
+  calibKey: "T2",
   labelL2Y: Math.round((T2_F2_MIN + T2_F2_MAX) / 2) * CELL + CELL / 2,
   labelL1Y: Math.round((T2_F1_MIN + T2_ROWS - 1) / 2) * CELL + CELL / 2,
 };
@@ -84,21 +143,17 @@ const T2_CFG: TerminalConfig = {
 // =============================================================================
 
 function nearestWalkable(
-  r: number,
-  c: number,
-  rows: number,
-  cols: number,
+  r: number, c: number,
+  rows: number, cols: number,
   wallSet: Set<string>,
   maxDist = 6
 ): { r: number; c: number } {
   if (!wallSet.has(`${r},${c}`)) return { r, c };
-
   for (let d = 1; d <= maxDist; d++) {
     for (let dr = -d; dr <= d; dr++) {
       for (let dc = -d; dc <= d; dc++) {
         if (Math.abs(dr) !== d && Math.abs(dc) !== d) continue;
-        const nr = r + dr;
-        const nc = c + dc;
+        const nr = r + dr, nc = c + dc;
         if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
         if (!wallSet.has(`${nr},${nc}`)) return { r: nr, c: nc };
       }
@@ -108,7 +163,20 @@ function nearestWalkable(
 }
 
 // =============================================================================
-// HELPER — buat synthetic FacilityWithRelations dari DestinationPoint
+// HELPER — room calibration transform
+// =============================================================================
+
+function getRoomTransform(terminal: "T1" | "T2", dest: DestinationWithRoom) {
+  const isFloor2 = dest.id.startsWith("l2_");
+  if (terminal === "T1") {
+    return isFloor2 ? T1_ROOM_CALIBRATION.floor2 : T1_ROOM_CALIBRATION.floor1;
+  }
+  return isFloor2 ? T2_ROOM_CALIBRATION.floor2 : T2_ROOM_CALIBRATION.floor1;
+}
+
+// =============================================================================
+// HELPER — synthetic facility (user mode, POI belum ada di DB)
+// id negatif = sinyal ini bukan data DB asli
 // =============================================================================
 
 let _syntheticIdCounter = -1;
@@ -118,7 +186,8 @@ function makeSyntheticFacility(
   walkableR: number,
   walkableC: number,
   floorId: number,
-  categoryId: number
+  categoryId: number,
+  categoryName: string
 ): FacilityWithRelations {
   _syntheticIdCounter--;
   return {
@@ -137,32 +206,69 @@ function makeSyntheticFacility(
     updatedAt: new Date(),
     category: {
       id: categoryId,
-      name: dest.id.includes("_tl") ? "Toilet & Nursery"
-          : dest.id.includes("_fnb") ? "Food & Beverages"
-          : dest.id.includes("_ret") ? "Retail"
-          : dest.id.includes("_mus") ? "Musholla"
-          : dest.id.includes("_gd") ? "Gate"
-          : dest.id.includes("_lo") ? "Lounge"
-          : dest.id.includes("_kan") ? "Services"
-          : "Services",
+      name: categoryName,
       icon: null,
       color: dest.color,
+      terminals: [],
+      sortOrder: 0,
       createdAt: new Date(),
     },
     floor: {
       id: floorId,
-      terminal: dest.id.startsWith("l1_") || !dest.id.includes("_") ? "T1" : "T1",
+      terminal: "T1",
       floorNumber: dest.id.startsWith("l2_") ? 2 : 1,
       label: dest.id.startsWith("l2_") ? "Lantai 2" : "Lantai 1",
-      gridRows: null,
-      gridCols: null,
-      startRow: null,
-      startCol: null,
+      gridRows: null, gridCols: null,
+      startRow: null, startCol: null,
       wallData: null,
     },
     node: null,
     operationalHours: [],
   } as FacilityWithRelations;
+}
+
+// =============================================================================
+// HELPER — template untuk ADD mode di admin
+// id: 0 = sinyal POST (create) ke EditFacilityModal
+// =============================================================================
+
+function makeAddFacilityTemplate(
+  dest: DestinationWithRoom,
+  walkableR: number,
+  walkableC: number,
+  terminal: string
+): FacilityWithRelations {
+  const isL2 = dest.id.startsWith("l2_");
+  return {
+    id: 0,
+    name: dest.label,
+    code: dest.id,
+    description: null,
+    categoryId: 0,
+    floorId: 0,       // dipilih via dropdown di EditFacilityModal
+    nodeId: null,
+    isActive: true,
+    gridRow: walkableR,
+    gridCol: walkableC,
+    photo: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    category: {
+      id: 0, name: "", icon: null,
+      color: "#3B82F6", terminals: [], sortOrder: 0, createdAt: new Date(),
+    },
+    floor: {
+      id: 0,
+      terminal,
+      floorNumber: isL2 ? 2 : 1,
+      label: isL2 ? "Lantai 2" : "Lantai 1",
+      gridRows: null, gridCols: null,
+      startRow: null, startCol: null,
+      wallData: null,
+    },
+    node: null,
+    operationalHours: [],
+  };
 }
 
 // =============================================================================
@@ -182,22 +288,21 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   const facilitiesVersion        = useMapStore((s) => s.facilitiesVersion);
 
   const [facilities, setFacilities] = useState<FacilityWithRelations[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading,  setIsLoading]  = useState(true);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const outerRef  = useRef<HTMLDivElement>(null);
 
-  // ── Pan & Zoom state ────────────────────────────────────────────────────────
+  const outerRef = useRef<HTMLDivElement>(null);
+
+  // ── Pan & Zoom state ─────────────────────────────────────────────────────────
   const [pan,   setPan]   = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
 
-  // Refs — tidak perlu trigger re-render
-  const isDragging    = useRef(false);
-  const lastPos       = useRef({ x: 0, y: 0 });
-  const pinchDist     = useRef<number | null>(null);
-  const lastTapTime   = useRef(0);
-  const didDrag       = useRef(false); // membedakan drag vs tap
+  const isDragging  = useRef(false);
+  const lastPos     = useRef({ x: 0, y: 0 });
+  const pinchDist   = useRef<number | null>(null);
+  const lastTapTime = useRef(0);
+  const didDrag     = useRef(false);
 
-  // Reset ke posisi & zoom awal
   const resetView = useCallback(() => {
     setPan({ x: 0, y: 0 });
     setScale(1);
@@ -206,7 +311,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   // Reset view setiap ganti terminal
   useEffect(() => { resetView(); }, [activeTerminal, resetView]);
 
-  // ── Prevent native scroll/zoom saat touch di dalam peta ────────────────────
+  // Prevent native scroll/zoom saat touch di dalam peta
   useEffect(() => {
     const el = outerRef.current;
     if (!el) return;
@@ -215,7 +320,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return () => el.removeEventListener("touchmove", prevent);
   }, []);
 
-  // ── Terminal config & wall set ──────────────────────────────────────────────
+  // ── Terminal config & wall set ───────────────────────────────────────────────
   const cfg = useMemo<TerminalConfig>(
     () => (activeTerminal === "T1" ? T1_CFG : T2_CFG),
     [activeTerminal]
@@ -223,118 +328,152 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   const wallSet = useMemo(() => buildWallSet(cfg.wallData.walls), [cfg]);
 
+  // facilityMap: "r,c" → facility dari DB (lookup utama)
   const facilityMap = useMemo(() => {
     const map = new Map<string, FacilityWithRelations>();
     for (const f of facilities) {
-      if (f.gridRow != null && f.gridCol != null) {
+      if (f.gridRow != null && f.gridCol != null)
         map.set(`${f.gridRow},${f.gridCol}`, f);
-      }
     }
     return map;
   }, [facilities]);
 
-  console.log(
-    "Active terminal:",
-    activeTerminal,
-    "Room count:",
-    (cfg.destinations as DestinationWithRoom[]).filter((d) => d.room).length
-  );
+  // facilityCodeMap: fallback untuk data lama yang gridRow/gridCol-nya null
+  const facilityCodeMap = useMemo(() => {
+    const map = new Map<string, FacilityWithRelations>();
+    for (const f of facilities) {
+      if (f.code) map.set(f.code, f);
+    }
+    return map;
+  }, [facilities]);
 
-  const activeCatSet = useMemo(() => new Set(activeCategories), [activeCategories]);
+  // categoryNameMap: DB category id → name (untuk filter by name)
+  const categoryNameMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const c of categories) map.set(c.id, c.name);
+    return map;
+  }, [categories]);
 
-  // ── Fetch fasilitas dari DB ─────────────────────────────────────────────────
+  // Set nama kategori yang aktif — null berarti tampilkan semua
+  const activeCategoryNames = useMemo(() => {
+    if (activeCategories.length === 0) return null;
+    const names = new Set<string>();
+    for (const id of activeCategories) {
+      const name = categoryNameMap.get(id);
+      if (name) names.add(name);
+    }
+    return names;
+  }, [activeCategories, categoryNameMap]);
+
+  // ── Fetch fasilitas & kategori (parallel) ───────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
 
     async function load() {
       try {
-        const res  = await fetch(`/api/facilities?terminal=${activeTerminal}`);
-        const body = (await res.json()) as {
-          success: boolean;
-          data: FacilityWithRelations[];
-        };
-        if (!cancelled && body.success) setFacilities(body.data);
-      } catch {
-        // Peta tetap tampil tanpa POI interaktif dari DB
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
+        const [facRes, catRes] = await Promise.all([
+          fetch(`/api/facilities?terminal=${activeTerminal}`),
+          fetch("/api/categories"),
+        ]);
+        const facBody = (await facRes.json()) as { success: boolean; data: FacilityWithRelations[] };
+        const catBody = (await catRes.json()) as { success: boolean; data: Category[] };
+        if (!cancelled) {
+          if (facBody.success) setFacilities(facBody.data);
+          if (catBody.success) setCategories(catBody.data);
+        }
+      } catch { /* peta tetap tampil tanpa POI interaktif */ }
+      finally   { if (!cancelled) setIsLoading(false); }
     }
 
     void load();
     return () => { cancelled = true; };
   }, [activeTerminal, facilitiesVersion]);
 
-  // ── Draw canvas ─────────────────────────────────────────────────────────────
-  const drawCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // ── Cek visibilitas POI berdasarkan filter kategori ──────────────────────────
+  const isVisible = useCallback((dest: DestinationPoint): boolean => {
+    if (!activeCategoryNames) return true;
 
-    const { rows, cols, gapMin, gapMax } = cfg;
-    canvas.width  = cols * CELL;
-    canvas.height = rows * CELL;
-
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (wallSet.has(`${r},${c}`)) {
-          ctx.fillStyle = C_WALL;
-        } else if (gapMin !== -1 && r >= gapMin && r <= gapMax) {
-          ctx.fillStyle = C_GAP;
-        } else {
-          ctx.fillStyle = C_FLOOR;
-        }
-        ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
-      }
+    // Prioritas: cek dari DB facility terlebih dahulu
+    const facility = facilityMap.get(`${dest.r},${dest.c}`);
+    if (facility) {
+      const catName = categoryNameMap.get(facility.categoryId) ?? "";
+      return activeCategoryNames.has(catName);
     }
-  }, [cfg, wallSet]);
 
-  useEffect(() => { drawCanvas(); }, [drawCanvas]);
+    // Fallback: inferensi dari prefix ID
+    const catName = getCategoryName(dest.id);
+    if (!catName) return true; // nl, ld, dll — selalu tampil
+    return activeCategoryNames.has(catName);
+  }, [activeCategoryNames, facilityMap, categoryNameMap]);
 
-  // ── Klik POI ────────────────────────────────────────────────────────────────
+  // ── Klik POI ─────────────────────────────────────────────────────────────────
   const handleDestinationClick = useCallback(
     (dest: DestinationPoint) => {
-      // Abaikan jika user sedang drag (bukan tap)
       if (didDrag.current) return;
 
-      const walkable = nearestWalkable(
-        dest.r, dest.c,
-        cfg.rows, cfg.cols,
-        wallSet
-      );
+      const walkable = nearestWalkable(dest.r, dest.c, cfg.rows, cfg.cols, wallSet);
 
-      let facility =
+      // Lookup: koordinat exact → koordinat walkable → code (data lama tanpa gridRow/Col)
+      const dbFacility =
         facilityMap.get(`${dest.r},${dest.c}`) ??
-        facilityMap.get(`${walkable.r},${walkable.c}`);
+        facilityMap.get(`${walkable.r},${walkable.c}`) ??
+        facilityCodeMap.get(dest.id);
 
-      if (!facility) {
-        const floorId  = dest.id.startsWith("l2_") ? 2 : 1;
-        const catId    = 1;
-        facility = makeSyntheticFacility(dest, walkable.r, walkable.c, floorId, catId);
-      } else if (walkable.r !== dest.r || walkable.c !== dest.c) {
-        facility = {
-          ...facility,
-          gridRow: walkable.r,
-          gridCol: walkable.c,
-        };
+      // ── Admin mode ──────────────────────────────────────────────────────────
+      if (mapMode === "admin") {
+        if (dbFacility && dbFacility.id > 0) {
+          // Facility sudah ada → edit mode; patch koordinat jika data lama
+          const facilityWithCoords =
+            (dbFacility.gridRow == null || dbFacility.gridCol == null)
+              ? { ...dbFacility, gridRow: walkable.r, gridCol: walkable.c }
+              : dbFacility;
+          setAdminSelectedFacility(facilityWithCoords);
+        } else {
+          // POI belum terdaftar → create mode (id: 0 = sinyal POST)
+          const template = makeAddFacilityTemplate(
+            dest as DestinationWithRoom,
+            walkable.r,
+            walkable.c,
+            activeTerminal
+          );
+          setAdminSelectedFacility(template);
+        }
+        return;
       }
 
-      if (mapMode === "admin") {
-        setAdminSelectedFacility(facility);
-        return;
+      // ── User mode ───────────────────────────────────────────────────────────
+      let facility: FacilityWithRelations;
+
+      if (!dbFacility) {
+        const floorId  = dest.id.startsWith("l2_") ? 2 : 1;
+        const catName  = getCategoryName(dest.id) ?? "Services";
+        const catEntry = categories.find(c => c.name === catName);
+        const catId    = catEntry?.id ?? 1;
+        facility = makeSyntheticFacility(
+          dest as DestinationWithRoom,
+          walkable.r, walkable.c,
+          floorId, catId, catName
+        );
+      } else if (walkable.r !== dest.r || walkable.c !== dest.c) {
+        facility = { ...dbFacility, gridRow: walkable.r, gridCol: walkable.c };
+      } else {
+        facility = dbFacility;
       }
 
       setIsRouteOpen(false);
       clearRoute();
       setSelectedFacility(facility);
     },
-    [facilityMap, wallSet, cfg.rows, cfg.cols, mapMode,
-     setAdminSelectedFacility, setSelectedFacility, setIsRouteOpen, clearRoute]
+    [
+      facilityMap, facilityCodeMap, wallSet, cfg.rows, cfg.cols,
+      mapMode, activeTerminal, categories,
+      setAdminSelectedFacility, setSelectedFacility,
+      setIsRouteOpen, clearRoute,
+    ]
   );
 
-  // ── Mouse event handlers (desktop / testing) ────────────────────────────────
+  // ── Mouse event handlers (desktop) ──────────────────────────────────────────
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     isDragging.current = true;
     didDrag.current    = false;
@@ -350,17 +489,14 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     setPan(p => ({ x: p.x + dx, y: p.y + dy }));
   }, []);
 
-  const onMouseUp = useCallback(() => {
-    isDragging.current = false;
-  }, []);
+  const onMouseUp = useCallback(() => { isDragging.current = false; }, []);
 
-  // Scroll wheel zoom (desktop)
   const onWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     setScale(s => Math.min(Math.max(s - e.deltaY * 0.001, MIN_SCALE), MAX_SCALE));
   }, []);
 
-  // ── Touch event handlers (kiosk touchscreen) ────────────────────────────────
+  // ── Touch event handlers (kiosk touchscreen) ─────────────────────────────────
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       isDragging.current = true;
@@ -372,7 +508,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       if (now - lastTapTime.current < 300) resetView();
       lastTapTime.current = now;
     }
-
     if (e.touches.length === 2) {
       isDragging.current = false;
       pinchDist.current  = Math.hypot(
@@ -391,15 +526,13 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       setPan(p => ({ x: p.x + dx, y: p.y + dy }));
     }
-
     // 2 jari → pinch zoom
     if (e.touches.length === 2 && pinchDist.current !== null) {
       const newDist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY,
       );
-      const ratio = newDist / pinchDist.current;
-      setScale(s => Math.min(Math.max(s * ratio, MIN_SCALE), MAX_SCALE));
+      setScale(s => Math.min(Math.max(s * (newDist / pinchDist.current!), MIN_SCALE), MAX_SCALE));
       pinchDist.current = newDist;
     }
   }, []);
@@ -409,9 +542,10 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     pinchDist.current  = null;
   }, []);
 
-  // ── Derived ─────────────────────────────────────────────────────────────────
-  const svgW = cfg.cols * CELL;
-  const svgH = cfg.rows * CELL;
+  // ── Derived ──────────────────────────────────────────────────────────────────
+  const svgW  = cfg.cols * CELL;
+  const svgH  = cfg.rows * CELL;
+  const calib = BG_CALIBRATION[cfg.calibKey];
 
   // =============================================================================
   // RENDER
@@ -425,7 +559,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
         aspectRatio: `${cfg.cols} / ${cfg.rows}`,
         cursor: isDragging.current ? "grabbing" : "grab",
         userSelect: "none",
-        touchAction: "none", // matikan gesture browser bawaan
+        touchAction: "none",
       }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
@@ -445,96 +579,133 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           willChange: "transform",
         }}
       >
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
-          aria-hidden="true"
-        />
-
+        {/* ════════════════════════════════════════════════════════════════
+            SVG LAYERS (satu koordinat sistem → overlay selalu align):
+            1 — Background Figma (<image>)
+            2 — Room boxes clickable + kalibrasi per-lantai
+            3 — Dot markers (POI tanpa room)
+            4 — Floor labels
+            5 — Kiosk / "Anda di sini" marker
+            6 — PathRenderer + children
+            ════════════════════════════════════════════════════════════════ */}
         <svg
           className="absolute inset-0 w-full h-full"
           viewBox={`0 0 ${svgW} ${svgH}`}
           preserveAspectRatio="none"
           aria-label={`Peta Terminal ${activeTerminal} Bandara Juanda`}
         >
-          <FloorLabel x={12} y={cfg.labelL2Y} label="LANTAI 2" />
-          <FloorLabel x={12} y={cfg.labelL1Y} label="LANTAI 1" />
-
-          <line
-            x1={0}
-            y1={cfg.gapMin !== -1
-              ? (cfg.gapMin + (cfg.gapMax - cfg.gapMin + 1) / 2) * CELL
-              : cfg.f1Min * CELL}
-            x2={svgW}
-            y2={cfg.gapMin !== -1
-              ? (cfg.gapMin + (cfg.gapMax - cfg.gapMin + 1) / 2) * CELL
-              : cfg.f1Min * CELL}
-            stroke="#1a4a5c" strokeWidth={1.5} strokeDasharray="8 5"
-            opacity={0.3} pointerEvents="none"
+          {/* ── LAYER 1: Background Figma ── */}
+          <image
+            href={cfg.bgSvg}
+            x={calib.x}
+            y={calib.y}
+            width={svgW * calib.widthScale}
+            height={svgH * calib.heightScale}
+            preserveAspectRatio="none"
           />
 
-          {/* Room / tenant boxes */}
-          {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
-            if (!dest.room) return null;
+          {/* ── LAYER 2: Room / tenant boxes ── */}
+          {(cfg.destinations as DestinationWithRoom[]).map((dest, i) => {
+            if (!dest.room)        return null;
+            if (!isVisible(dest))  return null;
+
             const { r1, c1, r2, c2 } = dest.room;
-            const x = c1 * CELL;
-            const y = r1 * CELL;
-            const w = (c2 - c1 + 1) * CELL;
-            const h = (r2 - r1 + 1) * CELL;
-            const showLabel = w >= 30 && h >= 14;
+            const roomCal = getRoomTransform(activeTerminal, dest);
+
+            const x = c1 * CELL * roomCal.scaleX + roomCal.offsetX;
+            const y = r1 * CELL * roomCal.scaleY + roomCal.offsetY;
+            const w = (c2 - c1 + 1) * CELL * roomCal.scaleX;
+            const h = (r2 - r1 + 1) * CELL * roomCal.scaleY;
+
+            // Hit padding untuk room yang sangat kecil
+            const hitPadX  = Math.max(0, (MIN_HIT - w) / 2);
+            const hitPadY  = Math.max(0, (MIN_HIT - h) / 2);
+            const showLabel = w >= 36 && h >= 18;
+
+            const isSelected =
+              mapMode === "admin"
+                ? adminSelectedFacility?.gridRow === dest.r &&
+                  adminSelectedFacility?.gridCol === dest.c
+                : selectedFacility?.code === dest.id ||
+                  (selectedFacility?.gridRow === dest.r &&
+                   selectedFacility?.gridCol === dest.c);
 
             return (
               <g
-                key={`room-${dest.id}`}
+                key={`room-${dest.id}-${i}`}
                 style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDestinationClick(dest);
-                }}
+                onClick={(e) => { e.stopPropagation(); handleDestinationClick(dest); }}
               >
+                {/* Invisible hit padding untuk room kecil */}
+                {(hitPadX > 0 || hitPadY > 0) && (
+                  <rect
+                    x={x - hitPadX} y={y - hitPadY}
+                    width={w + hitPadX * 2} height={h + hitPadY * 2}
+                    rx={3} fill="transparent" stroke="none"
+                  />
+                )}
+                {/* Fill utama */}
                 <rect
                   x={x} y={y} width={w} height={h} rx={3}
-                  fill={dest.color} fillOpacity={0.35}
-                  stroke={dest.color} strokeWidth={1.4}
+                  fill={dest.color}
+                  fillOpacity={isSelected ? 0.55 : 0.28}
+                  stroke={isSelected ? "#f39c12" : dest.color}
+                  strokeWidth={isSelected ? 2.5 : 1.2}
+                  strokeOpacity={isSelected ? 1 : 0.75}
                 />
+                {/* Highlight putih bagian dalam */}
                 <rect
                   x={x + 1} y={y + 1}
                   width={Math.max(0, w - 2)} height={Math.max(0, h - 2)}
                   rx={2} fill="none"
-                  stroke="white" strokeOpacity={0.45} strokeWidth={0.8}
+                  stroke="white" strokeOpacity={0.3} strokeWidth={0.7}
                   pointerEvents="none"
                 />
+                {/* Label — hanya untuk room cukup besar */}
                 {showLabel && (
                   <text
                     x={x + w / 2} y={y + h / 2}
                     textAnchor="middle" dominantBaseline="middle"
-                    fontSize={Math.min(9, Math.max(5, h * 0.32))}
-                    fontWeight={700} fill="#111827"
-                    pointerEvents="none" className="select-none"
+                    fontSize={Math.min(8, Math.max(5, h * 0.3))}
+                    fontWeight={700}
+                    fill={isSelected ? "#111827" : "#1a1a2e"}
+                    fillOpacity={0.85}
+                    pointerEvents="none"
+                    className="select-none"
                   >
                     {dest.label}
                   </text>
+                )}
+                {/* Outline dashed oranye saat selected */}
+                {isSelected && (
+                  <rect
+                    x={x - 1} y={y - 1}
+                    width={w + 2} height={h + 2}
+                    rx={4} fill="none"
+                    stroke="#f39c12" strokeWidth={2}
+                    strokeDasharray="4 2"
+                    pointerEvents="none"
+                  />
                 )}
               </g>
             );
           })}
 
-          {/* Destination dot markers */}
+          {/* ── LAYER 3: Dot markers (POI tanpa room) ── */}
           {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
+            if (dest.room)        return null; // sudah ditangani room box
+            if (!isVisible(dest)) return null;
+
             const cx = dest.c * CELL + CELL / 2;
             const cy = dest.r * CELL + CELL / 2;
-            const facility = facilityMap.get(`${dest.r},${dest.c}`);
 
-            const isSelected = mapMode === "admin"
-              ? adminSelectedFacility?.gridRow === dest.r &&
-                adminSelectedFacility?.gridCol === dest.c
-              : selectedFacility?.code === dest.id ||
-                (selectedFacility?.gridRow === dest.r &&
-                 selectedFacility?.gridCol === dest.c);
-
-            const isDimmed =
-              activeCatSet.size > 0 &&
-              (!facility || !activeCatSet.has(facility.category.id));
+            const isSelected =
+              mapMode === "admin"
+                ? adminSelectedFacility?.gridRow === dest.r &&
+                  adminSelectedFacility?.gridCol === dest.c
+                : selectedFacility?.code === dest.id ||
+                  (selectedFacility?.gridRow === dest.r &&
+                   selectedFacility?.gridCol === dest.c);
 
             return (
               <DestMarker
@@ -542,19 +713,23 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
                 cx={cx} cy={cy}
                 color={dest.color}
                 isSelected={isSelected}
-                isDimmed={isDimmed}
-                isInteractive={true}
                 onClick={() => handleDestinationClick(dest)}
               />
             );
           })}
 
+          {/* ── LAYER 4: Floor labels ── */}
+          <FloorLabel x={12} y={cfg.labelL2Y} label="LANTAI 2" />
+          <FloorLabel x={12} y={cfg.labelL1Y} label="LANTAI 1" />
+
+          {/* ── LAYER 5: Kiosk / "Anda di sini" marker ── */}
           <KioskMarker
             cx={cfg.startC * CELL + CELL / 2}
             cy={cfg.startR * CELL + CELL / 2}
             color={C_KIOSK}
           />
 
+          {/* ── LAYER 6: Route path + children ── */}
           <PathRenderer />
           {children}
         </svg>
@@ -578,9 +753,11 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
 function FloorLabel({ x, y, label }: { x: number; y: number; label: string }) {
   return (
-    <text x={x} y={y} fontSize={14} fontWeight="700" fill="#1a4a5c" opacity={0.35}
+    <text
+      x={x} y={y} fontSize={14} fontWeight="700" fill="#1a4a5c" opacity={0.35}
       fontFamily="system-ui, sans-serif" letterSpacing={1.5}
-      pointerEvents="none" dominantBaseline="middle">
+      pointerEvents="none" dominantBaseline="middle"
+    >
       {label}
     </text>
   );
@@ -588,19 +765,15 @@ function FloorLabel({ x, y, label }: { x: number; y: number; label: string }) {
 
 interface DestMarkerProps {
   cx: number; cy: number; color: string;
-  isSelected: boolean; isDimmed: boolean;
-  isInteractive: boolean; onClick: () => void;
+  isSelected: boolean; onClick: () => void;
 }
 
-function DestMarker({ cx, cy, color, isSelected, isDimmed, isInteractive, onClick }: DestMarkerProps) {
+function DestMarker({ cx, cy, color, isSelected, onClick }: DestMarkerProps) {
   const DOT_R  = isSelected ? 6 : 4;
   const GLOW_R = DOT_R + (isSelected ? 5 : 3);
   return (
-    <g onClick={isInteractive ? onClick : undefined}
-      style={{ cursor: isInteractive ? "pointer" : "default" }}
-      opacity={isDimmed ? 0.12 : 1}>
-      <circle cx={cx} cy={cy} r={TOUCH_R} fill="transparent"
-        pointerEvents={isInteractive ? "all" : "none"} />
+    <g onClick={onClick} style={{ cursor: "pointer" }}>
+      <circle cx={cx} cy={cy} r={TOUCH_R} fill="transparent" />
       <circle cx={cx} cy={cy} r={GLOW_R} fill={color}
         opacity={isSelected ? 0.35 : 0.18} pointerEvents="none" />
       <circle cx={cx} cy={cy} r={DOT_R} fill={color} pointerEvents="none" />
@@ -614,11 +787,14 @@ function DestMarker({ cx, cy, color, isSelected, isDimmed, isInteractive, onClic
 function KioskMarker({ cx, cy, color }: { cx: number; cy: number; color: string }) {
   return (
     <g pointerEvents="none">
-      <circle cx={cx} cy={cy} r={12} fill={color} opacity={0.15} />
-      <circle cx={cx} cy={cy} r={7}  fill={color} />
+      <circle cx={cx} cy={cy} r={14} fill={color} opacity={0.15} />
+      <circle cx={cx} cy={cy} r={8}  fill={color} />
       <circle cx={cx} cy={cy} r={3}  fill="#ffffff" />
-      <text x={cx + 12} y={cy + 4} fontSize={9} fontWeight="700"
-        fill={color} fontFamily="system-ui, sans-serif" letterSpacing={0.5}>
+      <text
+        x={cx + 13} y={cy + 4}
+        fontSize={8} fontWeight="700"
+        fill={color} fontFamily="system-ui, sans-serif" letterSpacing={0.3}
+      >
         Anda di sini
       </text>
     </g>
