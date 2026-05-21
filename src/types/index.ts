@@ -7,6 +7,8 @@ export interface Category {
   name: string;
   icon: string | null;
   color: string;
+  terminals: string[];
+  sortOrder: number;
   createdAt: Date;
 }
 
@@ -352,6 +354,7 @@ export interface CreateCategoryPayload {
   name: string;
   icon?: string;
   color: string;
+  terminals?: string[];
 }
 
 export type UpdateCategoryPayload = Partial<CreateCategoryPayload>;
