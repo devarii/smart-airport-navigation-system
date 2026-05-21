@@ -19,8 +19,10 @@ model Category {
   name       String     @unique
   icon       String?
   color      String
+  terminals  String[]   @default([])
   createdAt  DateTime   @default(now())
   facilities Facility[]
+  sortOrder  Int @default(0)
 }
 
 model Floor {
