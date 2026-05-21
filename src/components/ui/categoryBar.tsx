@@ -9,6 +9,23 @@ import type { Category } from "@/types";
 // HELPER — render icon sesuai tipe konten
 // =============================================================================
 
+/** Deteksi apakah string icon adalah URL/path gambar */
+function isImageSrc(icon: string): boolean {
+  // Protokol umum & path absolut
+  if (
+    icon.startsWith("data:image/") ||
+    icon.startsWith("http://") ||
+    icon.startsWith("https://") ||
+    icon.startsWith("blob:") ||
+    icon.startsWith("/")
+  ) return true;
+
+  // Path relatif dengan ekstensi gambar
+  if (/\.(png|jpe?g|gif|webp|avif|svg|ico)(\?.*)?$/i.test(icon)) return true;
+
+  return false;
+}
+
 function CategoryIcon({ icon, name }: { icon: string | null; name: string }) {
   if (!icon) {
     return (
@@ -18,6 +35,7 @@ function CategoryIcon({ icon, name }: { icon: string | null; name: string }) {
     );
   }
 
+  // SVG markup inline
   if (icon.trimStart().startsWith("<svg")) {
     return (
       <div
@@ -27,7 +45,8 @@ function CategoryIcon({ icon, name }: { icon: string | null; name: string }) {
     );
   }
 
-  if (icon.startsWith("data:") || icon.startsWith("http") || icon.startsWith("/")) {
+  // URL atau path gambar (data URI, http/https, blob, path relatif/absolut)
+  if (isImageSrc(icon)) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img src={icon} alt={name} className="w-7 h-7 object-contain" />
@@ -47,6 +66,7 @@ export default function CategoryBar() {
   const activeCategories = useMapStore((s) => s.activeCategories);
   const toggleCategory = useMapStore((s) => s.toggleCategory);
   const setIsSearchOpen = useMapStore((s) => s.setIsSearchOpen);
+  const activeTerminal   = useMapStore((s) => s.activeTerminal);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -76,9 +96,13 @@ export default function CategoryBar() {
     );
   }
 
+  const visibleCategories = categories.filter(
+    (c) => c.terminals.length === 0 || c.terminals.includes(activeTerminal)
+  );
+
   const allItems = [
     { type: "search" as const },
-    ...categories.map((c) => ({ type: "category" as const, data: c })),
+    ...visibleCategories.map((c) => ({ type: "category" as const, data: c })),
   ];
 
   const half = Math.ceil(allItems.length / 2);
@@ -168,7 +192,7 @@ export default function CategoryBar() {
       </div>
 
       {/* Baris 2 */}
-      {rowTwo.length > 0 && (
+      {rowTwo.length > 0 && ( 
         <div className="flex gap-3 justify-center">
           {rowTwo.map((item) =>
             item.type === "search"

@@ -60,7 +60,6 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiSuccess<Category> | ApiError>> {
-  // Cek session admin
   const session = await auth();
   if (!session) {
     return NextResponse.json(
@@ -81,9 +80,8 @@ export async function PUT(
 
   try {
     const body: UpdateCategoryPayload = await req.json();
-    const { name, icon, color } = body;
+    const { name, icon, color, terminals } = body;
 
-    // Pastikan kategori ada
     const existing = await prisma.category.findUnique({
       where: { id: categoryId },
     });
@@ -99,8 +97,9 @@ export async function PUT(
       where: { id: categoryId },
       data: {
         ...(name && { name }),
-        ...(icon && { icon }),
+        ...(icon !== undefined && { icon }),
         ...(color && { color }),
+        ...(terminals !== undefined && { terminals }),
       },
     });
 
@@ -120,8 +119,7 @@ export async function PUT(
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ApiSuccess<Category> | ApiError>> {
-  // Cek session admin
+): Promise<NextResponse<{ message: string } | ApiError>> {
   const session = await auth();
   if (!session) {
     return NextResponse.json(
@@ -141,7 +139,6 @@ export async function DELETE(
   }
 
   try {
-    // Cek apakah kategori masih dipakai fasilitas
     const facilityCount = await prisma.facility.count({
       where: { categoryId },
     });
@@ -156,7 +153,6 @@ export async function DELETE(
       );
     }
 
-    // Pastikan kategori ada
     const existing = await prisma.category.findUnique({
       where: { id: categoryId },
     });
@@ -168,15 +164,11 @@ export async function DELETE(
       );
     }
 
-    const deleted = await prisma.category.delete({
+    await prisma.category.delete({
       where: { id: categoryId },
     });
 
-    return NextResponse.json({
-      success: true,
-      data: deleted,
-      message: "Kategori berhasil dihapus",
-    });
+    return NextResponse.json({ message: "Kategori berhasil dihapus" });
   } catch {
     return NextResponse.json(
       { success: false, error: "Gagal menghapus kategori" },

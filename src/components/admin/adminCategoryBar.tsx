@@ -1,6 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  horizontalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useMapStore } from "@/store/mapStore";
 import type { Category } from "@/types";
 import EditCategoryModal from "@/components/admin/category/editCategoryModal";
@@ -18,7 +35,6 @@ function CategoryIcon({ icon, name }: { icon: string | null; name: string }) {
       </span>
     );
   }
-
   if (icon.trimStart().startsWith("<svg")) {
     return (
       <div
@@ -27,16 +43,109 @@ function CategoryIcon({ icon, name }: { icon: string | null; name: string }) {
       />
     );
   }
-
   if (icon.startsWith("data:") || icon.startsWith("http") || icon.startsWith("/")) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={icon} alt={name} className="w-7 h-7 object-contain" />
-    );
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={icon} alt={name} className="w-7 h-7 object-contain" />;
   }
+  return <span className="text-2xl leading-none">{icon}</span>;
+}
+
+// =============================================================================
+// SORTABLE CATEGORY ITEM
+// =============================================================================
+
+function SortableCategoryItem({
+  cat,
+  isAdmin,
+  isDragging,
+  onEdit,
+  onDelete,
+}: {
+  cat: Category;
+  isAdmin: boolean;
+  isDragging: boolean;
+  onEdit: (cat: Category) => void;
+  onDelete: (cat: Category) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSelfDragging,
+  } = useSortable({ id: cat.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSelfDragging ? 0.4 : 1,
+  };
 
   return (
-    <span className="text-2xl leading-none">{icon}</span>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative flex flex-col items-center gap-1"
+    >
+      {/* Admin badges — sembunyikan saat drag aktif */}
+      {isAdmin && !isDragging && (
+        <>
+          <button
+            onClick={() => onDelete(cat)}
+            className="absolute -top-1 -left-1 z-10 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow hover:bg-red-600 transition"
+            title="Hapus kategori"
+          >
+            ×
+          </button>
+          <button
+            onClick={() => onEdit(cat)}
+            className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center shadow hover:bg-blue-600 transition"
+            title="Edit kategori"
+          >
+            ✎
+          </button>
+        </>
+      )}
+
+      {/* Icon — drag handle hanya di mode admin */}
+      <div
+        {...(isAdmin ? { ...attributes, ...listeners } : {})}
+        className={[
+          "w-12 h-12 rounded-2xl flex items-center justify-center",
+          "shadow-[0_2px_6px_rgba(0,0,0,0.14)]",
+          "hover:scale-105 transition-transform duration-150",
+          isAdmin ? "cursor-grab active:cursor-grabbing" : "",
+        ].join(" ")}
+        style={{ backgroundColor: cat.color }}
+      >
+        <CategoryIcon icon={cat.icon} name={cat.name} />
+      </div>
+
+      <span className="text-[10px] text-gray-500 font-medium leading-tight text-center w-12 line-clamp-1">
+        {cat.name}
+      </span>
+    </div>
+  );
+}
+
+// =============================================================================
+// DRAG OVERLAY GHOST
+// =============================================================================
+
+function DragGhostItem({ cat }: { cat: Category }) {
+  return (
+    <div className="flex flex-col items-center gap-1 opacity-90 scale-110 rotate-2">
+      <div
+        className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
+        style={{ backgroundColor: cat.color }}
+      >
+        <CategoryIcon icon={cat.icon} name={cat.name} />
+      </div>
+      <span className="text-[10px] text-gray-500 font-medium leading-tight text-center w-12 line-clamp-1">
+        {cat.name}
+      </span>
+    </div>
   );
 }
 
@@ -45,22 +154,69 @@ function CategoryIcon({ icon, name }: { icon: string | null; name: string }) {
 // =============================================================================
 
 export default function AdminCategoryBar() {
-  const mapMode        = useMapStore((s) => s.mapMode);
+  const mapMode         = useMapStore((s) => s.mapMode);
   const setIsSearchOpen = useMapStore((s) => s.setIsSearchOpen);
-  const isAdmin        = mapMode === "admin";
+  const activeTerminal  = useMapStore((s) => s.activeTerminal);
+  const isAdmin         = mapMode === "admin";
 
   const [categories,   setCategories]   = useState<Category[]>([]);
   const [editTarget,   setEditTarget]   = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
+  const [activeId,     setActiveId]     = useState<number | null>(null);
+  const [isSaving,     setIsSaving]     = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    })
+  );
 
   useEffect(() => {
     async function load() {
       const res  = await fetch("/api/categories");
       const json = await res.json();
-      if (json.success) setCategories(json.data);
+      if (json.success) {
+        const sorted = [...json.data].sort(
+          (a: Category, b: Category) => a.sortOrder - b.sortOrder
+        );
+        setCategories(sorted);
+      }
     }
     load();
   }, []);
+
+  const persistOrder = useCallback(async (ordered: Category[]) => {
+    setIsSaving(true);
+    try {
+      await fetch("/api/categories", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          ordered.map((c, i) => ({ id: c.id, sortOrder: i }))
+        ),
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as number);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setActiveId(null);
+    if (!over || active.id === over.id) return;
+
+    setCategories((prev) => {
+      const oldIndex = prev.findIndex((c) => c.id === active.id);
+      const newIndex = prev.findIndex((c) => c.id === over.id);
+      const next = arrayMove(prev, oldIndex, newIndex);
+      persistOrder(next);
+      return next;
+    });
+  }
 
   function handleSaved(updated: Category) {
     setCategories((prev) => {
@@ -74,14 +230,16 @@ export default function AdminCategoryBar() {
     setCategories((prev) => prev.filter((c) => c.id !== id));
   }
 
-  // Gabungkan search + kategori jadi satu list, lalu bagi 2 baris
-  const allItems = [
-    { type: "search" as const },
-    ...categories.map((c) => ({ type: "category" as const, data: c })),
-  ];
-  const half   = Math.ceil(allItems.length / 2);
-  const rowOne = allItems.slice(0, half);
-  const rowTwo = allItems.slice(half);
+  const visibleCategories = categories.filter(
+    (c) => c.terminals.length === 0 || c.terminals.includes(activeTerminal)
+  );
+
+  // Search selalu slot pertama, sisanya kategori
+  const half             = Math.ceil((visibleCategories.length + 1) / 2);
+  const rowOneCategories = visibleCategories.slice(0, half - 1);
+  const rowTwoCategories = visibleCategories.slice(half - 1);
+
+  const activeCat = activeId ? categories.find((c) => c.id === activeId) : null;
 
   const renderSearchButton = () => (
     <button
@@ -90,14 +248,7 @@ export default function AdminCategoryBar() {
       aria-label="Buka pencarian fasilitas"
       className="flex flex-col items-center gap-1 transition-all duration-150 active:scale-95"
     >
-      <div
-        className={[
-          "w-12 h-12 rounded-2xl flex items-center justify-center",
-          "bg-orange-500",
-          "shadow-[0_3px_8px_rgba(249,115,22,0.40)]",
-          "hover:scale-105 transition-transform duration-150",
-        ].join(" ")}
-      >
+      <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-orange-500 shadow-[0_3px_8px_rgba(249,115,22,0.40)] hover:scale-105 transition-transform duration-150">
         <svg
           className="w-6 h-6 text-white"
           xmlns="http://www.w3.org/2000/svg"
@@ -120,69 +271,68 @@ export default function AdminCategoryBar() {
     </button>
   );
 
-  const renderCategoryButton = (cat: Category) => (
-    <div
-      key={cat.id}
-      className="relative flex flex-col items-center gap-1 transition-all duration-150 active:scale-95"
-    >
-      {/* Badge admin */}
-      {isAdmin && (
-        <>
-          <button
-            onClick={() => setDeleteTarget(cat)}
-            className="absolute -top-1 -left-1 z-10 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center shadow hover:bg-red-600 transition"
-            title="Hapus kategori"
-          >
-            ×
-          </button>
-          <button
-            onClick={() => setEditTarget(cat)}
-            className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center shadow hover:bg-blue-600 transition"
-            title="Edit kategori"
-          >
-            ✎
-          </button>
-        </>
-      )}
-
-      <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-[0_2px_6px_rgba(0,0,0,0.14)] hover:scale-105 transition-transform duration-150"
-        style={{ backgroundColor: cat.color }}
-      >
-        <CategoryIcon icon={cat.icon} name={cat.name} />
-      </div>
-
-      <span className="text-[10px] text-gray-500 font-medium leading-tight text-center w-12 line-clamp-1">
-        {cat.name}
-      </span>
-    </div>
-  );
-
   return (
     <>
-      <div className="flex flex-col items-center gap-2 px-4 py-2">
-        {/* Baris 1 */}
-        <div className="flex gap-3 justify-center">
-          {rowOne.map((item) =>
-            item.type === "search"
-              ? renderSearchButton()
-              : renderCategoryButton(item.data)
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex flex-col items-center gap-2 px-4 py-2">
+          {isSaving && (
+            <span className="text-[9px] text-gray-400 animate-pulse">
+              Menyimpan urutan...
+            </span>
+          )}
+
+          {/* Baris 1 */}
+          <SortableContext
+            items={rowOneCategories.map((c) => c.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            <div className="flex gap-3 justify-center">
+              {renderSearchButton()}
+              {rowOneCategories.map((cat) => (
+                <SortableCategoryItem
+                  key={cat.id}
+                  cat={cat}
+                  isAdmin={isAdmin}
+                  isDragging={activeId !== null}
+                  onEdit={setEditTarget}
+                  onDelete={setDeleteTarget}
+                />
+              ))}
+            </div>
+          </SortableContext>
+
+          {/* Baris 2 */}
+          {rowTwoCategories.length > 0 && (
+            <SortableContext
+              items={rowTwoCategories.map((c) => c.id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              <div className="flex gap-3 justify-center">
+                {rowTwoCategories.map((cat) => (
+                  <SortableCategoryItem
+                    key={cat.id}
+                    cat={cat}
+                    isAdmin={isAdmin}
+                    isDragging={activeId !== null}
+                    onEdit={setEditTarget}
+                    onDelete={setDeleteTarget}
+                  />
+                ))}
+              </div>
+            </SortableContext>
           )}
         </div>
 
-        {/* Baris 2 */}
-        {rowTwo.length > 0 && (
-          <div className="flex gap-3 justify-center">
-            {rowTwo.map((item) =>
-              item.type === "search"
-                ? renderSearchButton()
-                : renderCategoryButton(item.data)
-            )}
-          </div>
-        )}
-      </div>
+        <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+          {activeCat ? <DragGhostItem cat={activeCat} /> : null}
+        </DragOverlay>
+      </DndContext>
 
-      {/* Modals */}
       {editTarget && (
         <EditCategoryModal
           initialData={editTarget}
@@ -190,7 +340,6 @@ export default function AdminCategoryBar() {
           onSaved={handleSaved}
         />
       )}
-
       {deleteTarget && (
         <DeleteConfirm
           category={deleteTarget}

@@ -91,13 +91,17 @@ export default function EditCategoryModal({ initialData, onClose, onSaved }: Pro
 
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploading,  setUploading]  = useState(false);
+  const [terminals,  setTerminals]  = useState<string[]>(
+    initialData?.terminals ?? []
+  );
 
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);
       setIcon(initialData.icon ?? "");
       setColor(initialData.color);
+      setTerminals(initialData.terminals ?? []);
     }
   }, [initialData]);
 
@@ -132,6 +136,12 @@ export default function EditCategoryModal({ initialData, onClose, onSaved }: Pro
     }
   }
 
+    function toggleTerminal(id: string) {
+      setTerminals((prev) =>
+        prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+      );
+    }
+
   // ── Save ───────────────────────────────────────────────────────────────────
   async function handleSave() {
     setError(null);
@@ -155,9 +165,10 @@ export default function EditCategoryModal({ initialData, onClose, onSaved }: Pro
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name:  name.trim(),
-          icon:  icon.trim() || null,
-          color: color.trim(),
+          name:     name.trim(),
+          icon:     icon.trim() || null,
+          color:    color.trim(),
+          terminals,
         }),
       });
 
@@ -255,6 +266,37 @@ export default function EditCategoryModal({ initialData, onClose, onSaved }: Pro
                 placeholder="Contoh: Transit Inter"
                 className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               />
+            </div>
+
+            {/* Terminal */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-gray-700">
+                Tersedia di Terminal
+              </label>
+              <div className="flex gap-2">
+                {(["T1", "T2"] as const).map((t) => {
+                  const active = terminals.includes(t);
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => toggleTerminal(t)}
+                      className={`flex-1 py-2 rounded-xl border-2 text-sm font-semibold transition-colors ${
+                        active
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-200 bg-white text-gray-400 hover:border-gray-300"
+                      }`}
+                    >
+                      Terminal {t.slice(1)}
+                    </button>
+                  );
+                })}
+              </div>
+              {terminals.length === 0 && (
+                <p className="text-[10px] text-amber-600 bg-amber-50 rounded-lg px-2 py-1">
+                  Kosong = muncul di semua terminal
+                </p>
+              )}
             </div>
 
             {/* Color picker */}
