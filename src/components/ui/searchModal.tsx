@@ -7,6 +7,61 @@ import type { Category, FacilityWithRelations } from "@/types";
 const KEYBOARD_ROW_ONE = ["A","B","C","D","E","F","G","H","I","J","K","L","M"] as const;
 const KEYBOARD_ROW_TWO = ["N","O","P","Q","R","S","T","U","V","W","X","Y","Z"] as const;
 
+// =============================================================================
+// HELPER — render icon sesuai format (SVG inline, URL/path gambar, emoji, teks)
+// =============================================================================
+
+function isImageSrc(icon: string): boolean {
+  if (
+    icon.startsWith("data:image/") ||
+    icon.startsWith("http://") ||
+    icon.startsWith("https://") ||
+    icon.startsWith("blob:") ||
+    icon.startsWith("/")
+  ) return true;
+  if (/\.(png|jpe?g|gif|webp|avif|svg|ico)(\?.*)?$/i.test(icon)) return true;
+  return false;
+}
+
+function CategoryIcon({
+  icon,
+  name,
+  size = "md",
+}: {
+  icon: string | null;
+  name: string;
+  size?: "md" | "lg";
+}) {
+  const imgCls   = size === "lg" ? "w-8 h-8 object-contain" : "w-6 h-6 object-contain";
+  const svgCls   = size === "lg" ? "w-8 h-8" : "w-6 h-6";
+  const emojiCls = size === "lg" ? "text-3xl leading-none" : "text-2xl leading-none";
+
+  if (!icon) {
+    return (
+      <span className="text-white text-xs font-bold text-center leading-tight px-1">
+        {name.slice(0, 3).toUpperCase()}
+      </span>
+    );
+  }
+
+  if (icon.trimStart().startsWith("<svg")) {
+    return (
+      <div
+        className={`flex items-center justify-center ${svgCls} [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-white`}
+        dangerouslySetInnerHTML={{ __html: icon }}
+      />
+    );
+  }
+
+  if (isImageSrc(icon)) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={icon} alt={name} className={imgCls} />;
+  }
+
+  return <span className={emojiCls}>{icon}</span>;
+}
+
+
 export default function SearchModal() {
   const isSearchOpen = useMapStore((s) => s.isSearchOpen);
   const setIsSearchOpen = useMapStore((s) => s.setIsSearchOpen);
@@ -152,7 +207,7 @@ export default function SearchModal() {
                     ].join(" ")}
                     style={{ backgroundColor: category.color }}
                   >
-                    {category.icon}
+                    <CategoryIcon icon={category.icon} name={category.name} size="lg" />
                   </div>
                   <span className="text-[11px] text-gray-600 font-medium leading-tight text-center w-14 line-clamp-2">
                     {category.name}
@@ -198,9 +253,7 @@ export default function SearchModal() {
                         "transition-all duration-150 text-center",
                       ].join(" ")}
                     >
-                      <span className="text-xl leading-none" aria-hidden="true">
-                        {facility.category.icon}
-                      </span>
+                      <CategoryIcon icon={facility.category.icon} name={facility.name} />
                       <span className="text-gray-700 text-[10px] font-medium leading-tight line-clamp-2 w-full px-0.5">
                         {facility.name}
                       </span>

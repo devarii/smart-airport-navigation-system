@@ -126,6 +126,9 @@ export async function PUT(
         ...(body.floorId     !== undefined && { floorId: body.floorId }),
         ...(body.nodeId      !== undefined && { nodeId: body.nodeId }),
         ...(body.isActive    !== undefined && { isActive: body.isActive }),
+        // Patch gridRow/gridCol jika dikirim (untuk memperbaiki data lama yang null)
+        ...(body.gridRow     !== undefined && { gridRow: body.gridRow }),
+        ...(body.gridCol     !== undefined && { gridCol: body.gridCol }),
       },
       include: FACILITY_INCLUDE,
     });
