@@ -122,8 +122,10 @@ export default function EditFacilityModal() {
             description: description.trim() || null,
             categoryId,
             floorId,
-            gridRow:     facility.gridRow,
-            gridCol:     facility.gridCol,
+            // Round ke integer — dest.r/c dari JSON bisa float (mis. 32.25)
+            // DB schema: gridRow/gridCol adalah Int
+            gridRow:     facility.gridRow != null ? Math.round(facility.gridRow) : null,
+            gridCol:     facility.gridCol != null ? Math.round(facility.gridCol) : null,
             photo:       photo ?? null,
             isActive:    true,
           }),
@@ -139,9 +141,9 @@ export default function EditFacilityModal() {
             description: description.trim() || null,
             categoryId,
             photo:       photo ?? null,
-            // Patch gridRow/gridCol jika sebelumnya null (data lama sebelum migrasi grid)
-            ...(facility.gridRow != null && { gridRow: facility.gridRow }),
-            ...(facility.gridCol != null && { gridCol: facility.gridCol }),
+            // Patch gridRow/gridCol: round ke integer dan fix data lama yang null
+            ...(facility.gridRow != null && { gridRow: Math.round(facility.gridRow) }),
+            ...(facility.gridCol != null && { gridCol: Math.round(facility.gridCol) }),
           }),
         });
       }
@@ -195,7 +197,8 @@ export default function EditFacilityModal() {
               <p className="text-xs text-gray-500 mt-1">
                 Posisi grid:{" "}
                 <span className="font-mono font-medium text-blue-600">
-                  ({facility.gridRow}, {facility.gridCol})
+                  ({facility.gridRow != null ? Math.round(facility.gridRow) : "?"},{" "}
+                   {facility.gridCol != null ? Math.round(facility.gridCol) : "?"})
                 </span>
                 {" — "}
                 {facility.floor.terminal} {facility.floor.label}
