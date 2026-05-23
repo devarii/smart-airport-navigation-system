@@ -91,10 +91,11 @@ type RoomBox = { r1: number; c1: number; r2: number; c2: number };
 type DestinationWithRoom = DestinationPoint & { room?: RoomBox };
 
 interface Category {
-  id: number;
-  name: string;
-  color: string | null;
-  icon: string | null;
+  id:        number;
+  name:      string;
+  color:     string | null;
+  icon:      string | null;
+  sortOrder: number;
 }
 
 // =============================================================================
@@ -394,16 +395,15 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   const isVisible = useCallback((dest: DestinationPoint): boolean => {
     if (!activeCategoryNames) return true;
 
-    // Prioritas: cek dari DB facility terlebih dahulu
-    const facility = facilityMap.get(`${dest.r},${dest.c}`);
+    // Round ke integer — dest.r/c dari JSON bisa float, DB simpan INT
+    const facility = facilityMap.get(`${Math.round(dest.r)},${Math.round(dest.c)}`);
     if (facility) {
       const catName = categoryNameMap.get(facility.categoryId) ?? "";
       return activeCategoryNames.has(catName);
     }
 
-    // Fallback: inferensi dari prefix ID
     const catName = getCategoryName(dest.id);
-    if (!catName) return true; // nl, ld, dll — selalu tampil
+    if (!catName) return true;
     return activeCategoryNames.has(catName);
   }, [activeCategoryNames, facilityMap, categoryNameMap]);
 
@@ -412,11 +412,16 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     (dest: DestinationPoint) => {
       if (didDrag.current) return;
 
-      const walkable = nearestWalkable(dest.r, dest.c, cfg.rows, cfg.cols, wallSet);
+      // Round ke integer — dest.r/c dari JSON bisa float (mis. 32.25)
+      // DB menyimpan gridRow/gridCol sebagai INT → key harus cocok
+      const destR = Math.round(dest.r);
+      const destC = Math.round(dest.c);
+
+      const walkable = nearestWalkable(destR, destC, cfg.rows, cfg.cols, wallSet);
 
       // Lookup: koordinat exact → koordinat walkable → code (data lama tanpa gridRow/Col)
       const dbFacility =
-        facilityMap.get(`${dest.r},${dest.c}`) ??
+        facilityMap.get(`${destR},${destC}`) ??
         facilityMap.get(`${walkable.r},${walkable.c}`) ??
         facilityCodeMap.get(dest.id);
 
@@ -455,7 +460,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           walkable.r, walkable.c,
           floorId, catId, catName
         );
-      } else if (walkable.r !== dest.r || walkable.c !== dest.c) {
+      } else if (walkable.r !== destR || walkable.c !== destC) {
         facility = { ...dbFacility, gridRow: walkable.r, gridCol: walkable.c };
       } else {
         facility = dbFacility;
@@ -618,17 +623,21 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
             const h = (r2 - r1 + 1) * CELL * roomCal.scaleY;
 
             // Hit padding untuk room yang sangat kecil
+            // Round ke integer agar cocok dengan DB (simpan INT)
+            const dr = Math.round(dest.r);
+            const dc = Math.round(dest.c);
+
             const hitPadX  = Math.max(0, (MIN_HIT - w) / 2);
             const hitPadY  = Math.max(0, (MIN_HIT - h) / 2);
             const showLabel = w >= 36 && h >= 18;
 
             const isSelected =
               mapMode === "admin"
-                ? adminSelectedFacility?.gridRow === dest.r &&
-                  adminSelectedFacility?.gridCol === dest.c
+                ? adminSelectedFacility?.gridRow === dr &&
+                  adminSelectedFacility?.gridCol === dc
                 : selectedFacility?.code === dest.id ||
-                  (selectedFacility?.gridRow === dest.r &&
-                   selectedFacility?.gridCol === dest.c);
+                  (selectedFacility?.gridRow === dr &&
+                   selectedFacility?.gridCol === dc);
 
             return (
               <g
@@ -699,13 +708,17 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
             const cx = dest.c * CELL + CELL / 2;
             const cy = dest.r * CELL + CELL / 2;
 
+            // Round ke integer agar cocok dengan DB (simpan INT)
+            const dr = Math.round(dest.r);
+            const dc = Math.round(dest.c);
+
             const isSelected =
               mapMode === "admin"
-                ? adminSelectedFacility?.gridRow === dest.r &&
-                  adminSelectedFacility?.gridCol === dest.c
+                ? adminSelectedFacility?.gridRow === dr &&
+                  adminSelectedFacility?.gridCol === dc
                 : selectedFacility?.code === dest.id ||
-                  (selectedFacility?.gridRow === dest.r &&
-                   selectedFacility?.gridCol === dest.c);
+                  (selectedFacility?.gridRow === dr &&
+                   selectedFacility?.gridCol === dc);
 
             return (
               <DestMarker
