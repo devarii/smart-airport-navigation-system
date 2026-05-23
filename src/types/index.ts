@@ -232,7 +232,12 @@ export interface NearbyFacility {
 // MAP INTERACTION TYPES
 // =============================================================================
 
-export type MapMode = "view" | "admin";
+/**
+ * "view"  — mode normal user, SVG background tampil
+ * "grid"  — mode debug, wall/grid layer tampil, SVG disembunyikan
+ * "admin" — mode admin, edit/tambah POI
+ */
+export type MapMode = "view" | "grid" | "admin";
 
 export type AdminAction = "add" | "edit" | "delete" | null;
 
@@ -367,5 +372,3 @@ export interface CreateOperationalHourPayload {
   openTime?: string;   // format "HH:mm"
   closeTime?: string;  // format "HH:mm"
 }
-
-export type UpdateOperationalHourPayload = Partial<Omit<CreateOperationalHourPayload, "facilityId" | "day">>;

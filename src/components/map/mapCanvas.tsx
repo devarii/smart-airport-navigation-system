@@ -7,6 +7,8 @@ import { useMapStore } from "@/store/mapStore";
 import { buildWallSet } from "@/lib/astar";
 import type { FacilityWithRelations, DestinationPoint, WallDataJson } from "@/types";
 import PathRenderer from "@/components/map/pathRenderer";
+import { resolveNavigationAnchor } from "@/utils/roomAnchor";
+import GridWallLayer from "@/components/map/gridWallLayer";
 
 import {
   T1_WALL_DATA, DESTINATIONS as T1_DESTINATIONS,
@@ -30,15 +32,14 @@ import {
 
 const CELL    = 6;
 const C_KIOSK = "#00b4d8" as const;
-const TOUCH_R = 10;   // radius hit area dot marker
-const MIN_HIT = 18;   // minimum hit padding untuk room kecil
+const TOUCH_R = 10;
+const MIN_HIT = 18;
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 4;
 
 // =============================================================================
 // BACKGROUND & ROOM CALIBRATION
-// Sesuaikan nilai ini sampai overlay pas dengan gambar Figma.
 // =============================================================================
 
 const BG_CALIBRATION = {
@@ -58,7 +59,6 @@ const T2_ROOM_CALIBRATION = {
 
 // =============================================================================
 // CATEGORY MAPPING
-// Mapping dari prefix ID destination → nama kategori DB.
 // =============================================================================
 
 const PREFIX_TO_CATEGORY: Record<string, string> = {
@@ -73,10 +73,8 @@ const PREFIX_TO_CATEGORY: Record<string, string> = {
   mus: "Musholla",
   df:  "Duty Free",
   arr: "Arrival",
-  // nl, ld, lf, ll, ori → tidak ada kategori spesifik (selalu tampil)
 };
 
-/** Ambil nama kategori dari dest.id. null = selalu tampil (tidak difilter). */
 function getCategoryName(destId: string): string | null {
   const clean  = destId.replace(/^l[12]_/, "");
   const prefix = clean.match(/^([a-z]+)/)?.[1] ?? "";
@@ -91,11 +89,10 @@ type RoomBox = { r1: number; c1: number; r2: number; c2: number };
 type DestinationWithRoom = DestinationPoint & { room?: RoomBox };
 
 interface Category {
-  id:        number;
-  name:      string;
-  color:     string | null;
-  icon:      string | null;
-  sortOrder: number;
+  id: number;
+  name: string;
+  color: string | null;
+  icon: string | null;
 }
 
 // =============================================================================
@@ -176,8 +173,7 @@ function getRoomTransform(terminal: "T1" | "T2", dest: DestinationWithRoom) {
 }
 
 // =============================================================================
-// HELPER — synthetic facility (user mode, POI belum ada di DB)
-// id negatif = sinyal ini bukan data DB asli
+// HELPER — synthetic facility
 // =============================================================================
 
 let _syntheticIdCounter = -1;
@@ -229,8 +225,7 @@ function makeSyntheticFacility(
 }
 
 // =============================================================================
-// HELPER — template untuk ADD mode di admin
-// id: 0 = sinyal POST (create) ke EditFacilityModal
+// HELPER — template ADD mode admin
 // =============================================================================
 
 function makeAddFacilityTemplate(
@@ -246,7 +241,7 @@ function makeAddFacilityTemplate(
     code: dest.id,
     description: null,
     categoryId: 0,
-    floorId: 0,       // dipilih via dropdown di EditFacilityModal
+    floorId: 0,
     nodeId: null,
     isActive: true,
     gridRow: walkableR,
@@ -283,10 +278,11 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   const setSelectedFacility      = useMapStore((s) => s.setSelectedFacility);
   const setIsRouteOpen           = useMapStore((s) => s.setIsRouteOpen);
   const clearRoute               = useMapStore((s) => s.clearRoute);
-  const mapMode                  = useMapStore((s) => s.mapMode);
   const adminSelectedFacility    = useMapStore((s) => s.adminSelectedFacility);
   const setAdminSelectedFacility = useMapStore((s) => s.setAdminSelectedFacility);
   const facilitiesVersion        = useMapStore((s) => s.facilitiesVersion);
+
+  const mapMode = useMapStore((s) => s.mapMode);
 
   const [facilities, setFacilities] = useState<FacilityWithRelations[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -294,7 +290,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   const outerRef = useRef<HTMLDivElement>(null);
 
-  // ── Pan & Zoom state ─────────────────────────────────────────────────────────
+  // ── Pan & Zoom ───────────────────────────────────────────────────────────────
   const [pan,   setPan]   = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
 
@@ -309,10 +305,8 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     setScale(1);
   }, []);
 
-  // Reset view setiap ganti terminal
   useEffect(() => { resetView(); }, [activeTerminal, resetView]);
 
-  // Prevent native scroll/zoom saat touch di dalam peta
   useEffect(() => {
     const el = outerRef.current;
     if (!el) return;
@@ -329,7 +323,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   const wallSet = useMemo(() => buildWallSet(cfg.wallData.walls), [cfg]);
 
-  // facilityMap: "r,c" → facility dari DB (lookup utama)
   const facilityMap = useMemo(() => {
     const map = new Map<string, FacilityWithRelations>();
     for (const f of facilities) {
@@ -339,7 +332,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return map;
   }, [facilities]);
 
-  // facilityCodeMap: fallback untuk data lama yang gridRow/gridCol-nya null
   const facilityCodeMap = useMemo(() => {
     const map = new Map<string, FacilityWithRelations>();
     for (const f of facilities) {
@@ -348,14 +340,12 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return map;
   }, [facilities]);
 
-  // categoryNameMap: DB category id → name (untuk filter by name)
   const categoryNameMap = useMemo(() => {
     const map = new Map<number, string>();
     for (const c of categories) map.set(c.id, c.name);
     return map;
   }, [categories]);
 
-  // Set nama kategori yang aktif — null berarti tampilkan semua
   const activeCategoryNames = useMemo(() => {
     if (activeCategories.length === 0) return null;
     const names = new Set<string>();
@@ -366,7 +356,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return names;
   }, [activeCategories, categoryNameMap]);
 
-  // ── Fetch fasilitas & kategori (parallel) ───────────────────────────────────
+  // ── Fetch ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
@@ -383,7 +373,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           if (facBody.success) setFacilities(facBody.data);
           if (catBody.success) setCategories(catBody.data);
         }
-      } catch { /* peta tetap tampil tanpa POI interaktif */ }
+      } catch { /* peta tetap tampil */ }
       finally   { if (!cancelled) setIsLoading(false); }
     }
 
@@ -391,17 +381,14 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return () => { cancelled = true; };
   }, [activeTerminal, facilitiesVersion]);
 
-  // ── Cek visibilitas POI berdasarkan filter kategori ──────────────────────────
+  // ── Visibility filter ────────────────────────────────────────────────────────
   const isVisible = useCallback((dest: DestinationPoint): boolean => {
     if (!activeCategoryNames) return true;
-
-    // Round ke integer — dest.r/c dari JSON bisa float, DB simpan INT
-    const facility = facilityMap.get(`${Math.round(dest.r)},${Math.round(dest.c)}`);
+    const facility = facilityMap.get(`${dest.r},${dest.c}`);
     if (facility) {
       const catName = categoryNameMap.get(facility.categoryId) ?? "";
       return activeCategoryNames.has(catName);
     }
-
     const catName = getCategoryName(dest.id);
     if (!catName) return true;
     return activeCategoryNames.has(catName);
@@ -412,34 +399,28 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     (dest: DestinationPoint) => {
       if (didDrag.current) return;
 
-      // Round ke integer — dest.r/c dari JSON bisa float (mis. 32.25)
-      // DB menyimpan gridRow/gridCol sebagai INT → key harus cocok
-      const destR = Math.round(dest.r);
-      const destC = Math.round(dest.c);
+      // PATCH: room sebagai source of truth → anchor → nearestWalkable → A*
+      const anchor   = resolveNavigationAnchor(dest, cfg.rows, cfg.cols, wallSet);
+      const walkable = nearestWalkable(anchor.r, anchor.c, cfg.rows, cfg.cols, wallSet);
 
-      const walkable = nearestWalkable(destR, destC, cfg.rows, cfg.cols, wallSet);
-
-      // Lookup: koordinat exact → koordinat walkable → code (data lama tanpa gridRow/Col)
+      // DB lookup tetap pakai dest.r/c (gridRow/Col di DB masih koordinat lama)
       const dbFacility =
-        facilityMap.get(`${destR},${destC}`) ??
+        facilityMap.get(`${dest.r},${dest.c}`) ??
         facilityMap.get(`${walkable.r},${walkable.c}`) ??
         facilityCodeMap.get(dest.id);
 
       // ── Admin mode ──────────────────────────────────────────────────────────
       if (mapMode === "admin") {
         if (dbFacility && dbFacility.id > 0) {
-          // Facility sudah ada → edit mode; patch koordinat jika data lama
           const facilityWithCoords =
             (dbFacility.gridRow == null || dbFacility.gridCol == null)
               ? { ...dbFacility, gridRow: walkable.r, gridCol: walkable.c }
               : dbFacility;
           setAdminSelectedFacility(facilityWithCoords);
         } else {
-          // POI belum terdaftar → create mode (id: 0 = sinyal POST)
           const template = makeAddFacilityTemplate(
             dest as DestinationWithRoom,
-            walkable.r,
-            walkable.c,
+            walkable.r, walkable.c,
             activeTerminal
           );
           setAdminSelectedFacility(template);
@@ -447,7 +428,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
         return;
       }
 
-      // ── User mode ───────────────────────────────────────────────────────────
+      // ── User mode (svg & grid) ───────────────────────────────────────────────
       let facility: FacilityWithRelations;
 
       if (!dbFacility) {
@@ -460,7 +441,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           walkable.r, walkable.c,
           floorId, catId, catName
         );
-      } else if (walkable.r !== destR || walkable.c !== destC) {
+      } else if (walkable.r !== dest.r || walkable.c !== dest.c) {
         facility = { ...dbFacility, gridRow: walkable.r, gridCol: walkable.c };
       } else {
         facility = dbFacility;
@@ -478,7 +459,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     ]
   );
 
-  // ── Mouse event handlers (desktop) ──────────────────────────────────────────
+  // ── Mouse handlers ───────────────────────────────────────────────────────────
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     isDragging.current = true;
     didDrag.current    = false;
@@ -501,14 +482,12 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     setScale(s => Math.min(Math.max(s - e.deltaY * 0.001, MIN_SCALE), MAX_SCALE));
   }, []);
 
-  // ── Touch event handlers (kiosk touchscreen) ─────────────────────────────────
+  // ── Touch handlers ───────────────────────────────────────────────────────────
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       isDragging.current = true;
       didDrag.current    = false;
       lastPos.current    = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-
-      // Double-tap → reset view
       const now = Date.now();
       if (now - lastTapTime.current < 300) resetView();
       lastTapTime.current = now;
@@ -523,7 +502,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   }, [resetView]);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
-    // 1 jari → pan
     if (e.touches.length === 1 && isDragging.current) {
       const dx = e.touches[0].clientX - lastPos.current.x;
       const dy = e.touches[0].clientY - lastPos.current.y;
@@ -531,7 +509,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       setPan(p => ({ x: p.x + dx, y: p.y + dy }));
     }
-    // 2 jari → pinch zoom
     if (e.touches.length === 2 && pinchDist.current !== null) {
       const newDist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
@@ -551,6 +528,10 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   const svgW  = cfg.cols * CELL;
   const svgH  = cfg.rows * CELL;
   const calib = BG_CALIBRATION[cfg.calibKey];
+
+  // Shorthand untuk readability di JSX
+  const isGridMode  = mapMode === "grid";
+  const isAdminMode = mapMode === "admin";
 
   // =============================================================================
   // RENDER
@@ -575,7 +556,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
-      {/* ── Transform layer — semua konten peta bergerak di sini ── */}
       <div
         className="absolute inset-0"
         style={{
@@ -584,35 +564,40 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           willChange: "transform",
         }}
       >
-        {/* ════════════════════════════════════════════════════════════════
-            SVG LAYERS (satu koordinat sistem → overlay selalu align):
-            1 — Background Figma (<image>)
-            2 — Room boxes clickable + kalibrasi per-lantai
-            3 — Dot markers (POI tanpa room)
-            4 — Floor labels
-            5 — Kiosk / "Anda di sini" marker
-            6 — PathRenderer + children
-            ════════════════════════════════════════════════════════════════ */}
         <svg
           className="absolute inset-0 w-full h-full"
           viewBox={`0 0 ${svgW} ${svgH}`}
           preserveAspectRatio="none"
           aria-label={`Peta Terminal ${activeTerminal} Bandara Juanda`}
         >
-          {/* ── LAYER 1: Background Figma ── */}
-          <image
-            href={cfg.bgSvg}
-            x={calib.x}
-            y={calib.y}
-            width={svgW * calib.widthScale}
-            height={svgH * calib.heightScale}
-            preserveAspectRatio="none"
-          />
+          {/* ── LAYER 1: Background SVG — disembunyikan di grid mode ── */}
+          {!isGridMode && (
+            <image
+              href={cfg.bgSvg}
+              x={calib.x}
+              y={calib.y}
+              width={svgW * calib.widthScale}
+              height={svgH * calib.heightScale}
+              preserveAspectRatio="none"
+            />
+          )}
+
+          {/* ── LAYER 1b: Grid/Wall debug layer — hanya di grid mode ── */}
+          {isGridMode && (
+            <GridWallLayer
+              wallData={cfg.wallData}
+              rows={cfg.rows}
+              cols={cfg.cols}
+              f1Min={cfg.f1Min}
+              f2Min={cfg.f2Min}
+              f2Max={cfg.f2Max}
+            />
+          )}
 
           {/* ── LAYER 2: Room / tenant boxes ── */}
           {(cfg.destinations as DestinationWithRoom[]).map((dest, i) => {
-            if (!dest.room)        return null;
-            if (!isVisible(dest))  return null;
+            if (!dest.room)       return null;
+            if (!isVisible(dest)) return null;
 
             const { r1, c1, r2, c2 } = dest.room;
             const roomCal = getRoomTransform(activeTerminal, dest);
@@ -622,22 +607,16 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
             const w = (c2 - c1 + 1) * CELL * roomCal.scaleX;
             const h = (r2 - r1 + 1) * CELL * roomCal.scaleY;
 
-            // Hit padding untuk room yang sangat kecil
-            // Round ke integer agar cocok dengan DB (simpan INT)
-            const dr = Math.round(dest.r);
-            const dc = Math.round(dest.c);
-
-            const hitPadX  = Math.max(0, (MIN_HIT - w) / 2);
-            const hitPadY  = Math.max(0, (MIN_HIT - h) / 2);
+            const hitPadX   = Math.max(0, (MIN_HIT - w) / 2);
+            const hitPadY   = Math.max(0, (MIN_HIT - h) / 2);
             const showLabel = w >= 36 && h >= 18;
 
-            const isSelected =
-              mapMode === "admin"
-                ? adminSelectedFacility?.gridRow === dr &&
-                  adminSelectedFacility?.gridCol === dc
-                : selectedFacility?.code === dest.id ||
-                  (selectedFacility?.gridRow === dr &&
-                   selectedFacility?.gridCol === dc);
+            const isSelected = isAdminMode
+              ? adminSelectedFacility?.gridRow === dest.r &&
+                adminSelectedFacility?.gridCol === dest.c
+              : selectedFacility?.code === dest.id ||
+                (selectedFacility?.gridRow === dest.r &&
+                 selectedFacility?.gridCol === dest.c);
 
             return (
               <g
@@ -645,7 +624,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
                 style={{ cursor: "pointer" }}
                 onClick={(e) => { e.stopPropagation(); handleDestinationClick(dest); }}
               >
-                {/* Invisible hit padding untuk room kecil */}
                 {(hitPadX > 0 || hitPadY > 0) && (
                   <rect
                     x={x - hitPadX} y={y - hitPadY}
@@ -653,7 +631,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
                     rx={3} fill="transparent" stroke="none"
                   />
                 )}
-                {/* Fill utama */}
                 <rect
                   x={x} y={y} width={w} height={h} rx={3}
                   fill={dest.color}
@@ -662,7 +639,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
                   strokeWidth={isSelected ? 2.5 : 1.2}
                   strokeOpacity={isSelected ? 1 : 0.75}
                 />
-                {/* Highlight putih bagian dalam */}
                 <rect
                   x={x + 1} y={y + 1}
                   width={Math.max(0, w - 2)} height={Math.max(0, h - 2)}
@@ -670,7 +646,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
                   stroke="white" strokeOpacity={0.3} strokeWidth={0.7}
                   pointerEvents="none"
                 />
-                {/* Label — hanya untuk room cukup besar */}
                 {showLabel && (
                   <text
                     x={x + w / 2} y={y + h / 2}
@@ -685,7 +660,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
                     {dest.label}
                   </text>
                 )}
-                {/* Outline dashed oranye saat selected */}
                 {isSelected && (
                   <rect
                     x={x - 1} y={y - 1}
@@ -700,25 +674,20 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
             );
           })}
 
-          {/* ── LAYER 3: Dot markers (POI tanpa room) ── */}
+          {/* ── LAYER 3: Dot markers ── */}
           {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
-            if (dest.room)        return null; // sudah ditangani room box
+            if (dest.room)        return null;
             if (!isVisible(dest)) return null;
 
             const cx = dest.c * CELL + CELL / 2;
             const cy = dest.r * CELL + CELL / 2;
 
-            // Round ke integer agar cocok dengan DB (simpan INT)
-            const dr = Math.round(dest.r);
-            const dc = Math.round(dest.c);
-
-            const isSelected =
-              mapMode === "admin"
-                ? adminSelectedFacility?.gridRow === dr &&
-                  adminSelectedFacility?.gridCol === dc
-                : selectedFacility?.code === dest.id ||
-                  (selectedFacility?.gridRow === dr &&
-                   selectedFacility?.gridCol === dc);
+            const isSelected = isAdminMode
+              ? adminSelectedFacility?.gridRow === dest.r &&
+                adminSelectedFacility?.gridCol === dest.c
+              : selectedFacility?.code === dest.id ||
+                (selectedFacility?.gridRow === dest.r &&
+                 selectedFacility?.gridCol === dest.c);
 
             return (
               <DestMarker
@@ -735,7 +704,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           <FloorLabel x={12} y={cfg.labelL2Y} label="LANTAI 2" />
           <FloorLabel x={12} y={cfg.labelL1Y} label="LANTAI 1" />
 
-          {/* ── LAYER 5: Kiosk / "Anda di sini" marker ── */}
+          {/* ── LAYER 5: Kiosk marker ── */}
           <KioskMarker
             cx={cfg.startC * CELL + CELL / 2}
             cy={cfg.startR * CELL + CELL / 2}
@@ -748,7 +717,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
         </svg>
       </div>
 
-      {/* Loading overlay — di luar transform agar tidak ikut geser */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#e8f4f8]/60 rounded-2xl">
           <span className="text-[#1a4a5c]/70 text-[clamp(13px,1.2vw,15px)] font-medium animate-pulse">
