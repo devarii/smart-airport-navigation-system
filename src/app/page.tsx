@@ -12,11 +12,14 @@ import MapCanvas from "@/components/map/mapCanvas";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
 import IdleWarningBanner from "@/components/ui/idleWarningBanner";
 
+
 export default function HomePage() {
   const isSearchOpen     = useMapStore((s) => s.isSearchOpen);
   const selectedFacility = useMapStore((s) => s.selectedFacility);
   const isRouteOpen      = useMapStore((s) => s.isRouteOpen);
   const { countdown }    = useIdleTimer();
+  const mapMode    = useMapStore(s => s.mapMode);
+  const setMapMode = useMapStore(s => s.setMapMode);
 
   return (
     <main
@@ -50,6 +53,27 @@ export default function HomePage() {
       >
         {/* MapCanvas tidak menerima routeResult — PathRenderer baca langsung dari store */}
         <MapCanvas />
+        
+        <button
+        onClick={() => setMapMode(mapMode === "grid" ? "view" : "grid")}
+        style={{
+          position: "fixed",
+          bottom: 16,
+          right: 16,
+          zIndex: 9999,
+          padding: "8px 14px",
+          background: mapMode === "grid" ? "#1e293b" : "#f8fafc",
+          color: mapMode === "grid" ? "#fff" : "#1e293b",
+          border: "1.5px solid #94a3b8",
+          borderRadius: 8,
+          fontFamily: "monospace",
+          fontSize: 12,
+          cursor: "pointer",
+        }}
+      >
+        {mapMode === "grid" ? "🗺 SVG Mode" : "🔲 Wall Debug"}
+      </button>
+
       </div>
 
       {/* ── Bottom bar ── */}
@@ -92,5 +116,7 @@ export default function HomePage() {
       {/* RoutePanel baca + tulis store sendiri — tidak perlu props dari page */}
       {isRouteOpen && <RoutePanel />}
     </main>
+
+    
   );
 }

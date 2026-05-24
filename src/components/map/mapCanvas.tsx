@@ -59,6 +59,8 @@ const MAX_SCALE = 4;
 //      (-3, -7). Residual visual per lantai ≤ 3 px — dapat fine-tune di sini.
 // =============================================================================
 
+
+
 const BG_CALIBRATION = {
   T1: { x: -7,  y: -23, widthScale: 1.0, heightScale: 1.0 },
   // T2 midpoint dari floor1(0,10) dan floor2(5,4). Fine-tune jika perlu:
