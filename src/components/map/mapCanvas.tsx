@@ -42,19 +42,38 @@ const MAX_SCALE = 4;
 // BACKGROUND & ROOM CALIBRATION
 // =============================================================================
 
+// =============================================================================
+// CALIBRATION — Prinsip: room box + path KEDUANYA pakai raw grid coordinate.
+//
+// Room calibration sebelumnya (offsetX/offsetY) menggeser room box MENJAUHI
+// raw grid, sehingga path (yang sudah raw grid) terlihat berhenti sebelum
+// sampai ke room secara visual.
+//
+// Fix:
+//  1. Room calibration di-nol-kan → room box kembali ke raw grid.
+//  2. Background SVG digeser SESUAI offset lama agar alignment latar tetap terjaga.
+//     Formula: BG_CALIBRATION = { x: -offsetX, y: -offsetY }
+//
+// T1 : offset seragam (7, 23) di kedua lantai → BG shift tunggal (-7, -23).
+// T2 : offset berbeda per lantai (floor2: 5,4 / floor1: 0,10) → pakai midpoint
+//      (-3, -7). Residual visual per lantai ≤ 3 px — dapat fine-tune di sini.
+// =============================================================================
+
 const BG_CALIBRATION = {
-  T1: { x: 0, y: 0, widthScale: 1.0, heightScale: 1.0 },
-  T2: { x: 0, y: 0, widthScale: 1.0, heightScale: 1.0 },
+  T1: { x: -7,  y: -23, widthScale: 1.0, heightScale: 1.0 },
+  // T2 midpoint dari floor1(0,10) dan floor2(5,4). Fine-tune jika perlu:
+  T2: { x: -3,  y:  -7, widthScale: 1.0, heightScale: 1.0 },
 } as const;
 
+// Room box → raw grid coordinate (0 offset). Path sudah raw grid → keduanya aligned.
 const T1_ROOM_CALIBRATION = {
-  floor2: { offsetX: 7, offsetY: 23, scaleX: 1, scaleY: 1 },
-  floor1: { offsetX: 7, offsetY: 23, scaleX: 1, scaleY: 1 },
+  floor2: { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 },
+  floor1: { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 },
 } as const;
 
 const T2_ROOM_CALIBRATION = {
-  floor2: { offsetX: 5, offsetY: 4, scaleX: 1, scaleY: 1 },
-  floor1: { offsetX: 0, offsetY: 10, scaleX: 1, scaleY: 1 },
+  floor2: { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 },
+  floor1: { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 },
 } as const;
 
 // =============================================================================

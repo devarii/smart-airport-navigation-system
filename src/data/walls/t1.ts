@@ -3,8 +3,8 @@ import t1Json from "@/data/map/T1_gabungan.json";
 
 export const COLS = 300;
 export const ROWS = 100;
-export const START_R = 77;
-export const START_C = 10;
+export const START_R = 80;
+export const START_C = 13;
 
 // Batas baris per lantai (untuk deteksi lintas lantai)
 export const FLOOR1_ROW_MIN = 38;
