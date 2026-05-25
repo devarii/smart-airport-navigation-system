@@ -4,8 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { useMapStore } from "@/store/mapStore";
 import type { Category, FacilityWithRelations } from "@/types";
 
-const KEYBOARD_ROW_ONE = ["A","B","C","D","E","F","G","H","I","J","K","L","M"] as const;
-const KEYBOARD_ROW_TWO = ["N","O","P","Q","R","S","T","U","V","W","X","Y","Z"] as const;
+const KEYBOARD_LETTERS: string[][] = [
+  ["Q","W","E","R","T","Y","U","I","O","P"],
+  ["A","S","D","F","G","H","J","K","L"],
+  ["Z","X","C","V","B","N","M"],
+];
+
+const KEYBOARD_NUMBERS: string[][] = [
+  ["1","2","3","4","5","6","7","8","9","0"],
+  ["-","_","@","#","&","(",")","/"],
+  [".","!","?","'",'"',",",";"],
+];
 
 // =============================================================================
 // HELPER — render icon sesuai format (SVG inline, URL/path gambar, emoji, teks)
@@ -75,6 +84,8 @@ export default function SearchModal() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
+  const [keyboardMode, setKeyboardMode] = useState<"letters" | "numbers">("letters");
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -94,6 +105,7 @@ export default function SearchModal() {
     if (isSearchOpen) {
       setQuery("");
       setActiveCategoryId(null);
+      setKeyboardMode("letters");
     }
   }, [isSearchOpen]);
 
@@ -128,6 +140,8 @@ export default function SearchModal() {
   }, [query, activeCategoryId, activeTerminal, isSearchOpen]);
 
   const handleKeyPress = (letter: string) => setQuery((prev) => prev + letter);
+  const handleBackspace = () => setQuery((prev) => prev.slice(0, -1));
+  const handleSpace = () => setQuery((prev) => prev + " ");
   const handleClose = () => setIsSearchOpen(false);
   const handleClearQuery = () => setQuery("");
 
@@ -324,13 +338,15 @@ export default function SearchModal() {
 
           {/* ── Virtual keyboard ── */}
           <div className="bg-[#b8cfe0] px-3 pb-4 pt-3 flex flex-col gap-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
-            {[KEYBOARD_ROW_ONE, KEYBOARD_ROW_TWO].map((row, rowIndex) => (
+            {/* Letter / Number rows */}
+            {(keyboardMode === "letters" ? KEYBOARD_LETTERS : KEYBOARD_NUMBERS).map((row, rowIndex) => (
               <div key={rowIndex} className="flex gap-1.5 justify-center">
-                {row.map((letter) => (
+                {/* Middle row of letters gets auto side padding to center the 9-key row */}
+                {row.map((key) => (
                   <button
-                    key={letter}
-                    onClick={() => handleKeyPress(letter)}
-                    aria-label={`Ketik ${letter}`}
+                    key={key}
+                    onClick={() => handleKeyPress(key)}
+                    aria-label={`Ketik ${key}`}
                     className={[
                       "flex-1 min-h-11 rounded-lg",
                       "bg-white hover:bg-sky-50",
@@ -342,11 +358,76 @@ export default function SearchModal() {
                       "transition-all duration-75",
                     ].join(" ")}
                   >
-                    {letter}
+                    {key}
                   </button>
                 ))}
               </div>
             ))}
+
+            {/* Bottom action row: [123/?] [SPACE] [⌫] */}
+            <div className="flex gap-1.5 justify-center">
+              {/* Mode toggle */}
+              <button
+                onClick={() => setKeyboardMode((m) => m === "letters" ? "numbers" : "letters")}
+                aria-label={keyboardMode === "letters" ? "Beralih ke angka" : "Beralih ke huruf"}
+                className={[
+                  "min-h-11 px-3 rounded-lg",
+                  "bg-[#9ab4cc] hover:bg-[#8aa4bc]",
+                  "text-gray-800 font-bold text-[11px]",
+                  "shadow-[0_3px_0_#7a98b0,0_1px_3px_rgba(0,0,0,0.15)]",
+                  "border border-gray-300/60",
+                  "active:translate-y-0.5 active:shadow-[0_1px_0_#7a98b0]",
+                  "transition-all duration-75 whitespace-nowrap",
+                ].join(" ")}
+              >
+                {keyboardMode === "letters" ? "123" : "ABC"}
+              </button>
+
+              {/* Space */}
+              <button
+                onClick={handleSpace}
+                aria-label="Spasi"
+                className={[
+                  "flex-1 min-h-11 rounded-lg",
+                  "bg-white hover:bg-sky-50",
+                  "text-gray-400 font-medium text-[12px]",
+                  "shadow-[0_3px_0_#94a3b8,0_1px_3px_rgba(0,0,0,0.15)]",
+                  "border border-gray-200/80",
+                  "active:translate-y-0.5 active:shadow-[0_1px_0_#94a3b8]",
+                  "transition-all duration-75",
+                ].join(" ")}
+              >
+                space
+              </button>
+
+              {/* Backspace */}
+              <button
+                onClick={handleBackspace}
+                aria-label="Hapus karakter"
+                className={[
+                  "min-h-11 px-4 rounded-lg",
+                  "bg-[#9ab4cc] hover:bg-[#8aa4bc]",
+                  "text-gray-700",
+                  "shadow-[0_3px_0_#7a98b0,0_1px_3px_rgba(0,0,0,0.15)]",
+                  "border border-gray-300/60",
+                  "active:translate-y-0.5 active:shadow-[0_1px_0_#7a98b0]",
+                  "transition-all duration-75 flex items-center justify-center",
+                ].join(" ")}
+              >
+                <svg
+                  className="w-5 h-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6H8.5a2.5 2.5 0 0 0-2.5 2.5v7a2.5 2.5 0 0 0 2.5 2.5H12l7-6-7-6Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m15 10-2 2m0 0-2 2m2-2 2 2m-2-2-2-2" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
