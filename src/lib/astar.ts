@@ -70,6 +70,11 @@ function astarSingle(
       const nc = current.c + dc;
       if (!inBounds(nr, nc)) continue;
       if (isWall(nr, nc)) continue;
+      // Cegah diagonal menembus sudut wall (corner-cutting)
+      if (dr !== 0 && dc !== 0) {
+        if (isWall(current.r + dr, current.c)) continue;
+        if (isWall(current.r, current.c + dc)) continue;
+      }
       const neighborKey = key(nr, nc);
       if (closed.has(neighborKey)) continue;
       const moveCost = dr !== 0 && dc !== 0 ? 1.414 : 1;
