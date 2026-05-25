@@ -245,32 +245,39 @@ export default function SearchModal() {
               {isLoading && (
                 <div className="grid grid-cols-5 gap-1.5">
                   {Array.from({ length: 15 }).map((_, i) => (
-                    <div key={i} className="h-16 rounded-lg bg-white/70 animate-pulse" />
+                    <div key={i} className="h-10 rounded-lg bg-white/70 animate-pulse" />
                   ))}
                 </div>
               )}
 
               {/* Hasil */}
               {!isLoading && results.length > 0 && (
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.25">
                   {results.map((facility) => (
                     <button
                       key={facility.id}
                       onClick={() => handleSelectFacility(facility)}
                       className={[
-                        "flex flex-col items-center justify-center gap-1",
-                        "h-16 px-1 py-2 rounded-lg",
+                        "flex flex-col justify-center items-start text-left",
+                        "h-10 px-2.5 rounded-lg",
                         "bg-white hover:bg-sky-50 active:bg-sky-100",
-                        "shadow-[0_2px_6px_rgba(0,0,0,0.10)]",
-                        "hover:-translate-y-0.5 hover:shadow-[0_4px_10px_rgba(0,0,0,0.15)]",
-                        "active:translate-y-0 active:shadow-sm",
-                        "transition-all duration-150 text-center",
+                        "shadow-[0_1px_3px_rgba(0,0,0,0.07)]",
+                        "hover:shadow-[0_3px_8px_rgba(0,0,0,0.11)]",
+                        "active:shadow-sm",
+                        "transition-all duration-150",
+                        "border-l-[3px] border border-white/60",
+                        "overflow-hidden",
                       ].join(" ")}
+                      style={{ borderLeftColor: facility.category?.color ?? "#38bdf8" }}
                     >
-                      <CategoryIcon icon={facility.category.icon} name={facility.name} />
-                      <span className="text-gray-700 text-[10px] font-medium leading-tight line-clamp-2 w-full px-0.5">
+                      <span className="text-gray-800 text-[9.5px] font-semibold leading-tight line-clamp-1 w-full tracking-tight">
                         {facility.name}
                       </span>
+                      {facility.description && (
+                        <span className="text-gray-400 text-[8px] leading-tight line-clamp-1 w-full mt-0.5">
+                          {facility.description}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>

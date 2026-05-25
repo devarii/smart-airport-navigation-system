@@ -36,7 +36,6 @@ model Floor {
   startCol    Int?
   wallData    Json?
   facilities  Facility[]
-  nodes       MapNode[]
 
   @@unique([terminal, floorNumber])
 }
@@ -57,7 +56,6 @@ model Facility {
   updatedAt        DateTime           @updatedAt
   category         Category           @relation(fields: [categoryId], references: [id])
   floor            Floor              @relation(fields: [floorId], references: [id])
-  node             MapNode?           @relation(fields: [nodeId], references: [id])
   operationalHours OperationalHour[]
 }
 
@@ -72,28 +70,6 @@ model OperationalHour {
   facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
 
   @@unique([facilityId, day])
-}
-
-model MapNode {
-  id         Int       @id @default(autoincrement())
-  x          Float
-  y          Float
-  label      String?
-  floorId    Int
-  floor      Floor     @relation(fields: [floorId], references: [id])
-  facility   Facility?
-  edgesFrom  MapEdge[] @relation("EdgeFrom")
-  edgesTo    MapEdge[] @relation("EdgeTo")
-}
-
-model MapEdge {
-  id           Int     @id @default(autoincrement())
-  fromNodeId   Int
-  toNodeId     Int
-  distance     Float
-  isAccessible Boolean @default(true)
-  fromNode     MapNode @relation("EdgeFrom", fields: [fromNodeId], references: [id])
-  toNode       MapNode @relation("EdgeTo",   fields: [toNodeId],   references: [id])
 }
 
 model Admin {
