@@ -20,6 +20,8 @@ interface GridWallLayerProps {
   f1Min: number;
   f2Min: number;
   f2Max: number;
+  offsetX?: number;
+  offsetY?: number;
 }
 
 export default function GridWallLayer({
@@ -29,6 +31,8 @@ export default function GridWallLayer({
   f1Min,
   f2Min,
   f2Max,
+  offsetX = 7,
+  offsetY = 23,
 }: GridWallLayerProps) {
   const wallSet = useMemo(() => buildWallSet(wallData.walls), [wallData]);
 
@@ -62,7 +66,7 @@ export default function GridWallLayer({
   const hLines = Array.from({ length: Math.floor(rows / 10) + 1 }, (_, i) => i * 10);
 
   return (
-    <g id="grid-wall-layer" pointerEvents="none">
+    <g id="grid-wall-layer" pointerEvents="none" transform={`translate(${offsetX}, ${offsetY})`}>
       {/* Zone fills */}
       <rect x={0} y={f2ZoneY} width={svgW} height={f2ZoneH}
         fill="#dbeafe" fillOpacity={0.5} />

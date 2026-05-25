@@ -430,6 +430,8 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
         facilityMap.get(`${walkable.r},${walkable.c}`) ??
         facilityCodeMap.get(dest.id);
 
+      
+
       // ── Admin mode ──────────────────────────────────────────────────────────
       if (mapMode === "admin") {
         if (dbFacility && dbFacility.id > 0) {
@@ -472,6 +474,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       clearRoute();
       setSelectedFacility(facility);
     },
+    
     [
       facilityMap, facilityCodeMap, wallSet, cfg.rows, cfg.cols,
       mapMode, activeTerminal, categories,
@@ -612,6 +615,8 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
               f1Min={cfg.f1Min}
               f2Min={cfg.f2Min}
               f2Max={cfg.f2Max}
+              offsetX={calib.x * -1}
+              offsetY={calib.y * 0}
             />
           )}
 
