@@ -44,10 +44,10 @@ model Facility {
   id               Int                @id @default(autoincrement())
   name             String
   code             String             @unique
+  destId  String?  @unique
   description      String?
   categoryId       Int
   floorId          Int
-  nodeId           Int?               @unique
   gridRow          Int?
   gridCol          Int?
   photo            String?
