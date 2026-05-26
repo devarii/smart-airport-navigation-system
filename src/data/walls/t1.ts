@@ -81,10 +81,10 @@ function buildWalls(): string[] {
   // ── Koridor tengah L1: r67 c64–c136 (batas atas zona tengah) ─────────────
   // Di atas batas ini: food/retail (r43–r48)
   // Di bawah batas ini: nolabel, toilet, kantor (r68–r84)
-  row(67, 64, 109);
-  row(67, 111, 136);
-  col(109, 63, 67);  // sisi kiri gap tangga1
-  col(111, 63, 67);  // sisi kanan gap tangga1
+  row(70, 64, 109);
+  row(70, 111, 136);
+  col(109, 66, 69);  // sisi kiri gap tangga1
+  col(111, 66, 69);  // sisi kanan gap tangga1
 
   // ── Area lounge/koridor tengah: r68–r77 c136–c166 ────────────────────────
   col(136, 68, 71);
@@ -93,11 +93,11 @@ function buildWalls(): string[] {
 
   // ── Kotak parkir/kantor area: r69–r80 c100–c131 ──────────────────────────
   // nolabel18 (l1_nl18): r72–r84 c117–c128
-  row(70, 100, 105);
-  row(70, 107, 131);
+  row(73, 100, 105);
+  row(73, 107, 131);
   row(84, 100, 131);
-  col(100, 70, 84);
-  col(131, 70, 84);
+  col(100, 73, 84);
+  col(131, 73, 84);
 
   // ── Dinding atas zona food/retail L1 (r43–r48) ───────────────────────────
   // Baris r43 = dinding atas semua toko di koridor utama L1
@@ -112,28 +112,30 @@ function buildWalls(): string[] {
   row(43, 192, 205); // dinding atas: food15 (c195–197), retail4 (c191–194), ret5 (c198–203)
   row(43, 207, 229); // dinding atas: nolabel9 (c206–208), food16–17 (c209–215), lain5 (c217–221), ret6 (c222–227)
   row(43, 233, 243); // dinding atas: food18 (c235–240)
-  row(43, 245, 257); // dinding atas: tl7 (c241–247), tl8 (c248–251), lain6 (c253–256)
+  row(43, 244, 257); // dinding atas: tl7 (c241–247), tl8 (c248–251), lain6 (c253–256)
   row(43, 254, 252); // dinding atas: food19 (c258–259)
    // dinding kanan area food19/20 — sisi kiri kolom c261
   row(43, 263, 275); // dinding atas: food20–22 (c260–271), lain8–9 (c272–275), nolabel10 (c276)
 
   // ── Blok toilet5 (l1_tl5): r48–r51 c31–c38 ──────────────────────────────
   // + nolabel6 di bawahnya: r52–r54 c31–c38
-  row(51, 47, 62);
+  row(53, 47, 64);
   col(63, 48, 51);
   row(48, 47, 62);
   col(47, 48, 51);
 
   // ── Kotak area r71–r77 c68–c94 (kantor13–20, toilet2 bawah) ─────────────
-  row(71, 68, 94);
+  row(74, 68, 76);
+  row(77, 77, 93);
   row(81, 68, 94);
-  col(68, 72, 81);
-  col(94, 72, 81);
+  col(68, 74, 81);
+  col(77, 74, 77);
+  col(94, 74, 81);
 
   // ── Area kecil r48–r51 c89–c95 (toilet22, toilet23, nolabel37) ───────────
   row(49, 64, 66);
   row(48, 89, 95);
-  row(51, 89, 95);
+  row(51, 89, 98);
   col(89, 49, 50);
   col(95, 49, 50);
 
@@ -141,18 +143,21 @@ function buildWalls(): string[] {
   // food24 (c105–110), food25 (c123–127), food30 (c110–113)
   // musholla1 (c114–116), musholla2 (c117–119), tangga1 (c115–118)
   col(99, 48, 51);
-  col(105, 52, 59);
-  col(125, 52, 59);
-  col(129, 48, 51);
-  row(60, 94, 135);  // dinding bawah area food tengah
-  col(94, 52, 59);
-  col(136, 48, 60);
+  col(108, 53, 61);
+  col(122, 50, 61);
+  col(127,  50, 52);
+  col(103,  50, 53);
+  col(109,  50, 53);
+  row(61, 94, 135);  // dinding bawah area food tengah
+  col(94, 52, 60);
+  col(135, 48, 60);
 
-  col(94, 63, 66);
-  col(138, 63, 66);
-  row(63, 95, 109);
-  row(63, 111, 137);
-  row(67, 137, 138);
+  col(94, 66, 66);
+  col(138, 66, 66);
+  row(66, 95, 109);
+  row(66, 111, 137);
+  row(68, 137, 138);
+  col(94, 66, 69);
 
   col(63, 57, 66);
 
@@ -176,7 +181,7 @@ function buildWalls(): string[] {
   col(152, 73, 82);
   row(82, 153, 176);
   col(177, 58, 82);
-  row(64, 171, 176);
+  row(66, 171, 176);
 
   // ── Koridor tengah lanjutan r67 c138–c246 ────────────────────────────────
   row(67, 138, 165);
@@ -219,21 +224,21 @@ function buildWalls(): string[] {
 
   // ── Kotak-kotak kantor bawah L1 (r71–r79): ───────────────────────────────
   // kan41/42 area c187–c193 (musholla4 l1_mus4 ada di c189–c190)
-  col(191, 71, 79);
-  col(184, 71, 79);
-  row(71, 184, 191);
+  col(191, 74, 79);
+  col(184, 74, 79);
+  row(74, 186, 191);
   row(79, 184, 191);
 
   // kan43/46 area c199–c214
-  col(199, 72, 80);
-  col(214, 72, 80);
-  row(72, 199, 214);
-  row(80, 199, 214);
+  col(199, 76, 79);
+  col(214, 76, 79);
+  row(76, 199, 214);
+  row(79, 201, 214);
 
   // kan41/42 area c232–c238
-  col(228, 72, 80);
-  col(235, 72, 80);
-  row(72, 228, 235);
+  col(228, 76, 79);
+  col(235, 76, 79);
+
   row(80, 228, 235);
 
   // nolabel32/33 area c254–c260
@@ -251,7 +256,34 @@ function buildWalls(): string[] {
 
   // ── Batas atas & bawah lantai 2 ──────────────────────────────────────────
   row(0, 1, 300);    // dinding atas lantai 2
-  row(32, 1, 300);   // dinding bawah lantai 2 (batas gate)
+ // dinding bawah lantai 2 (batas gate)
+  row(32, 1, 6);   // dinding bawah lantai 2 (batas gate)
+  row(32, 8, 27)
+  row(32, 29, 50)
+  row(32, 52, 75)
+  row(32, 77, 95)
+  row(32, 97, 118)
+  row(32, 120, 144)
+  row(32, 146, 167)
+  row(32, 169, 192)
+  row(32, 194, 215)
+  row(32, 217, 239)
+  row(32, 241, 261)
+  row(32, 263, 288)
+  row(32, 290, 300)
+
+  col(270, 32, 38)
+  col(250, 32, 38)
+  col(230, 32, 38)
+  col(200, 32, 38)
+  col(190, 32, 38)
+  col(160, 32, 38)
+  col(140, 32, 38)
+  col(110, 32, 38)
+  col(80, 32, 38)
+  col(70, 32, 38)
+  col(40, 32, 38)
+  col(15, 32, 38)
 
   // ── Area pojok kiri atas L2: r10–r20 c1–c47 ─────────────────────────────
   // musholla1 L2 (l2_mus1): r23–r24 c9–c11
@@ -262,40 +294,40 @@ function buildWalls(): string[] {
   col(44, 1, 10);
 
   // ── Lounge3 (l2_lo3): r26–r29 c11–c17 ───────────────────────────────────
-  col(6, 24, 29);
-  col(13, 24, 29);
-  row(24, 6, 13);
-  row(29, 6, 13);
+  col(9, 24, 29);
+  col(16, 24, 29);
+  row(24, 6, 15);
+  row(29, 6, 15);
 
   // ── Lounge4 (l2_lo4): r24–r29 c19–c26 ───────────────────────────────────
-  col(15, 24, 29);
-  col(22, 24, 29);
-  row(24, 15, 22);
-  row(29, 15, 22);
+  col(18, 24, 29);
+  col(25, 24, 29);
+  row(24, 18, 24);
+  row(29, 18, 24);
 
   // ── Lounge5 (l2_lo5): r24–r29 c33–c39 ───────────────────────────────────
-  col(29, 24, 29);
-  col(36, 24, 29);
-  row(24, 29, 36);
-  row(29, 29, 36);
+  col(31, 24, 29);
+  col(38, 24, 29);
+  row(24, 32, 38);
+  row(29, 31, 38);
 
   // ── Lounge6 (l2_lo6): r24–r29 c42–c48 ───────────────────────────────────
-  col(38, 24, 29);
-  col(45, 24, 29);
-  row(24, 38, 45);
-  row(29, 38, 45);
+  col(40, 24, 29);
+  col(47, 24, 29);
+  row(24, 40, 46);
+  row(29, 40, 46);
 
   // ── Lounge7 (l2_lo7): r24–r29 c55–c61 ───────────────────────────────────
-  col(52, 24, 29);
-  col(59, 24, 29);
-  row(24, 52, 59);
-  row(29, 52, 59);
+  col(54, 24, 29);
+  col(60, 24, 29);
+  row(24, 54, 59);
+  row(29, 54, 59);
 
   // ── Lounge8 (l2_lo8): r24–r29 c64–c70 ───────────────────────────────────
-  col(61, 24, 29);
+  col(62, 24, 29);
   col(68, 24, 29);
-  row(24, 61, 68);
-  row(29, 61, 68);
+  row(24, 63, 68);
+  row(29, 63, 68);
 
   // ── Lounge9 (l2_lo9): r24–r29 c79–c85 ───────────────────────────────────
   col(77, 24, 29);
@@ -408,7 +440,7 @@ function buildWalls(): string[] {
   // food8–9 (l2_fnb8–9), retail2–3 (l2_ret2–3)
   col(79, 13, 20);
   col(107, 17, 20);
-  row(20, 79, 107);
+  row(20, 80, 107);
   row(17, 82, 107);
   col(82, 13, 16);
   row(13, 79, 82);
@@ -416,7 +448,8 @@ function buildWalls(): string[] {
   // ── Area r11–r20 c120–c138 (tangga3 l2_ld3) ─────────────────────────────
   col(120, 11, 20);
   col(138, 11, 20);
-  row(11, 120, 138);
+  row(11, 120, 125);
+  row(11, 130, 138);
   row(20, 120, 138);
 
   // ── Area r11–r20 c147–c150 ───────────────────────────────────────────────
@@ -440,7 +473,7 @@ function buildWalls(): string[] {
   col(170, 11, 20);
   col(180, 13, 20);
   row(13, 170, 180);
-  row(20, 170, 180);
+  row(20, 170, 176);
   row(11, 152, 170);
 
   // ── Area r17–r20 c183–c201 ───────────────────────────────────────────────
