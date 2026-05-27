@@ -51,8 +51,8 @@ function buildWalls(): string[] {
   // Membentuk koridor kiri (c6–c20) dan dinding c26 menuju r67
   col(20, 39, 37);   // dinding kanan area kiri atas
   row(44, 21, 26);   // dinding bawah area kiri atas
-  col(26, 45, 67);   // dinding kanan koridor kiri (retail_new, food1, food2)
-  row(67, 6, 52);    // dinding bawah koridor kiri — batas atas area toilet/kantor bawah
+  col(26, 45, 70);   // dinding kanan koridor kiri (retail_new, food1, food2)
+  row(70, 6, 54);    // dinding bawah koridor kiri — batas atas area toilet/kantor bawah
 
   // ── Kotak tengah bawah kiri: area nolabel/kantor r73–r78 c27–c46 ─────────
   // (Mechanical Room l1_nl1 ada di c44–c49 — lihat di bawah)
@@ -64,19 +64,19 @@ function buildWalls(): string[] {
   // ── Kompleks toilet/kantor area c54–c63, r55–r78 ─────────────────────────
   // toilet2 (l1_tl2): r71–r75 c57–c63
   // kan_new (l1_tl2_2): r64–r70 c57–c60
-  col(54, 63, 67);
-  row(67, 55, 57);
-  col(57, 63, 67);
-  row(63, 55, 57);
-  col(59, 55, 69);
-  row(69, 55, 59);
-  row(59, 54, 58);
-  col(54, 55, 59);
 
-  col(54, 69, 78);
-  row(78, 53, 56);
-  row(78, 59, 62);
-  col(63, 67, 78);
+
+  col(59, 63, 67);
+  row(64, 56, 58);
+  col(59, 56, 69);
+  row(69, 56, 59);
+  row(61, 56, 58);
+  col(56, 56, 61);
+
+  col(56, 64, 80);
+  row(81, 56, 58);
+  row(81, 61, 63);
+  col(64, 67, 81);
 
   // ── Koridor tengah L1: r67 c64–c136 (batas atas zona tengah) ─────────────
   // Di atas batas ini: food/retail (r43–r48)
@@ -93,16 +93,16 @@ function buildWalls(): string[] {
 
   // ── Kotak parkir/kantor area: r69–r80 c100–c131 ──────────────────────────
   // nolabel18 (l1_nl18): r72–r84 c117–c128
-  row(73, 100, 105);
-  row(73, 107, 131);
+  row(72, 100, 105);
+  row(72, 107, 131);
   row(84, 100, 131);
   col(100, 73, 84);
   col(131, 73, 84);
 
   // ── Dinding atas zona food/retail L1 (r43–r48) ───────────────────────────
   // Baris r43 = dinding atas semua toko di koridor utama L1
-  row(49, 26, 35);
-  col(35, 48, 50);
+  row(49, 26, 36);
+  col(37, 48, 50);
   row(43, 26, 54);   // dinding atas: food1 (c31–38), food2 (c39–42), lain2 (c43–47), lain3 (c48–51) promo1
   row(43, 59, 66);   // dinding atas: food3 (c62–65), nolabel7 (c66–69)
   row(43, 73, 78);   // dinding atas: promo2 (c75–76), food4 (c77–80)
@@ -159,14 +159,15 @@ function buildWalls(): string[] {
   row(68, 137, 138);
   col(94, 66, 69);
 
-  col(63, 57, 66);
+  col(64, 57, 66);
 
   // ── Dinding atas r48 zona kanan (setelah tangga) ─────────────────────────
   row(48, 137, 143); // nolabel23 (c136–139), nolabel24 (c140–143)
   row(48, 156, 185); // food27 (c159–163), food28 (c164–169), toilet9 (c170–172), toilet10 (c173–175), toilet11 (c173–175), tl6 (c168–170)
   row(48, 195, 229); // toilet12 (c195–200), food15, ret4, ret5, ret6, dll
   row(48, 241, 257); // toilet7 (c241–247), toilet8 (c248–251), lain6 (c253–256)
-  row(48, 266, 295); // lift1 (c275–278), food29 (c279–284), retail15 (c285–288), nolabel10 (c276)
+  row(48, 266, 279); // lift1 (c275–278), food29 (c279–284), retail15 (c285–288), nolabel10 (c276) fikri
+  row(48, 285, 295);
   row(53, 106, 112); // sekat atas musholla1/2 bagian tengah
   row(53, 118, 124); // sekat atas tangga1 bagian tengah
 
@@ -185,28 +186,30 @@ function buildWalls(): string[] {
 
   // ── Koridor tengah lanjutan r67 c138–c246 ────────────────────────────────
   row(67, 138, 165);
-  row(67, 178, 246);
+  row(70, 178, 243);
 
   // ── Koridor r67 c249–c263 (setelah gap musholla3) ────────────────────────
   // GAP di c264–c265 = pintu masuk musholla3 dari bawah (dibuka saat debug)
-  row(67, 249, 267); // dinding c249–c263 (ada gap c264–c265 ke musholla3)
-  row(67, 276, 295); // dinding c284–c295
+  row(70, 246, 267); // dinding c249–c263 (ada gap c264–c265 ke musholla3)
+  row(69, 276, 295); // dinding c284–c295
 
   // ── Area toilet16 (l1_tl16): r56–r62 c242–c250 ──────────────────────────
   col(241, 55, 62);
-  col(244, 64, 71);
-  col(244, 71, 74);
-  row(71, 244, 246);
-  col(248, 67, 74);
+  col(243, 64, 70);
+  col(242, 71, 74);
+  col(240, 75, 78);
+  row(75, 240, 242);
+  col(245, 70, 78);
 
   // ── Area toilet15 (l1_tl15): r49–r56 c250–c257 ──────────────────────────
   row(55, 241, 257);
-  col(249, 49, 66);
+  col(249, 49, 70);
   col(257, 43, 56);
 
   // ── Sekat internal area c198 (food/retail) ───────────────────────────────
   col(198, 48, 51);
-  col(198, 61, 66);
+  col(195, 62, 70);
+  col(200, 65, 70);
 
   // ── Area musholla3 (l1_mus3): r49–r56 c262–c271 ─────────────────────────
   // Dinding kanan: col(269) dan col(273)
