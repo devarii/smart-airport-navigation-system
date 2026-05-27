@@ -41,6 +41,16 @@ export default function EditFacilityModal() {
   const [photo,       setPhoto]       = useState<string | null>(null);
   const [hours,       setHours]       = useState<OperationalHour[]>([]);
 
+  // ── Grid state (editable, dipakai saat save) ───────────────────────────────
+  const [gridRow, setGridRow] = useState<number | null>(null);
+  const [gridCol, setGridCol] = useState<number | null>(null);
+
+  // ── Debug: nilai asli dari JSON (store) dan dari DB ───────────────────────
+  const [jsonGridRow, setJsonGridRow] = useState<number | null>(null);
+  const [jsonGridCol, setJsonGridCol] = useState<number | null>(null);
+  const [dbGridRow,   setDbGridRow]   = useState<number | null | "loading">("loading");
+  const [dbGridCol,   setDbGridCol]   = useState<number | null | "loading">("loading");
+
   // ── UI state ───────────────────────────────────────────────────────────────
   const [categories,     setCategories]     = useState<Category[]>([]);
   const [floors,         setFloors]         = useState<Floor[]>([]);
@@ -59,7 +69,47 @@ export default function EditFacilityModal() {
     setPhoto(facility.photo ?? null);
     setHours(facility.operationalHours);
     setError(null);
-  }, [facility]);
+
+    // Simpan nilai asli dari JSON/store untuk debug
+    const jRow = facility.gridRow != null ? Math.round(facility.gridRow) : null;
+    const jCol = facility.gridCol != null ? Math.round(facility.gridCol) : null;
+    setJsonGridRow(jRow);
+    setJsonGridCol(jCol);
+
+    if (isCreate) {
+      // Create mode: pakai nilai JSON langsung (belum ada di DB)
+      setGridRow(jRow);
+      setGridCol(jCol);
+      setDbGridRow(null);
+      setDbGridCol(null);
+    } else {
+      // Edit mode: fetch dari DB untuk dapat nilai yang benar
+      setDbGridRow("loading");
+      setDbGridCol("loading");
+      setGridRow(jRow); // sementara pakai JSON dulu
+      setGridCol(jCol);
+      fetch(`/api/facilities/${facility.id}`)
+        .then((r) => r.json())
+        .then((json) => {
+          if (json.success && json.data) {
+            const dRow = json.data.gridRow != null ? Math.round(json.data.gridRow) : null;
+            const dCol = json.data.gridCol != null ? Math.round(json.data.gridCol) : null;
+            setDbGridRow(dRow);
+            setDbGridCol(dCol);
+            // Pakai nilai DB sebagai nilai aktif yang akan disimpan
+            setGridRow(dRow);
+            setGridCol(dCol);
+          } else {
+            setDbGridRow(null);
+            setDbGridCol(null);
+          }
+        })
+        .catch(() => {
+          setDbGridRow(null);
+          setDbGridCol(null);
+        });
+    }
+  }, [facility, isCreate]);
 
   // Fetch categories untuk dropdown
   useEffect(() => {
@@ -122,10 +172,8 @@ export default function EditFacilityModal() {
             description: description.trim() || null,
             categoryId,
             floorId,
-            // Round ke integer — dest.r/c dari JSON bisa float (mis. 32.25)
-            // DB schema: gridRow/gridCol adalah Int
-            gridRow:     facility.gridRow != null ? Math.round(facility.gridRow) : null,
-            gridCol:     facility.gridCol != null ? Math.round(facility.gridCol) : null,
+            gridRow:     gridRow,
+            gridCol:     gridCol,
             photo:       photo ?? null,
             isActive:    true,
           }),
@@ -141,9 +189,9 @@ export default function EditFacilityModal() {
             description: description.trim() || null,
             categoryId,
             photo:       photo ?? null,
-            // Patch gridRow/gridCol: round ke integer dan fix data lama yang null
-            ...(facility.gridRow != null && { gridRow: Math.round(facility.gridRow) }),
-            ...(facility.gridCol != null && { gridCol: Math.round(facility.gridCol) }),
+            // Pakai state gridRow/gridCol yang sudah di-sync dari DB (bukan dari facility/JSON)
+            ...(gridRow != null && { gridRow }),
+            ...(gridCol != null && { gridCol }),
           }),
         });
       }
@@ -193,14 +241,102 @@ export default function EditFacilityModal() {
             <h2 className="text-xl font-bold text-gray-800">
               {isCreate ? "Tambah Fasilitas" : "Edit Detail Lokasi"}
             </h2>
+
+            {/* ── DEBUG: Grid Row / Col (tampil di semua kondisi) ─────────── */}
+            <div className="mt-2 rounded-lg border border-dashed border-amber-400 bg-amber-50 px-3 py-2 text-xs font-mono">
+              <p className="font-semibold text-amber-700 mb-1">
+                🐛 DEBUG GRID &nbsp;—&nbsp;
+                {isCreate
+                  ? <span className="text-blue-600">[CREATE MODE — belum di DB]</span>
+                  : <span className="text-green-700">[EDIT MODE — id: {facility.id}]</span>
+                }
+              </p>
+              <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 text-gray-700">
+                {/* Header */}
+                <span className="text-gray-400"></span>
+                <span className="font-semibold text-gray-500">gridRow</span>
+                <span className="font-semibold text-gray-500">gridCol</span>
+
+                {/* Nilai dari JSON/store */}
+                <span className="text-purple-600">JSON/store</span>
+                <span className={jsonGridRow == null ? "text-gray-400 italic" : "text-purple-700"}>
+                  {jsonGridRow ?? "null"}
+                </span>
+                <span className={jsonGridCol == null ? "text-gray-400 italic" : "text-purple-700"}>
+                  {jsonGridCol ?? "null"}
+                </span>
+
+                {/* Nilai dari DB (edit mode) */}
+                {isCreate ? (
+                  <>
+                    <span className="text-gray-400">DB</span>
+                    <span className="text-gray-400 italic col-span-2">— (belum ada)</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-green-700">DB</span>
+                    <span className={
+                      dbGridRow === "loading" ? "text-gray-400 italic" :
+                      dbGridRow == null ? "text-red-400 italic" :
+                      dbGridRow !== jsonGridRow ? "text-red-600 font-bold" : "text-green-700"
+                    }>
+                      {dbGridRow === "loading" ? "memuat…" : (dbGridRow ?? "null")}
+                    </span>
+                    <span className={
+                      dbGridCol === "loading" ? "text-gray-400 italic" :
+                      dbGridCol == null ? "text-red-400 italic" :
+                      dbGridCol !== jsonGridCol ? "text-red-600 font-bold" : "text-green-700"
+                    }>
+                      {dbGridCol === "loading" ? "memuat…" : (dbGridCol ?? "null")}
+                    </span>
+                  </>
+                )}
+
+                {/* Nilai aktif yang akan disimpan */}
+                <span className="text-blue-600 font-bold">akan disimpan</span>
+                <span className="text-blue-700 font-bold">{gridRow ?? "null"}</span>
+                <span className="text-blue-700 font-bold">{gridCol ?? "null"}</span>
+              </div>
+
+              {/* Input override manual */}
+              <div className="flex gap-2 mt-2 items-center">
+                <span className="text-gray-500 shrink-0">Override:</span>
+                <input
+                  type="number"
+                  value={gridRow ?? ""}
+                  onChange={(e) => setGridRow(e.target.value === "" ? null : Number(e.target.value))}
+                  placeholder="row"
+                  className="w-16 px-1.5 py-0.5 rounded border border-amber-300 bg-white text-center"
+                />
+                <input
+                  type="number"
+                  value={gridCol ?? ""}
+                  onChange={(e) => setGridCol(e.target.value === "" ? null : Number(e.target.value))}
+                  placeholder="col"
+                  className="w-16 px-1.5 py-0.5 rounded border border-amber-300 bg-white text-center"
+                />
+                {!isCreate && (
+                  <button
+                    type="button"
+                    onClick={() => { setGridRow(dbGridRow === "loading" ? null : dbGridRow); setGridCol(dbGridCol === "loading" ? null : dbGridCol); }}
+                    className="text-green-700 hover:underline"
+                  >
+                    ↺ DB
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setGridRow(jsonGridRow); setGridCol(jsonGridCol); }}
+                  className="text-purple-600 hover:underline"
+                >
+                  ↺ JSON
+                </button>
+              </div>
+            </div>
+            {/* ── END DEBUG ─────────────────────────────────────────────── */}
+
             {isCreate && (
               <p className="text-xs text-gray-500 mt-1">
-                Posisi grid:{" "}
-                <span className="font-mono font-medium text-blue-600">
-                  ({facility.gridRow != null ? Math.round(facility.gridRow) : "?"},{" "}
-                   {facility.gridCol != null ? Math.round(facility.gridCol) : "?"})
-                </span>
-                {" — "}
                 {facility.floor.terminal} {facility.floor.label}
               </p>
             )}
