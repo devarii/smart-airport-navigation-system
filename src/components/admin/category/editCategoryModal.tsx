@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { HexColorPicker } from "react-colorful";
 import type { Category } from "@/types";
+import { useMapStore } from "@/store/mapStore";
 
 // =============================================================================
 // HELPERS
@@ -88,6 +89,7 @@ export default function EditCategoryModal({ initialData, onClose, onSaved }: Pro
   const [name,  setName]  = useState(initialData?.name  ?? "");
   const [icon,  setIcon]  = useState(initialData?.icon  ?? "");
   const [color, setColor] = useState(initialData?.color ?? "#3B82F6");
+  const incrementFacilitiesVersion = useMapStore((s) => s.incrementFacilitiesVersion);
 
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState<string | null>(null);
@@ -180,6 +182,7 @@ export default function EditCategoryModal({ initialData, onClose, onSaved }: Pro
       }
 
       onSaved(json.data);
+      incrementFacilitiesVersion();
       onClose();
     } catch {
       setError("Gagal menyimpan. Coba lagi.");

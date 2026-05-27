@@ -62,7 +62,6 @@ export async function GET(
       include: {
         category: true,
         floor: true,
-        node: true,
         operationalHours: {
           orderBy: { day: "asc" },
         },
@@ -96,7 +95,7 @@ export async function POST(
 
   try {
     const body: CreateFacilityPayload = await req.json();
-    const { name, code, description, categoryId, floorId, nodeId, isActive, photo, gridRow, gridCol } = body;
+    const { name, code, description, categoryId, floorId, isActive, photo, gridRow, gridCol } = body;
 
     // Validasi field wajib
     if (!name || !code || !categoryId || !floorId) {
@@ -140,7 +139,6 @@ export async function POST(
         description: description ?? null,
         categoryId,
         floorId,
-        nodeId:   nodeId   ?? null,
         isActive: isActive ?? true,
         photo:    photo    ?? null,
         gridRow:  gridRow  ?? null,
@@ -149,7 +147,6 @@ export async function POST(
       include: {
         category: true,
         floor: true,
-        node: true,
         operationalHours: { orderBy: { day: "asc" } },
       },
     });
@@ -158,7 +155,8 @@ export async function POST(
       { success: true, data: facility },
       { status: 201 }
     );
-  } catch {
+  } catch (err) {
+    console.error("[POST /api/facilities]", err);
     return NextResponse.json(
       { success: false, error: "Gagal membuat fasilitas baru" },
       { status: 500 }
