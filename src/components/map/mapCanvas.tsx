@@ -370,7 +370,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return map;
   }, [facilities]);
 
-  // Map destId → category.color dari DB (override warna statis)
+  // Map destId / koordinat → category.color dari DB (override warna statis)
   const destColorMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const f of facilities) {
@@ -381,15 +381,21 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       if (f.code && f.category?.color) {
         map.set(f.code, f.category.color);
       }
+      // fallback via koordinat grid (dipakai saat destId = null)
+      if (f.gridRow != null && f.gridCol != null && f.category?.color) {
+        map.set(`${f.gridRow},${f.gridCol}`, f.category.color);
+      }
     }
     return map;
   }, [facilities]);
 
   const getDestColor = useCallback(
-  (dest: DestinationPoint): string =>
-    destColorMap.get(dest.id) ?? dest.color,
-  [destColorMap]
-);
+    (dest: DestinationPoint): string =>
+      destColorMap.get(dest.id)                   // 1. coba destId
+      ?? destColorMap.get(`${dest.r},${dest.c}`)  // 2. fallback koordinat grid
+      ?? dest.color,                              // 3. fallback warna statis
+    [destColorMap]
+  );
 
   const categoryNameMap = useMemo(() => {
     const map = new Map<number, string>();
