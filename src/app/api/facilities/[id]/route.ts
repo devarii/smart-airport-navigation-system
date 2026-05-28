@@ -20,7 +20,6 @@ function parseId(id: string): number | null {
 const FACILITY_INCLUDE = {
   category: true,
   floor: true,
-  node: true,
   operationalHours: { orderBy: { day: "asc" } },
 } as const;
 
@@ -124,7 +123,6 @@ export async function PUT(
         ...(body.photo       !== undefined && { photo: body.photo }),
         ...(body.categoryId  !== undefined && { categoryId: body.categoryId }),
         ...(body.floorId     !== undefined && { floorId: body.floorId }),
-        ...(body.nodeId      !== undefined && { nodeId: body.nodeId }),
         ...(body.isActive    !== undefined && { isActive: body.isActive }),
         // Patch gridRow/gridCol jika dikirim (untuk memperbaiki data lama yang null)
         ...(body.gridRow     !== undefined && { gridRow: body.gridRow }),

@@ -17,43 +17,27 @@ export interface Floor {
   terminal: string;
   floorNumber: number;
   label: string;
-  gridRows: number | null; 
-  gridCols: number | null; 
-  startRow: number | null; 
-  startCol: number | null; 
-  wallData: unknown | null; 
+  gridRows: number | null;
+  gridCols: number | null;
+  startRow: number | null;
+  startCol: number | null;
+  wallData: unknown | null;
 }
 
 export interface Facility {
   id: number;
+  destId: string | null;
   name: string;
   code: string;
   description: string | null;
   categoryId: number;
   floorId: number;
-  nodeId: number | null;
   isActive: boolean;
-  gridRow: number | null; 
-  gridCol: number | null; 
+  gridRow: number | null;
+  gridCol: number | null;
   photo: string | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface MapNode {
-  id: number;
-  x: number;
-  y: number;
-  label: string | null;
-  floorId: number;
-}
-
-export interface MapEdge {
-  id: number;
-  fromNodeId: number;
-  toNodeId: number;
-  distance: number;
-  isAccessible: boolean;
 }
 
 export interface Admin {
@@ -84,19 +68,8 @@ export interface CategoryWithFacilities extends Category {
 export interface FacilityWithRelations extends Facility {
   category: Category;
   floor: Floor;
-  node: MapNode | null;
+  // node dihapus — relasi MapNode sudah dihapus dari schema
   operationalHours: OperationalHour[];
-}
-
-export interface MapNodeWithEdges extends MapNode {
-  facility: Facility | null;
-  edgesFrom: MapEdge[];
-  edgesTo: MapEdge[];
-}
-
-export interface MapEdgeWithNodes extends MapEdge {
-  fromNode: MapNode;
-  toNode: MapNode;
 }
 
 // =============================================================================
@@ -144,16 +117,6 @@ export interface SearchSuggestion {
   categoryIcon: string | null;
   categoryColor: string;
   floorLabel: string;
-}
-
-// =============================================================================
-// ROUTE / PATHFINDING TYPES
-// =============================================================================
-
-// Legacy node-based (simpan untuk kompatibilitas API nodes/edges)
-export interface RouteRequest {
-  fromNodeId: number;
-  toNodeId: number;
 }
 
 // =============================================================================
@@ -243,7 +206,6 @@ export type AdminAction = "add" | "edit" | "delete" | null;
 
 export interface SelectedPOI {
   facility: FacilityWithRelations;
-  node: MapNode;
 }
 
 // =============================================================================
@@ -278,10 +240,6 @@ export interface MapState {
 
   // Route
   routeResult: RouteResult | null;
-  routeFrom: MapNode | null;
-  routeTo: MapNode | null;
-  setRouteFrom: (node: MapNode | null) => void;
-  setRouteTo: (node: MapNode | null) => void;
   setRouteResult: (result: RouteResult | null) => void;
   clearRoute: () => void;
 
@@ -325,10 +283,11 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 export interface CreateFacilityPayload {
   name: string;
   code: string;
+  destId?: string;
   description?: string;
   categoryId: number;
   floorId: number;
-  nodeId?: number;
+  // nodeId dihapus — model MapNode sudah dihapus dari schema
   isActive?: boolean;
   gridRow?: number;
   gridCol?: number;
@@ -336,24 +295,6 @@ export interface CreateFacilityPayload {
 }
 
 export type UpdateFacilityPayload = Partial<CreateFacilityPayload>;
-
-export interface CreateNodePayload {
-  x: number;
-  y: number;
-  label?: string;
-  floorId: number;
-}
-
-export type UpdateNodePayload = Partial<CreateNodePayload>;
-
-export interface CreateEdgePayload {
-  fromNodeId: number;
-  toNodeId: number;
-  distance: number;
-  isAccessible?: boolean;
-}
-
-export type UpdateEdgePayload = Partial<CreateEdgePayload>;
 
 export interface CreateCategoryPayload {
   name: string;

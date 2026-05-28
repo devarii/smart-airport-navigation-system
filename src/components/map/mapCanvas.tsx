@@ -212,6 +212,7 @@ function makeSyntheticFacility(
     id: _syntheticIdCounter,
     name: dest.label,
     code: dest.id,
+    destId: dest.id,
     description: null,
     categoryId,
     floorId,
@@ -260,10 +261,10 @@ function makeAddFacilityTemplate(
     id: 0,
     name: dest.label,
     code: dest.id,
+    destId: dest.id,
     description: null,
     categoryId: 0,
     floorId: 0,
-    nodeId: null,
     isActive: true,
     gridRow: walkableR,
     gridCol: walkableC,
@@ -283,7 +284,6 @@ function makeAddFacilityTemplate(
       startRow: null, startCol: null,
       wallData: null,
     },
-    node: null,
     operationalHours: [],
   };
 }
@@ -361,6 +361,36 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return map;
   }, [facilities]);
 
+  // Primary link: dest.id (JSON) → destId (DB)
+  const facilityDestMap = useMemo(() => {
+    const map = new Map<string, FacilityWithRelations>();
+    for (const f of facilities) {
+      if (f.destId) map.set(f.destId, f);
+    }
+    return map;
+  }, [facilities]);
+
+  // Map destId → category.color dari DB (override warna statis)
+  const destColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const f of facilities) {
+      if (f.destId && f.category?.color) {
+        map.set(f.destId, f.category.color);
+      }
+      // fallback via code
+      if (f.code && f.category?.color) {
+        map.set(f.code, f.category.color);
+      }
+    }
+    return map;
+  }, [facilities]);
+
+  const getDestColor = useCallback(
+  (dest: DestinationPoint): string =>
+    destColorMap.get(dest.id) ?? dest.color,
+  [destColorMap]
+);
+
   const categoryNameMap = useMemo(() => {
     const map = new Map<number, string>();
     for (const c of categories) map.set(c.id, c.name);
@@ -426,9 +456,10 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
       // DB lookup tetap pakai dest.r/c (gridRow/Col di DB masih koordinat lama)
       const dbFacility =
-        facilityMap.get(`${dest.r},${dest.c}`) ??
-        facilityMap.get(`${walkable.r},${walkable.c}`) ??
-        facilityCodeMap.get(dest.id);
+        facilityDestMap.get(dest.id)                      // 1. destId — paling reliable
+        ?? facilityMap.get(`${dest.r},${dest.c}`)         // 2. koordinat dest
+        ?? facilityMap.get(`${walkable.r},${walkable.c}`) // 3. koordinat walkable
+        ?? facilityCodeMap.get(dest.id);                  // 4. code fallback
 
       
 
@@ -476,7 +507,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     },
     
     [
-      facilityMap, facilityCodeMap, wallSet, cfg.rows, cfg.cols,
+      facilityMap, facilityDestMap, facilityCodeMap, wallSet, cfg.rows, cfg.cols,
       mapMode, activeTerminal, categories,
       setAdminSelectedFacility, setSelectedFacility,
       setIsRouteOpen, clearRoute,
@@ -659,9 +690,9 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
                 )}
                 <rect
                   x={x} y={y} width={w} height={h} rx={3}
-                  fill={dest.color}
+                  fill={getDestColor(dest)}
+                  stroke={isSelected ? "#f39c12" : getDestColor(dest)}
                   fillOpacity={isSelected ? 0.55 : 0.28}
-                  stroke={isSelected ? "#f39c12" : dest.color}
                   strokeWidth={isSelected ? 2.5 : 1.2}
                   strokeOpacity={isSelected ? 1 : 0.75}
                 />
@@ -719,7 +750,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
               <DestMarker
                 key={dest.id}
                 cx={cx} cy={cy}
-                color={dest.color}
+                color={getDestColor(dest)}
                 isSelected={isSelected}
                 onClick={() => handleDestinationClick(dest)}
               />
