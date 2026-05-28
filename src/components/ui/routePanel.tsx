@@ -2,7 +2,12 @@
 
 import { useEffect, useCallback, useState } from "react";
 import { useMapStore } from "@/store/mapStore";
-import { astarWithStairs, buildWallSet } from "@/lib/astar";
+import {
+  astarWithStairs,
+  buildWallSet,
+  calcMultiPathMeters,
+  calcWalkMinutes,
+} from "@/lib/astar";
 
 import {
   T1_WALL_DATA, ROWS as T1_ROWS, COLS as T1_COLS,
@@ -93,9 +98,16 @@ export default function RoutePanel() {
     clearSelectedFacility();
   }, [setIsRouteOpen, setRouteResult, clearSelectedFacility]);
 
-  const totalSteps  = routeResult?.multiPath?.totalSteps ?? 0;
   const usedStairs  = routeResult?.multiPath?.usedStairs ?? false;
   const stairsLabel = routeResult?.multiPath?.stairsLabel;
+
+  // ── Distance metric ──────────────────────────────────────────────────────
+  // Dihitung dari segment path asli (bukan totalSteps) agar akurat untuk
+  // gerakan diagonal. totalSteps tetap dipakai pathRenderer untuk timing animasi.
+  const distanceMeters = routeResult
+    ? calcMultiPathMeters(routeResult.multiPath.segments)
+    : 0;
+  const walkMinutes = calcWalkMinutes(distanceMeters);
 
   return (
     <div
@@ -147,19 +159,21 @@ export default function RoutePanel() {
         )}
 
         {/* Tidak ditemukan */}
-        {routeResult && totalSteps === 0 && (
+        {routeResult && distanceMeters === 0 && (
           <div className="bg-red-50 rounded-xl px-3 py-2 text-sm font-semibold text-red-600">
             ❌ Jalur tidak ditemukan
           </div>
         )}
 
         {/* Hasil rute */}
-        {routeResult && totalSteps > 0 && (
+        {routeResult && distanceMeters > 0 && (
           <>
+            {/* Metric utama: jarak + estimasi waktu */}
             <div className="bg-blue-50 rounded-xl px-3 py-2 text-sm flex items-center gap-2">
-              <span className="font-bold text-gray-900">{totalSteps} langkah</span>
+              <span className="font-bold text-gray-900">{distanceMeters} m</span>
+              <span className="text-gray-500">·</span>
               <span className="text-gray-900 font-medium">
-                ±{Math.ceil(totalSteps / 60)} menit
+                ±{walkMinutes} menit
               </span>
             </div>
 
@@ -176,7 +190,9 @@ export default function RoutePanel() {
                   className="text-xs bg-gray-100 rounded-lg px-3 py-2 flex justify-between text-gray-900"
                 >
                   <span className="font-semibold">Segmen {i + 1}</span>
-                  <span className="font-bold">{seg.path.length - 1} langkah</span>
+                  <span className="font-bold">
+                    {calcMultiPathMeters([seg])} m
+                  </span>
                 </div>
               ))}
             </div>

@@ -208,3 +208,68 @@ export function gridToSvg(
     y: r * cellSize + cellSize / 2,
   };
 }
+
+// =============================================================================
+// DISTANCE METRIC
+// =============================================================================
+
+/**
+ * Jarak fisik satu cell grid dalam meter.
+ * Tune nilai ini agar sesuai dengan skala denah bandara.
+ * Cara kalibrasi: ukur elemen fisik yang diketahui di denah
+ * (mis. lebar koridor ~3 m) lalu hitung berapa cell lebarnya.
+ *
+ * @example
+ * // Koridor 3 m = 4 cell → CELL_METERS = 3 / 4 = 0.75
+ * // Untuk sekarang pakai 0.8 sebagai estimasi wajar bandara
+ */
+export const CELL_METERS = 0.8;
+
+/**
+ * Hitung jarak tempuh nyata satu segment path dalam meter.
+ *
+ * Gerakan ortogonal  (↑↓←→)  : 1 cell   = 1.000 × CELL_METERS
+ * Gerakan diagonal   (↖↗↙↘)  : √2 cell  = 1.414 × CELL_METERS
+ *
+ * Konsisten dengan moveCost di astarSingle — tidak ada double-counting.
+ */
+export function calcSegmentMeters(
+  path: GridPoint[],
+  cellMeters: number = CELL_METERS
+): number {
+  let dist = 0;
+  for (let i = 1; i < path.length; i++) {
+    const dr = Math.abs(path[i].r - path[i - 1].r);
+    const dc = Math.abs(path[i].c - path[i - 1].c);
+    dist += dr > 0 && dc > 0 ? Math.SQRT2 : 1;
+  }
+  return dist * cellMeters;
+}
+
+/**
+ * Hitung total jarak tempuh semua segment (termasuk lintas lantai) dalam meter.
+ * Hasilnya dibulatkan ke meter terdekat untuk display.
+ */
+export function calcMultiPathMeters(
+  segments: { path: GridPoint[] }[],
+  cellMeters: number = CELL_METERS
+): number {
+  const total = segments.reduce(
+    (sum, seg) => sum + calcSegmentMeters(seg.path, cellMeters),
+    0
+  );
+  return Math.round(total);
+}
+
+/**
+ * Estimasi waktu tempuh dalam menit.
+ * Kecepatan jalan rata-rata di bandara ~80 m/menit
+ * (lebih lambat dari 100 m/menit karena membawa koper, ramai, dll).
+ *
+ * Minimum 1 menit agar tidak tampil "0 menit" untuk rute sangat pendek.
+ */
+export const WALKING_SPEED_MPM = 80; // meter per menit
+
+export function calcWalkMinutes(meters: number): number {
+  return Math.max(1, Math.ceil(meters / WALKING_SPEED_MPM));
+}
