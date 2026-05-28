@@ -1236,8 +1236,8 @@
         {
       "id": "l1_rtnew",
       "label": "retail_new",
-      "r": 45,
-      "c": 35,
+      "r": 46,
+      "c": 23,
       "color": "#36A732",
       "room": {
         "r1": 39,
