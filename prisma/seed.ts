@@ -56,10 +56,10 @@ interface SeedFacility {
   id: number;
   name: string;
   code: string;
+  destId: string | null;
   description: string | null;
   categoryId: number;
   floorId: number;
-  nodeId: number | null;
   gridRow: number | null;
   gridCol: number | null;
   photo: string | null;
@@ -182,6 +182,7 @@ async function main() {
         where:  { code: facility.code },
         update: {
           name:        facility.name,
+          destId:      facility.destId,
           description: facility.description,
           categoryId,
           floorId,
@@ -193,10 +194,10 @@ async function main() {
         create: {
           name:        facility.name,
           code:        facility.code,
+          destId:      facility.destId,
           description: facility.description,
           categoryId,
           floorId,
-          nodeId:      null,
           gridRow:     facility.gridRow,
           gridCol:     facility.gridCol,
           photo:       facility.photo,
