@@ -4,7 +4,7 @@
       "id": 2,
       "name": "Retail",
       "icon": "",
-      "color": "#a86a6a",
+      "color": "#66e34b",
       "terminals": [
         "T1",
         "T2"
@@ -35,18 +35,6 @@
       ],
       "createdAt": "2026-04-27T23:37:19.777Z",
       "sortOrder": 4
-    },
-    {
-      "id": 8,
-      "name": "Gate",
-      "icon": "",
-      "color": "#0D9488",
-      "terminals": [
-        "T1",
-        "T2"
-      ],
-      "createdAt": "2026-04-08T02:28:06.424Z",
-      "sortOrder": 10
     },
     {
       "id": 53,
@@ -83,6 +71,18 @@
       ],
       "createdAt": "2026-05-22T11:08:51.810Z",
       "sortOrder": 14
+    },
+    {
+      "id": 8,
+      "name": "Gate",
+      "icon": "",
+      "color": "#dc4040",
+      "terminals": [
+        "T1",
+        "T2"
+      ],
+      "createdAt": "2026-04-08T02:28:06.424Z",
+      "sortOrder": 10
     },
     {
       "id": 56,
@@ -124,7 +124,7 @@
       "id": 1,
       "name": "Food & Beverages",
       "icon": "",
-      "color": "#92268e",
+      "color": "#942890",
       "terminals": [
         "T1",
         "T2"
@@ -18761,6 +18761,21 @@
       "updatedAt": "2026-05-28T11:06:15.276Z"
     },
     {
+      "id": 1113,
+      "name": "Convenience Store",
+      "code": "RT-01-01B",
+      "destId": null,
+      "description": "Convenience Store",
+      "categoryId": 2,
+      "floorId": 1,
+      "gridRow": 46,
+      "gridCol": 17,
+      "photo": null,
+      "isActive": true,
+      "createdAt": "2026-05-28T15:30:03.954Z",
+      "updatedAt": "2026-05-28T15:32:57.713Z"
+    },
+    {
       "id": 177,
       "name": "Duty Paid",
       "code": "RT-02-11",
@@ -20066,36 +20081,6 @@
       "updatedAt": "2026-05-28T10:57:08.961Z"
     },
     {
-      "id": 419,
-      "name": "Lounge 3",
-      "code": "LO-02-03",
-      "destId": null,
-      "description": "Lounge 3",
-      "categoryId": 46,
-      "floorId": 2,
-      "gridRow": 30,
-      "gridCol": 14,
-      "photo": null,
-      "isActive": true,
-      "createdAt": "2026-05-23T01:54:50.225Z",
-      "updatedAt": "2026-05-26T07:02:57.497Z"
-    },
-    {
-      "id": 420,
-      "name": "Lounge 4",
-      "code": "LO-02-04",
-      "destId": null,
-      "description": "Lounge 4",
-      "categoryId": 46,
-      "floorId": 2,
-      "gridRow": 30,
-      "gridCol": 23,
-      "photo": null,
-      "isActive": true,
-      "createdAt": "2026-05-23T01:55:37.235Z",
-      "updatedAt": "2026-05-26T07:02:57.497Z"
-    },
-    {
       "id": 378,
       "name": "No label",
       "code": "GF-01-12",
@@ -20109,21 +20094,6 @@
       "isActive": true,
       "createdAt": "2026-05-22T12:52:56.733Z",
       "updatedAt": "2026-05-26T07:02:57.739Z"
-    },
-    {
-      "id": 415,
-      "name": "Gate 1",
-      "code": "GT-02-01",
-      "destId": null,
-      "description": "Gate 1",
-      "categoryId": 8,
-      "floorId": 2,
-      "gridRow": 34,
-      "gridCol": 7,
-      "photo": null,
-      "isActive": true,
-      "createdAt": "2026-05-23T00:59:32.367Z",
-      "updatedAt": "2026-05-26T07:02:57.493Z"
     },
     {
       "id": 417,
@@ -20829,6 +20799,51 @@
       "isActive": true,
       "createdAt": "2026-05-22T12:53:27.752Z",
       "updatedAt": "2026-05-28T11:41:21.776Z"
+    },
+    {
+      "id": 415,
+      "name": "Gate 1",
+      "code": "GT-02-01",
+      "destId": null,
+      "description": "Gate 1",
+      "categoryId": 8,
+      "floorId": 2,
+      "gridRow": 34,
+      "gridCol": 7,
+      "photo": null,
+      "isActive": true,
+      "createdAt": "2026-05-23T00:59:32.367Z",
+      "updatedAt": "2026-05-28T15:31:07.808Z"
+    },
+    {
+      "id": 419,
+      "name": "Lounge 3",
+      "code": "LO-02-03",
+      "destId": null,
+      "description": "Lounge 3",
+      "categoryId": 46,
+      "floorId": 2,
+      "gridRow": 30,
+      "gridCol": 14,
+      "photo": null,
+      "isActive": true,
+      "createdAt": "2026-05-23T01:54:50.225Z",
+      "updatedAt": "2026-05-28T15:31:16.295Z"
+    },
+    {
+      "id": 420,
+      "name": "Lounge 4",
+      "code": "LO-02-04",
+      "destId": null,
+      "description": "Lounge 4",
+      "categoryId": 46,
+      "floorId": 2,
+      "gridRow": 30,
+      "gridCol": 23,
+      "photo": null,
+      "isActive": true,
+      "createdAt": "2026-05-23T01:55:37.235Z",
+      "updatedAt": "2026-05-28T15:31:20.665Z"
     },
     {
       "id": 110,
@@ -22190,7 +22205,7 @@
       "floorId": 1,
       "gridRow": 47,
       "gridCol": 30,
-      "photo": null,
+      "photo": "",
       "isActive": true,
       "createdAt": "2026-04-27T23:37:20.164Z",
       "updatedAt": "2026-05-26T07:02:57.722Z"
@@ -23126,21 +23141,6 @@
       "updatedAt": "2026-05-26T07:02:57.815Z"
     },
     {
-      "id": 486,
-      "name": "Duty Paid",
-      "code": "RT-02-10",
-      "destId": null,
-      "description": "Duty Paid",
-      "categoryId": 2,
-      "floorId": 2,
-      "gridRow": 28,
-      "gridCol": 215,
-      "photo": null,
-      "isActive": true,
-      "createdAt": "2026-05-23T03:46:14.987Z",
-      "updatedAt": "2026-05-26T07:02:57.818Z"
-    },
-    {
       "id": 487,
       "name": "ATM",
       "code": "SV-02-04",
@@ -23904,6 +23904,21 @@
       "isActive": true,
       "createdAt": "2026-05-23T13:12:45.873Z",
       "updatedAt": "2026-05-28T13:26:38.523Z"
+    },
+    {
+      "id": 486,
+      "name": "Duty Paid",
+      "code": "RT-02-10",
+      "destId": null,
+      "description": "Duty Paid",
+      "categoryId": 2,
+      "floorId": 2,
+      "gridRow": 30,
+      "gridCol": 206,
+      "photo": null,
+      "isActive": true,
+      "createdAt": "2026-05-23T03:46:14.987Z",
+      "updatedAt": "2026-05-26T07:02:57.818Z"
     },
     {
       "id": 535,
@@ -52327,6 +52342,195 @@
       "closeTime": "17:00"
     },
     {
+      "id": 5629,
+      "facilityId": 415,
+      "day": 1,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5630,
+      "facilityId": 415,
+      "day": 2,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5631,
+      "facilityId": 415,
+      "day": 3,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5632,
+      "facilityId": 415,
+      "day": 4,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5633,
+      "facilityId": 415,
+      "day": 5,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5634,
+      "facilityId": 415,
+      "day": 6,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5635,
+      "facilityId": 415,
+      "day": 7,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5643,
+      "facilityId": 420,
+      "day": 1,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5644,
+      "facilityId": 420,
+      "day": 2,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5645,
+      "facilityId": 420,
+      "day": 3,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5646,
+      "facilityId": 420,
+      "day": 4,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5647,
+      "facilityId": 420,
+      "day": 5,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5648,
+      "facilityId": 420,
+      "day": 6,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5649,
+      "facilityId": 420,
+      "day": 7,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5650,
+      "facilityId": 1113,
+      "day": 1,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5651,
+      "facilityId": 1113,
+      "day": 2,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5652,
+      "facilityId": 1113,
+      "day": 3,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5653,
+      "facilityId": 1113,
+      "day": 4,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5654,
+      "facilityId": 1113,
+      "day": 5,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5655,
+      "facilityId": 1113,
+      "day": 6,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5656,
+      "facilityId": 1113,
+      "day": 7,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
       "id": 5524,
       "facilityId": 359,
       "day": 1,
@@ -53202,6 +53406,69 @@
     {
       "id": 5628,
       "facilityId": 1112,
+      "day": 7,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5636,
+      "facilityId": 419,
+      "day": 1,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5637,
+      "facilityId": 419,
+      "day": 2,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5638,
+      "facilityId": 419,
+      "day": 3,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5639,
+      "facilityId": 419,
+      "day": 4,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5640,
+      "facilityId": 419,
+      "day": 5,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5641,
+      "facilityId": 419,
+      "day": 6,
+      "isOpen": true,
+      "is24Hours": false,
+      "openTime": "08:00",
+      "closeTime": "17:00"
+    },
+    {
+      "id": 5642,
+      "facilityId": 419,
       "day": 7,
       "isOpen": true,
       "is24Hours": false,
