@@ -14,11 +14,17 @@ import AdminCategoryBar from "@/components/admin/adminCategoryBar";
 import EditCategoryModal from "@/components/admin/category/editCategoryModal";
 import EditFacilityModal from "@/components/admin/facility/editFacilityModal";
 
+// Import komponen AdminSearchModal yang sebelumnya terlewat
+import AdminSearchModal from "@/components/admin/adminSearchModal";
+
 export default function AdminPage() {
   const { data: session }     = useSession();
   const mapMode               = useMapStore((s) => s.mapMode);
   const isAdmin               = mapMode === "admin";
   const adminSelectedFacility = useMapStore((s) => s.adminSelectedFacility);
+  
+  // Mengambil fungsi setter dari store untuk memproses fasilitas yang dipilih dari pencarian
+  const setAdminSelectedFacility = useMapStore((s) => s.setAdminSelectedFacility);
 
   const [showAddCategory,    setShowAddCategory]    = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
@@ -154,6 +160,9 @@ export default function AdminPage() {
 
       {/* ── Edit Facility Modal ── */}
       {adminSelectedFacility && <EditFacilityModal />}
+
+      {/* ── Admin Search Modal ── */}
+      <AdminSearchModal onEdit={(facility) => setAdminSelectedFacility(facility)} />
 
     </main>
   );
