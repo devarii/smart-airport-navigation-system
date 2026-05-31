@@ -48,6 +48,7 @@ export default function RoutePanel() {
   const activeTerminal        = useMapStore((s) => s.activeTerminal);
   const selectedFacility      = useMapStore((s) => s.selectedFacility);
   const routeResult           = useMapStore((s) => s.routeResult);
+  const isSearchOpen          = useMapStore((s) => s.isSearchOpen);
   const setIsRouteOpen        = useMapStore((s) => s.setIsRouteOpen);
   const setRouteResult        = useMapStore((s) => s.setRouteResult);
   const clearSelectedFacility = useMapStore((s) => s.clearSelectedFacility);
@@ -67,8 +68,8 @@ export default function RoutePanel() {
   const handleMouseUp = () => setDragging(false);
 
   const calculate = useCallback(async () => {
-    if (!selectedFacility) return;
-    if (selectedFacility.gridRow == null || selectedFacility.gridCol == null) return;
+    if (!selectedFacility) { setRouteResult(null); return; }
+    if (selectedFacility.gridRow == null || selectedFacility.gridCol == null) { setRouteResult(null); return; }
 
     const td = TERMINAL_DATA[activeTerminal];
     await new Promise<void>((r) => setTimeout(r, 30));
@@ -100,6 +101,9 @@ export default function RoutePanel() {
 
   const usedStairs  = routeResult?.multiPath?.usedStairs ?? false;
   const stairsLabel = routeResult?.multiPath?.stairsLabel;
+
+  // Hide behind search modal — avoids panel being "frozen" under the backdrop
+  if (isSearchOpen) return null;
 
   // ── Distance metric ──────────────────────────────────────────────────────
   // Dihitung dari segment path asli (bukan totalSteps) agar akurat untuk

@@ -104,7 +104,15 @@ export const useMapStore = create<MapStore>((set) => ({
   // Terminal
   // ---------------------------------------------------------------------------
   activeTerminal: "T1",
-  setActiveTerminal: (terminal) => set({ activeTerminal: terminal }),
+  setActiveTerminal: (terminal) =>
+    set({
+      activeTerminal:   terminal,
+      selectedFacility: null,
+      isRouteOpen:      false,
+      routeResult:      null,
+      routeFrom:        null,
+      routeTo:          null,
+    }),
 
   // ---------------------------------------------------------------------------
   // Map Mode
@@ -145,7 +153,11 @@ export const useMapStore = create<MapStore>((set) => ({
   // Search Modal
   // ---------------------------------------------------------------------------
   isSearchOpen: false,
-  setIsSearchOpen: (val) => set({ isSearchOpen: val }),
+  setIsSearchOpen: (val) =>
+    set(val
+      ? { isSearchOpen: true, routeResult: null, isRouteOpen: false, selectedFacility: null }
+      : { isSearchOpen: false }
+    ),
 
   // ---------------------------------------------------------------------------
   // Filter Kategori
