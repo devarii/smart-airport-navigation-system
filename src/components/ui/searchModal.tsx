@@ -146,8 +146,10 @@ export default function SearchModal() {
   const handleClearQuery = () => setQuery("");
 
   const handleSelectFacility = (facility: FacilityWithRelations) => {
-    setSelectedFacility(facility);
+    // Tutup modal dulu (setIsSearchOpen(false) TIDAK mereset selectedFacility),
+    // baru set facility — POIDetailPopup muncul karena selectedFacility !== null.
     setIsSearchOpen(false);
+    setSelectedFacility(facility);
   };
 
   if (!isSearchOpen) return null;
