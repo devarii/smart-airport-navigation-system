@@ -160,14 +160,13 @@ export const useMapStore = create<MapStore>((set) => ({
     ),
 
   // ---------------------------------------------------------------------------
-  // Filter Kategori
+  // Filter Kategori — single-select
+  // Pilih kategori baru → ganti. Pilih kategori yang sama → clear (kembali abu-abu)
   // ---------------------------------------------------------------------------
   activeCategories: [],
   toggleCategory: (id) =>
     set((state) => ({
-      activeCategories: state.activeCategories.includes(id)
-        ? state.activeCategories.filter((c) => c !== id)
-        : [...state.activeCategories, id],
+      activeCategories: state.activeCategories[0] === id ? [] : [id],
     })),
   clearCategories: () => set({ activeCategories: [] }),
 

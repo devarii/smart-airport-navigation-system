@@ -65,6 +65,7 @@ export default function CategoryBar() {
 
   const activeCategories = useMapStore((s) => s.activeCategories);
   const toggleCategory = useMapStore((s) => s.toggleCategory);
+  const clearCategories = useMapStore((s) => s.clearCategories);
   const setIsSearchOpen = useMapStore((s) => s.setIsSearchOpen);
   const activeTerminal   = useMapStore((s) => s.activeTerminal);
 
@@ -102,12 +103,59 @@ export default function CategoryBar() {
 
   const allItems = [
     { type: "search" as const },
+    { type: "all" as const },
     ...visibleCategories.map((c) => ({ type: "category" as const, data: c })),
   ];
 
   const half = Math.ceil(allItems.length / 2);
   const rowOne = allItems.slice(0, half);
   const rowTwo = allItems.slice(half);
+
+  const renderAllButton = () => {
+    const isAllActive = activeCategories.length === 0;
+    return (
+      <button
+        key="all"
+        onClick={clearCategories}
+        aria-label="Tampilkan semua kategori"
+        aria-pressed={isAllActive}
+        className="flex flex-col items-center gap-1 transition-all duration-150 active:scale-95"
+      >
+        <div
+          className={[
+            "w-12 h-12 rounded-2xl flex items-center justify-center",
+            "transition-all duration-150 hover:scale-105",
+            isAllActive
+              ? "bg-gray-500 shadow-[0_3px_10px_rgba(0,0,0,0.22)] ring-2 ring-white ring-offset-1 ring-offset-gray-100 scale-110"
+              : "bg-gray-300 shadow-[0_2px_6px_rgba(0,0,0,0.14)]",
+          ].join(" ")}
+        >
+          <svg
+            className="w-6 h-6 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <rect x="3" y="3" width="7" height="7" rx="1" strokeWidth={2} />
+            <rect x="14" y="3" width="7" height="7" rx="1" strokeWidth={2} />
+            <rect x="3" y="14" width="7" height="7" rx="1" strokeWidth={2} />
+            <rect x="14" y="14" width="7" height="7" rx="1" strokeWidth={2} />
+          </svg>
+        </div>
+        <span
+          className={[
+            "text-[10px] font-medium leading-tight text-center w-12",
+            isAllActive ? "text-gray-800" : "text-gray-400",
+          ].join(" ")}
+        >
+          Semua
+        </span>
+      </button>
+    );
+  };
 
   const renderSearchButton = () => (
     <button
@@ -187,6 +235,8 @@ export default function CategoryBar() {
         {rowOne.map((item) =>
           item.type === "search"
             ? renderSearchButton()
+            : item.type === "all"
+            ? renderAllButton()
             : renderCategoryButton(item.data)
         )}
       </div>
@@ -197,6 +247,8 @@ export default function CategoryBar() {
           {rowTwo.map((item) =>
             item.type === "search"
               ? renderSearchButton()
+              : item.type === "all"
+              ? renderAllButton()
               : renderCategoryButton(item.data)
           )}
         </div>
