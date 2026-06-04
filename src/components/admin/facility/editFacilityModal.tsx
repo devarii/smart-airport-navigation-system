@@ -50,6 +50,9 @@ export default function EditFacilityModal() {
   const [jsonGridCol, setJsonGridCol] = useState<number | null>(null);
   const [dbGridRow,   setDbGridRow]   = useState<number | null | "loading">("loading");
   const [dbGridCol,   setDbGridCol]   = useState<number | null | "loading">("loading");
+  // Koordinat ASLI dari wall data (dest.r / dest.c) — disisipkan oleh mapCanvas
+  const [wallDestR,   setWallDestR]   = useState<number | null>(null);
+  const [wallDestC,   setWallDestC]   = useState<number | null>(null);
 
   // ── UI state ───────────────────────────────────────────────────────────────
   const [categories,     setCategories]     = useState<Category[]>([]);
@@ -75,6 +78,11 @@ export default function EditFacilityModal() {
     const jCol = facility.gridCol != null ? Math.round(facility.gridCol) : null;
     setJsonGridRow(jRow);
     setJsonGridCol(jCol);
+
+    // Baca koordinat asli wall data yang disisipkan oleh mapCanvas
+    const fAny = facility as unknown as Record<string, unknown>;
+    setWallDestR(typeof fAny.wallDestR === "number" ? fAny.wallDestR : null);
+    setWallDestC(typeof fAny.wallDestC === "number" ? fAny.wallDestC : null);
 
     if (isCreate) {
       // Create mode: pakai nilai JSON langsung (belum ada di DB)
@@ -257,12 +265,23 @@ export default function EditFacilityModal() {
                 <span className="font-semibold text-gray-500">gridRow</span>
                 <span className="font-semibold text-gray-500">gridCol</span>
 
-                {/* Nilai dari JSON/store */}
-                <span className="text-purple-600">JSON/store</span>
-                <span className={jsonGridRow == null ? "text-gray-400 italic" : "text-purple-700"}>
+                {/* Koordinat ASLI dari wall data (dest.r / dest.c) */}
+                <span className="text-orange-600 font-semibold">Wall JSON</span>
+                <span className={wallDestR == null ? "text-gray-400 italic" : "text-orange-700 font-bold"}>
+                  {wallDestR ?? "null"}
+                </span>
+                <span className={wallDestC == null ? "text-gray-400 italic" : "text-orange-700 font-bold"}>
+                  {wallDestC ?? "null"}
+                </span>
+
+                {/* Nilai dari JSON/store (gridRow/gridCol yang masuk ke store) */}
+                <span className="text-purple-600">store</span>
+                <span className={jsonGridRow == null ? "text-gray-400 italic" :
+                  wallDestR != null && jsonGridRow !== wallDestR ? "text-yellow-600 font-bold" : "text-purple-700"}>
                   {jsonGridRow ?? "null"}
                 </span>
-                <span className={jsonGridCol == null ? "text-gray-400 italic" : "text-purple-700"}>
+                <span className={jsonGridCol == null ? "text-gray-400 italic" :
+                  wallDestC != null && jsonGridCol !== wallDestC ? "text-yellow-600 font-bold" : "text-purple-700"}>
                   {jsonGridCol ?? "null"}
                 </span>
 
@@ -329,8 +348,17 @@ export default function EditFacilityModal() {
                   onClick={() => { setGridRow(jsonGridRow); setGridCol(jsonGridCol); }}
                   className="text-purple-600 hover:underline"
                 >
-                  ↺ JSON
+                  ↺ store
                 </button>
+                {wallDestR != null && (
+                  <button
+                    type="button"
+                    onClick={() => { setGridRow(wallDestR); setGridCol(wallDestC); }}
+                    className="text-orange-600 hover:underline font-semibold"
+                  >
+                    ↺ Wall
+                  </button>
+                )}
               </div>
             </div>
             {/* ── END DEBUG ─────────────────────────────────────────────── */}
