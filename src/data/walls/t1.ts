@@ -3,21 +3,19 @@ import t1Json from "@/data/map/T1_gabungan.json";
 
 export const COLS = 300;
 export const ROWS = 100;
-export const START_R = 80;
-export const START_C = 13;
+export const START_R = 90;
+export const START_C = 182.5;
 
 export const FLOOR1_ROW_MIN = 38;
 export const FLOOR1_ROW_MAX = 90;
 export const FLOOR2_ROW_MIN = 0;
 export const FLOOR2_ROW_MAX = 32;
 
-export const STAIRCASE_L1: DestinationPoint = {
-  id: "l1_ld1", label: "tangga1", r: 52, c: 114, color: "#B1B1B1",
-};
-export const STAIRCASE_L2: DestinationPoint = {
-  id: "l2_ld3", label: "tangga3", r: 10, c: 129, color: "#B1B1B1",
-};
+// L1: r=137-52=85, c=299-114=185
+export const STAIRCASE_L1 = { id: "l1_ld1", label: "tangga1", r: 85, c: 185, color: "#B1B1B1" };
 
+// L2: r=32-10=22, c=299-129=170  
+export const STAIRCASE_L2 = { id: "l2_ld3", label: "tangga3", r: 22, c: 170, color: "#B1B1B1" };
 function buildWalls(): string[] {
   const wallSet = new Set<string>();
 
@@ -579,12 +577,39 @@ function buildWalls(): string[] {
   return Array.from(wallSet);
 }
 
+function rotateWalls(walls: string[]): string[] {
+  const F2_MAX = FLOOR2_ROW_MAX; // 32
+  const F1_MIN = FLOOR1_ROW_MIN; // 38
+  const result = new Set<string>();
+
+  for (const w of walls) {
+    const [r, c] = w.split(",").map(Number);
+
+    if (r <= F2_MAX) {
+      // Floor 2: rotate dalam bbox r=0..F2_MAX
+      const rNew = F2_MAX - r;
+      const cNew = (COLS - 1) - c;
+      result.add(`${rNew},${cNew}`);
+    } else if (r >= F1_MIN) {
+      // Floor 1: rotate dalam bbox r=F1_MIN..ROWS-1
+      const rNew = (F1_MIN + ROWS - 1) - r;
+      const cNew = (COLS - 1) - c;
+      result.add(`${rNew},${cNew}`);
+    } else {
+      // Gap area (r=33..37): tidak dirotasi
+      result.add(w);
+    }
+  }
+
+  return Array.from(result);
+}
+
 export const T1_WALL_DATA: WallDataJson = {
   rows: ROWS,
   cols: COLS,
   startRow: START_R,
   startCol: START_C,
-  walls: buildWalls(),
+  walls: rotateWalls(buildWalls()),
 };
 
 type RoomBox = {
