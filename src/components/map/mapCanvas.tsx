@@ -40,18 +40,21 @@ const MAX_SCALE      = 4;
 const LOADING_DELAY_MS = 300;
 const FETCH_TIMEOUT_MS = 10_000;
 
+
+
+
 // =============================================================================
 // CALIBRATION
 // =============================================================================
 
 const BG_CALIBRATION = {
-  T1: { x: -7,  y: -23, widthScale: 1.0, heightScale: 1.0 },
+  T1: { x: 3,  y: -4, widthScale: 1.0, heightScale: 1.0 },
   T2: { x: -3,  y:  -7, widthScale: 1.0, heightScale: 1.0 },
 } as const;
 
 const T1_ROOM_CALIBRATION = {
   floor2: { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 },
-  floor1: { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 },
+  floor1: { offsetX: 0, offsetY: 1, scaleX: 1, scaleY: 1 },
 } as const;
 
 const T2_ROOM_CALIBRATION = {
