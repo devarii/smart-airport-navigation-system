@@ -3,8 +3,8 @@ import t1Json from "@/data/map/T1_gabungan.json";
 
 export const COLS = 300;
 export const ROWS = 100;
-export const START_R = 80;
-export const START_C = 13;
+export const START_R = 90;
+export const START_C = 183;
 
 export const FLOOR1_ROW_MIN = 38;
 export const FLOOR1_ROW_MAX = 90;
@@ -29,8 +29,14 @@ function buildWalls(): string[] {
   };
   void box;
 
+  // Koordinat tembok T1 setelah rotasi 180° per lantai
+// Lantai 2 (row 0–35): newR = 35 - r, newC = 299 - c
+// Lantai 1 (row 36–99): newR = 135 - r, newC = 299 - c
+
+// Ganti isi fungsi buildWalls() dengan koordinat berikut:
+
   // ─────────────────────────────────────────────────────────────────────────
-  // BATAS GRID (jangan diubah)
+  // BATAS GRID (tidak dirotasi)
   // ─────────────────────────────────────────────────────────────────────────
   row(0, 0, COLS - 1);
   row(ROWS - 1, 0, COLS - 1);
@@ -38,543 +44,439 @@ function buildWalls(): string[] {
   col(COLS - 1, 0, ROWS - 1);
 
   // =========================================================================
-  // LANTAI 1
+  // LANTAI 1 (rotasi 180°)
   // =========================================================================
 
-  // ── Batas atas & bawah lantai 1 + sisi kiri & kanan ─────────────────────
-  row(38, 6, 295);   // dinding atas lantai 1
-  row(90, 6, 295);   // dinding bawah lantai 1
-  col(5, 38, 90);    // dinding kiri lantai 1
-  col(295, 38, 90);  // dinding kanan lantai 1
+  row(97, 4, 293);
+  row(45, 4, 293);
+  col(294, 45, 97);
+  col(4, 45, 97);
 
-  // ── Area pojok kiri atas L1: selasar & dinding pembatas kiri ─────────────
-  // Membentuk koridor kiri (c6–c20) dan dinding c26 menuju r67
-  col(20, 39, 37);   // dinding kanan area kiri atas
-  row(44, 21, 26);   // dinding bawah area kiri atas
-  col(26, 45, 70);   // dinding kanan koridor kiri (retail_new, food1, food2)
-  row(70, 6, 54);    // dinding bawah koridor kiri — batas atas area toilet/kantor bawah
+  col(279, 96, 98);
+  row(91, 273, 278);
+  col(273, 65, 90);
+  row(65, 245, 293);
 
-  // ── Kotak tengah bawah kiri: area nolabel/kantor r73–r78 c27–c46 ─────────
-  // (Mechanical Room l1_nl1 ada di c44–c49 — lihat di bawah)
-  row(73, 27, 46);   // dinding atas kotak
-  row(81, 27, 46);   // dinding bawah kotak
-  col(27, 74, 81);   // dinding kiri kotak
-  col(46, 74, 81);   // dinding kanan kotak
+  row(62, 253, 272);
+  row(54, 253, 272);
+  col(272, 54, 61);
+  col(253, 54, 61);
 
-  // ── Kompleks toilet/kantor area c54–c63, r55–r78 ─────────────────────────
-  // toilet2 (l1_tl2): r71–r75 c57–c63
-  // kan_new (l1_tl2_2): r64–r70 c57–c60
+  col(240, 68, 72);
+  row(71, 241, 243);
+  col(240, 66, 79);
+  row(66, 240, 243);
+  row(74, 241, 243);
+  col(243, 74, 79);
 
+  col(243, 55, 71);
+  row(54, 241, 243);
+  row(54, 236, 238);
+  col(235, 54, 68);
 
-  col(59, 63, 67);
-  row(64, 56, 58);
-  col(59, 56, 69);
-  row(69, 56, 59);
-  row(61, 56, 58);
-  col(56, 56, 61);
+  row(65, 190, 235);
+  row(65, 163, 188);
+  col(190, 66, 69);
+  col(188, 66, 69);
 
-  col(56, 64, 80);
-  row(81, 56, 58);
-  row(81, 61, 63);
-  col(64, 67, 81);
+  col(163, 64, 67);
+  row(63, 133, 163);
+  col(133, 64, 77);
 
-  // ── Koridor tengah L1: r67 c64–c136 (batas atas zona tengah) ─────────────
-  // Di atas batas ini: food/retail (r43–r48)
-  // Di bawah batas ini: nolabel, toilet, kantor (r68–r84)
-  row(70, 64, 109);
-  row(70, 111, 136);
-  col(109, 66, 69);  // sisi kiri gap tangga1
-  col(111, 66, 69);  // sisi kanan gap tangga1
+  row(63, 194, 199);
+  row(63, 168, 192);
+  row(51, 168, 199);
+  col(199, 51, 62);
+  col(168, 51, 62);
 
-  // ── Area lounge/koridor tengah: r68–r77 c136–c166 ────────────────────────
-  col(136, 68, 71);
-  row(72, 136, 166);
-  col(166, 58, 71);
+  row(86, 263, 273);
+  col(262, 85, 87);
+  row(92, 245, 273);
+  row(92, 233, 240);
+  row(92, 221, 226);
+  row(92, 193, 210);
+  row(92, 159, 175);
+  row(92, 111, 145);
+  row(92, 94, 107);
+  row(92, 70, 92);
+  row(92, 56, 66);
+  row(92, 42, 55);
+  row(92, 24, 36);
 
-  // ── Kotak parkir/kantor area: r69–r80 c100–c131 ──────────────────────────
-  // nolabel18 (l1_nl18): r72–r84 c117–c128
-  row(72, 100, 105);
-  row(72, 107, 131);
-  row(84, 100, 131);
-  col(100, 73, 84);
-  col(131, 73, 84);
+  row(82, 235, 252);
+  col(236, 84, 87);
+  row(87, 237, 252);
+  col(252, 84, 87);
 
-  // ── Dinding atas zona food/retail L1 (r43–r48) ───────────────────────────
-  // Baris r43 = dinding atas semua toko di koridor utama L1
-  row(49, 26, 36);
-  col(37, 48, 50);
-  row(43, 26, 54);   // dinding atas: food1 (c31–38), food2 (c39–42), lain2 (c43–47), lain3 (c48–51) promo1
-  row(43, 59, 66);   // dinding atas: food3 (c62–65), nolabel7 (c66–69)
-  row(43, 73, 78);   // dinding atas: promo2 (c75–76), food4 (c77–80)
-  row(43, 89, 106);  // dinding atas: nolabel8 (c91), retail2 (c93–97), food5–7 (c98–107)
-  row(43, 124, 140); // dinding atas: food8 (c124–129), food9 (c130–135), retail3 (c136–140)
-  row(43, 154, 188); // dinding atas: food10–14 (c154–178), lain4 (c183–187), tl21 (c180–182)
-  row(43, 192, 205); // dinding atas: food15 (c195–197), retail4 (c191–194), ret5 (c198–203)
-  row(43, 207, 229); // dinding atas: nolabel9 (c206–208), food16–17 (c209–215), lain5 (c217–221), ret6 (c222–227)
-  row(43, 233, 243); // dinding atas: food18 (c235–240)
-  row(43, 244, 257); // dinding atas: tl7 (c241–247), tl8 (c248–251), lain6 (c253–256)
-  row(43, 254, 252); // dinding atas: food19 (c258–259)
-   // dinding kanan area food19/20 — sisi kiri kolom c261
-  row(43, 263, 275); // dinding atas: food20–22 (c260–271), lain8–9 (c272–275), nolabel10 (c276)
+  row(61, 223, 231);
+  row(58, 206, 222);
+  row(54, 205, 231);
+  col(231, 54, 61);
+  col(222, 58, 61);
+  col(205, 54, 61);
 
-  // ── Blok toilet5 (l1_tl5): r48–r51 c31–c38 ──────────────────────────────
-  // + nolabel6 di bawahnya: r52–r54 c31–c38
-  row(53, 47, 64);
-  col(63, 48, 51);
-  row(48, 47, 62);
-  col(47, 48, 51);
+  row(86, 233, 235);
+  row(87, 204, 210);
+  row(84, 201, 210);
+  col(210, 85, 86);
+  col(204, 85, 86);
 
-  // ── Kotak area r71–r77 c68–c94 (kantor13–20, toilet2 bawah) ─────────────
-  row(74, 68, 76);
-  row(77, 77, 93);
-  row(81, 68, 94);
-  col(68, 74, 81);
-  col(77, 74, 77);
-  col(94, 74, 81);
+  col(200, 84, 87);
+  col(191, 74, 82);
+  col(177, 74, 85);
+  col(172, 83, 85);
+  col(196, 82, 85);
+  col(190, 82, 85);
+  row(74, 164, 205);
+  col(205, 75, 83);
+  col(164, 75, 87);
 
-  // ── Area kecil r48–r51 c89–c95 (toilet22, toilet23, nolabel37) ───────────
-  row(49, 64, 66);
-  row(48, 89, 95);
-  row(51, 89, 98);
-  col(89, 49, 50);
-  col(95, 49, 50);
+  col(205, 69, 69);
+  col(161, 69, 69);
+  row(69, 190, 204);
+  row(69, 162, 188);
+  row(67, 161, 162);
+  col(205, 66, 69);
 
-  // ── Sekat area food/nolabel c94–c136 r48–r60 ─────────────────────────────
-  // food24 (c105–110), food25 (c123–127), food30 (c110–113)
-  // musholla1 (c114–116), musholla2 (c117–119), tangga1 (c115–118)
-  col(99, 48, 51);
-  col(108, 53, 61);
-  col(122, 50, 61);
-  col(127,  50, 52);
-  col(103,  50, 53);
-  col(109,  50, 53);
-  row(61, 94, 135);  // dinding bawah area food tengah
-  col(94, 52, 60);
-  col(135, 48, 60);
+  col(235, 69, 78);
 
-  col(94, 66, 66);
-  col(138, 66, 66);
-  row(66, 95, 109);
-  row(66, 111, 137);
-  row(68, 137, 138);
-  col(94, 66, 69);
+  row(87, 156, 162);
+  row(87, 114, 143);
+  row(87, 70, 104);
+  row(87, 42, 58);
+  row(87, 20, 33);
+  row(87, 4, 20);
+  row(82, 187, 193);
+  row(82, 175, 181);
 
-  col(64, 57, 66);
+  col(157, 83, 86);
+  row(83, 157, 162);
 
-  // ── Dinding atas r48 zona kanan (setelah tangga) ─────────────────────────
-  row(48, 137, 143); // nolabel23 (c136–139), nolabel24 (c140–143)
-  row(48, 156, 185); // food27 (c159–163), food28 (c164–169), toilet9 (c170–172), toilet10 (c173–175), toilet11 (c173–175), tl6 (c168–170)
-  row(48, 195, 229); // toilet12 (c195–200), food15, ret4, ret5, ret6, dll
-  row(48, 241, 257); // toilet7 (c241–247), toilet8 (c248–251), lain6 (c253–256)
-  row(48, 266, 279); // lift1 (c275–278), food29 (c279–284), retail15 (c285–288), nolabel10 (c276) fikri
-  row(48, 285, 295);
-  row(53, 106, 112); // sekat atas musholla1/2 bagian tengah
-  row(53, 118, 124); // sekat atas tangga1 bagian tengah
+  col(129, 69, 77);
+  row(68, 127, 129);
+  col(127, 53, 67);
+  col(147, 53, 62);
+  row(53, 123, 146);
+  col(122, 53, 77);
+  row(69, 123, 128);
 
-  // ── nolabel25 (l1_nl25): r53–r54 c136–c142 ──────────────────────────────
-  col(142, 49, 52);
-  row(52, 137, 142);
+  row(68, 134, 161);
+  row(65, 56, 121);
 
-  // ── Area lain11/lain12/toilet13/14 c165–c177 r58–r78 ────────────────────
-  col(170, 58, 66);
-  row(67, 170, 172);
-  col(172, 68, 82);
-  col(152, 73, 82);
-  row(82, 153, 176);
-  col(177, 58, 82);
-  row(66, 171, 176);
+  row(65, 32, 53);
+  row(66, 4, 23);
 
-  // ── Koridor tengah lanjutan r67 c138–c246 ────────────────────────────────
-  row(67, 138, 165);
-  row(70, 178, 243);
+  col(58, 73, 80);
+  col(56, 65, 71);
+  col(57, 61, 64);
+  col(59, 57, 60);
+  row(60, 57, 59);
+  col(54, 57, 65);
 
-  // ── Koridor r67 c249–c263 (setelah gap musholla3) ────────────────────────
-  // GAP di c264–c265 = pintu masuk musholla3 dari bawah (dibuka saat debug)
-  row(70, 246, 267); // dinding c249–c263 (ada gap c264–c265 ke musholla3)
-  row(69, 276, 295); // dinding c284–c295
+  row(80, 42, 58);
+  col(50, 65, 86);
+  col(42, 79, 92);
 
-  // ── Area toilet16 (l1_tl16): r56–r62 c242–c250 ──────────────────────────
-  col(241, 55, 62);
-  col(243, 64, 70);
-  col(242, 71, 74);
-  col(240, 75, 78);
-  row(75, 240, 242);
-  col(245, 70, 78);
+  col(101, 84, 87);
+  col(104, 65, 73);
+  col(99, 65, 70);
 
-  // ── Area toilet15 (l1_tl15): r49–r56 c250–c257 ──────────────────────────
-  row(55, 241, 257);
-  col(249, 49, 70);
-  col(257, 43, 56);
+  col(38, 51, 77);
+  col(29, 51, 70);
+  row(77, 31, 37);
+  row(51, 29, 37);
+  row(81, 24, 38);
+  col(23, 51, 86);
+  row(51, 20, 22);
 
-  // ── Sekat internal area c198 (food/retail) ───────────────────────────────
-  col(198, 48, 51);
-  col(195, 62, 70);
-  col(200, 65, 70);
+  col(108, 56, 61);
+  col(115, 56, 61);
+  row(61, 108, 113);
+  row(56, 108, 115);
 
-  // ── Area musholla3 (l1_mus3): r49–r56 c262–c271 ─────────────────────────
-  // Dinding kanan: col(269) dan col(273)
-  // Dinding dalam: row(54, 266–282) — wall internal dalam room
-  // Akses masuk: dari atas via gap r48 c262–c265
-  col(261, 58, 84);  // dinding kanan dalam musholla3
-  col(270, 65, 84);  // dinding kanan luar (lorong sempit c274–c282)
-  row(58, 262, 268); // sekat bawah dalam musholla3
-  row(84, 262, 270);
+  col(100, 56, 59);
+  col(85, 56, 59);
+  row(59, 85, 100);
+  row(56, 85, 98);
 
+  col(71, 56, 59);
+  col(64, 56, 59);
+  row(55, 64, 71);
 
-  row(54, 266, 270); // wall internal musholla3 — membagi ruang atas/bawah
-  col(276, 54, 84);  // dinding kanan lorong c274–c282 toilet17
-  row(84, 277, 279); 
+  col(50, 55, 60);
+  col(44, 55, 60);
+  row(60, 44, 50);
+  row(55, 44, 50);
 
-  // ── Kotak-kotak kantor bawah L1 (r71–r79): ───────────────────────────────
-  // kan41/42 area c187–c193 (musholla4 l1_mus4 ada di c189–c190)
-  col(191, 74, 79);
-  col(184, 74, 79);
-  row(74, 186, 191);
-  row(79, 184, 191);
-
-  // kan43/46 area c199–c214
-  col(199, 76, 79);
-  col(214, 76, 79);
-  row(76, 199, 214);
-  row(79, 201, 214);
-
-  // kan41/42 area c232–c238
-  col(228, 76, 79);
-  col(235, 76, 79);
-
-  row(80, 228, 235);
-
-  // nolabel32/33 area c254–c260
-  col(249, 75, 80);
-  col(255, 75, 80);
-  row(75, 249, 255);
-  row(80, 249, 255);
-
-  // ── Sekat col c266 area r48–r53 (sisi kiri lift/musholla3) ──────────────
-  col(266, 48, 53);
+  col(38, 82, 87);
+  row(87, 30, 38);
 
   // =========================================================================
-  // LANTAI 2
+  // LANTAI 2 (rotasi 180°)
   // =========================================================================
 
-  // ── Batas atas & bawah lantai 2 ──────────────────────────────────────────
-  row(0, 1, 300);    // dinding atas lantai 2
- // dinding bawah lantai 2 (batas gate)
-  row(32, 1, 6);   // dinding bawah lantai 2 (batas gate)
-  row(32, 8, 27)
-  row(32, 29, 50)
-  row(32, 52, 75)
-  row(32, 77, 95)
-  row(32, 97, 118)
-  row(32, 120, 144)
-  row(32, 146, 167)
-  row(32, 169, 192)
-  row(32, 194, 215)
-  row(32, 217, 239)
-  row(32, 241, 261)
-  row(32, 263, 288)
-  row(32, 290, 300)
+  row(35, 0, 298);
+  row(3, 293, 298);
+  row(3, 272, 291);
+  row(3, 249, 270);
+  row(3, 224, 247);
+  row(3, 204, 222);
+  row(3, 181, 202);
+  row(3, 155, 179);
+  row(3, 132, 153);
+  row(3, 107, 130);
+  row(3, 84, 105);
+  row(3, 60, 82);
+  row(3, 38, 58);
+  row(3, 11, 36);
+  row(3, 0, 9);
 
-  col(270, 32, 38)
-  col(250, 32, 38)
-  col(230, 32, 38)
-  col(200, 32, 38)
-  col(190, 32, 38)
-  col(160, 32, 38)
-  col(140, 32, 38)
-  col(110, 32, 38)
-  col(80, 32, 38)
-  col(70, 32, 38)
-  col(40, 32, 38)
-  col(15, 32, 38)
+  col(29, 0, 3);
+  col(29, 97, 99);
+  col(49, 0, 3);
+  col(49, 97, 99);
+  col(69, 0, 3);
+  col(69, 97, 99);
+  col(99, 0, 3);
+  col(99, 97, 99);
+  col(109, 0, 3);
+  col(109, 97, 99);
+  col(139, 0, 3);
+  col(139, 97, 99);
+  col(159, 0, 3);
+  col(159, 97, 99);
+  col(189, 0, 3);
+  col(189, 97, 99);
+  col(219, 0, 3);
+  col(219, 97, 99);
+  col(229, 0, 3);
+  col(229, 97, 99);
+  col(259, 0, 3);
+  col(259, 97, 99);
+  col(284, 0, 3);
+  col(284, 97, 99);
 
-  // ── Area pojok kiri atas L2: r10–r20 c1–c47 ─────────────────────────────
-  // musholla1 L2 (l2_mus1): r23–r24 c9–c11
-  // toilet1 L2 (l2_tl1): r23–r24 c12–c14
-  row(20, 1, 47);
-  col(47, 10, 20);
-  row(10, 44, 47);
-  col(44, 1, 10);
+  row(15, 252, 298);
+  col(252, 15, 25);
+  row(25, 252, 255);
+  col(255, 25, 34);
 
-  // ── Lounge3 (l2_lo3): r26–r29 c11–c17 ───────────────────────────────────
-  col(9, 24, 29);
-  col(16, 24, 29);
-  row(24, 6, 15);
-  row(29, 6, 15);
+  col(290, 6, 11);
+  col(283, 6, 11);
+  row(11, 284, 293);
+  row(6, 284, 293);
 
-  // ── Lounge4 (l2_lo4): r24–r29 c19–c26 ───────────────────────────────────
-  col(18, 24, 29);
-  col(25, 24, 29);
-  row(24, 18, 24);
-  row(29, 18, 24);
+  col(281, 6, 11);
+  col(274, 6, 11);
+  row(11, 275, 281);
+  row(6, 275, 281);
 
-  // ── Lounge5 (l2_lo5): r24–r29 c33–c39 ───────────────────────────────────
-  col(31, 24, 29);
-  col(38, 24, 29);
-  row(24, 32, 38);
-  row(29, 31, 38);
+  col(268, 6, 11);
+  col(261, 6, 11);
+  row(11, 261, 267);
+  row(6, 261, 268);
 
-  // ── Lounge6 (l2_lo6): r24–r29 c42–c48 ───────────────────────────────────
-  col(40, 24, 29);
-  col(47, 24, 29);
-  row(24, 40, 46);
-  row(29, 40, 46);
+  col(259, 6, 11);
+  col(252, 6, 11);
+  row(11, 253, 259);
+  row(6, 253, 259);
 
-  // ── Lounge7 (l2_lo7): r24–r29 c55–c61 ───────────────────────────────────
-  col(54, 24, 29);
-  col(60, 24, 29);
-  row(24, 54, 59);
-  row(29, 54, 59);
+  col(245, 6, 11);
+  col(239, 6, 11);
+  row(11, 240, 245);
+  row(6, 240, 245);
 
-  // ── Lounge8 (l2_lo8): r24–r29 c64–c70 ───────────────────────────────────
-  col(62, 24, 29);
-  col(68, 24, 29);
-  row(24, 63, 68);
-  row(29, 63, 68);
+  col(237, 6, 11);
+  col(231, 6, 11);
+  row(11, 231, 236);
+  row(6, 231, 236);
 
-  // ── Lounge9 (l2_lo9): r24–r29 c79–c85 ───────────────────────────────────
-  col(77, 24, 29);
-  col(84, 24, 29);
-  row(24, 77, 84);
-  row(29, 77, 84);
+  col(222, 6, 11);
+  col(215, 6, 11);
+  row(11, 215, 222);
+  row(6, 215, 222);
 
-  // ── Lounge10 (l2_lo10): r24–r29 c88–c94 ─────────────────────────────────
-  col(86, 24, 29);
-  col(93, 24, 29);
-  row(24, 86, 93);
-  row(29, 86, 93);
+  col(213, 6, 11);
+  col(206, 6, 11);
+  row(11, 206, 213);
+  row(6, 206, 213);
 
-  // ── Lounge11 (l2_lo11): r24–r29 c100–c104 ───────────────────────────────
-  col(98, 24, 29);
-  col(104, 24, 29);
-  row(24, 98, 104);
-  row(29, 98, 104);
+  col(201, 6, 11);
+  col(195, 6, 11);
+  row(11, 195, 201);
+  row(6, 195, 201);
 
-  // ── Lounge12 (l2_lo12): r24–r29 c108–c116 ───────────────────────────────
-  col(107, 24, 29);
-  col(116, 24, 29);
-  row(24, 107, 116);
-  row(29, 107, 116);
+  col(192, 6, 11);
+  col(183, 6, 11);
+  row(11, 183, 192);
+  row(6, 183, 192);
 
-  // ── Lounge13 (l2_lo13): r24–r29 c124–c141 ───────────────────────────────
-  col(123, 24, 29);
-  col(141, 24, 29);
-  row(24, 123, 141);
-  row(29, 123, 141);
+  col(176, 6, 11);
+  col(158, 6, 11);
+  row(11, 158, 176);
+  row(6, 158, 176);
 
-  // ── Lounge14 (l2_lo14): r24–r29 c153–c159 ───────────────────────────────
-  col(153, 24, 29);
-  col(160, 24, 29);
-  row(24, 153, 160);
-  row(29, 153, 160);
+  col(146, 6, 11);
+  col(139, 6, 11);
+  row(11, 139, 146);
+  row(6, 139, 146);
 
-  // ── Lounge15 (l2_lo15): r24–r29 c162–c168 ───────────────────────────────
-  col(162, 24, 29);
-  col(169, 24, 29);
-  row(24, 162, 169);
-  row(29, 162, 169);
+  col(137, 6, 11);
+  col(130, 6, 11);
+  row(11, 130, 137);
+  row(6, 130, 137);
 
-  // ── Lounge16 (l2_lo16): r24–r29 c176–c183 ───────────────────────────────
-  col(176, 24, 29);
-  col(183, 24, 29);
-  row(24, 176, 183);
-  row(29, 176, 183);
+  col(123, 6, 11);
+  col(116, 6, 11);
+  row(11, 116, 123);
+  row(6, 116, 123);
 
-  // ── Lounge17 (l2_lo17): r24–r29 c184–c190 ───────────────────────────────
-  col(185, 24, 29);
-  col(192, 24, 29);
-  row(24, 185, 192);
-  row(29, 185, 192);
+  col(114, 6, 11);
+  col(107, 6, 11);
+  row(11, 107, 114);
+  row(6, 107, 114);
 
-  // ── Retail12 (l2_ret12): r27–r30 c197–c216 ───────────────────────────────
-  col(197, 24, 29);
-  col(219, 27, 29);
-  row(29, 197, 219);
+  col(102, 6, 11);
+  col(80, 6, 8);
+  row(6, 80, 102);
 
-  // ── Lounge18 (l2_lo18): r24–r29 c224–c230 ───────────────────────────────
-  col(224, 24, 29);
-  col(231, 24, 29);
-  row(24, 224, 231);
-  row(29, 224, 231);
+  col(75, 6, 11);
+  col(68, 6, 11);
+  row(11, 68, 75);
+  row(6, 68, 75);
 
-  // ── Lounge19 (l2_lo19): r24–r29 c233–c239 ───────────────────────────────
-  col(233, 24, 29);
-  col(240, 24, 29);
-  row(24, 233, 240);
-  row(29, 233, 240);
+  col(66, 6, 11);
+  col(59, 6, 11);
+  row(11, 59, 66);
+  row(6, 59, 66);
 
-  // ── Lounge20 (l2_lo20): r24–r29 c248–c257 ───────────────────────────────
-  col(247, 24, 29);
-  col(262, 24, 29);
-  row(24, 247, 262);
-  row(29, 247, 262);
+  col(52, 6, 11);
+  col(37, 6, 11);
+  row(11, 37, 52);
+  row(6, 37, 52);
 
-  // ── Lounge21 (l2_lo21): r24–r29 c265–c271 ───────────────────────────────
-  col(269, 24, 29);
-  col(276, 24, 26);
-  row(24, 269, 276);
-  row(29, 269, 273);
-  col(273, 27, 29);
-  row(27, 273, 276);
+  col(30, 6, 11);
+  col(23, 9, 11);
+  row(11, 23, 30);
+  row(6, 26, 30);
+  col(26, 6, 8);
+  row(8, 23, 26);
 
-  // ── Lounge22 (l2_lo22): r24–r29 c280–c284 ───────────────────────────────
-  col(280, 24, 27);
-  col(290, 24, 29);
-  row(24, 280, 290);
-  row(29, 283, 290);
-  col(282, 27, 29);
-  row(27, 280, 282);
+  col(19, 8, 11);
+  col(9, 6, 11);
+  row(11, 9, 19);
+  row(6, 9, 16);
+  col(17, 6, 8);
+  row(8, 17, 19);
 
-  // ── Area tengah L2: r13–r20 c49–c107 ─────────────────────────────────────
-  // food4–9 (l2_fnb4–9), retail1 (l2_ret1), nolabel1 (l2_nl1)
-  // musholla5 (l2_mus5): r5–r7 c73–c76
-  // toilet6 (l2_tl6): r5–r7 c77–c81
-  // lounge1 (l2_lo1): r5–r8 c49–c64
-  col(49, 17, 20);
-  col(77, 16, 20);
-  row(20, 49, 77);
-  row(17, 49, 70);
-  col(70, 17, 18);
-  row(18, 70, 74);
-  col(74, 16, 18);
-  row(16, 74, 77);
+  col(250, 15, 18);
+  col(222, 15, 19);
+  row(15, 222, 250);
+  row(18, 229, 250);
+  col(229, 17, 18);
+  row(17, 225, 229);
+  col(225, 17, 19);
+  row(19, 222, 225);
 
-  // ── Area r13–r20 c79–c107 ─────────────────────────────────────────────────
-  // food8–9 (l2_fnb8–9), retail2–3 (l2_ret2–3)
-  col(79, 13, 20);
-  col(107, 17, 20);
-  row(20, 80, 107);
-  row(17, 82, 107);
-  col(82, 13, 16);
-  row(13, 79, 82);
+  col(220, 15, 22);
+  col(192, 15, 18);
+  row(15, 192, 219);
+  row(18, 192, 217);
+  col(217, 19, 22);
+  row(22, 217, 220);
 
-  // ── Area r11–r20 c120–c138 (tangga3 l2_ld3) ─────────────────────────────
-  col(120, 11, 20);
-  col(138, 11, 20);
-  row(11, 120, 125);
-  row(11, 130, 138);
-  row(20, 120, 138);
+  col(179, 15, 24);
+  col(161, 15, 24);
+  row(24, 174, 179);
+  row(24, 161, 169);
+  row(15, 161, 179);
 
-  // ── Area r11–r20 c147–c150 ───────────────────────────────────────────────
-  col(147, 11, 20);
-  col(150, 11, 20);
-  row(11, 147, 150);
-  row(20, 147, 150);
+  col(152, 15, 24);
+  col(149, 15, 24);
+  row(24, 149, 152);
+  row(15, 149, 152);
 
-  // ── Area r11–r20 c152–c170 ───────────────────────────────────────────────
-  // lounge2 (l2_lo2): r6–r9 c147–c164
-  // musholla4 (l2_mus4): r6–r7 c167–c169
-  // toilet8 (l2_tl8): r6–r7 c170–c172
-  col(152, 11, 20);
-  col(170, 17, 20);
-  row(20, 153, 170);
-  row(17, 155, 170);
-  col(155, 11, 17);
+  col(147, 15, 24);
+  col(129, 15, 18);
+  row(15, 129, 146);
+  row(18, 129, 144);
+  col(144, 18, 24);
 
-  // ── Area r13–r20 c170–c180 ───────────────────────────────────────────────
-  // kan8–10, kan14–15 (kantor L2 area kiri)
-  col(170, 11, 20);
-  col(180, 13, 20);
-  row(13, 170, 180);
-  row(20, 170, 176);
-  row(11, 152, 170);
+  col(129, 15, 24);
+  col(119, 15, 22);
+  row(22, 119, 129);
+  row(15, 123, 129);
+  row(24, 129, 147);
 
-  // ── Area r17–r20 c183–c201 ───────────────────────────────────────────────
-  // retail7–9 (l2_ret7–9), lain1 (l2_ll1)
-  col(183, 17, 20);
-  col(201, 17, 20);
-  row(17, 183, 201);
-  row(20, 183, 201);
+  col(116, 15, 18);
+  col(98, 15, 18);
+  row(18, 98, 116);
+  row(15, 98, 116);
 
-  // ── Area r20–r23 c204–c217 ───────────────────────────────────────────────
-  // tangga4 (l2_ld4), lain2–3 (l2_ll2–3)
-  row(20, 204, 208);
-  col(208, 20, 23);
-  row(20, 217, 271);  // dinding bawah area tengah L2 c217–c271
+  row(15, 91, 95);
+  col(91, 12, 15);
+  row(15, 28, 82);
 
-  // ── Area r17–r20 c228–c267 ───────────────────────────────────────────────
-  // toilet4 (l2_tl4): r17–r20 c239–c242
-  // food18–21 (l2_fnb18–21)
-  // lain4 (l2_ll4): r17–r20 c254–c255
-  // musholla2 (l2_mus2): r8–r20 c264–c266
-  col(228, 17, 20);
-  row(17, 228, 243);
-  col(243, 11, 17);
-  row(11, 243, 252);
-  col(252, 11, 16);
-  row(16, 252, 267);
-  col(267, 9, 16);
-  row(9, 267, 271);
+  col(71, 15, 18);
+  row(18, 56, 71);
+  col(56, 18, 24);
+  row(24, 47, 56);
+  col(47, 19, 24);
+  row(19, 32, 47);
+  col(32, 19, 26);
+  row(26, 28, 32);
 
-  // ── Area kanan atas L2: r7–r20 c271–c300 ────────────────────────────────
-  // toilet5 (l2_tl5): r15–r20 c282–c285
-  // nolabel3 (l2_nl3): r15–r20 c278–c281
-  // food22 (l2_fnb22): r21–r25 c289–c293
-  row(20, 279, 300);
-  col(271, 9, 20);
-  col(279, 7, 20);
+  row(15, 0, 20);
+  col(28, 15, 26);
+  col(20, 15, 28);
 
-  // ── Sekat vertikal area tengah L2 c204 dan c217 ──────────────────────────
-  col(217, 20, 23);
-  col(204, 7, 20);
+  col(82, 12, 15);
+  col(95, 15, 28);
 
-  // ── Dinding horizontal area atas L2 (r7–r10) ─────────────────────────────
-  // kan1–7 (kantor L2 area c100–c113)
-  // musholla3 L2 (l2_mus3): r5–r7 c84–c99
-  // toilet7 (l2_tl7): r5–r7 c109–c110
-  row(10, 47, 75);
-  row(10, 77, 107);
-  row(10, 109, 112);
+  row(25, 224, 252);
+  row(25, 192, 222);
+  row(25, 187, 190);
 
-  // ── Sekat internal area L2 c72–c79 ───────────────────────────────────────
-  col(72, 10, 16);
-  col(77, 10, 13);
-  col(79, 10, 13);
-  row(16, 70, 71);
-  col(112, 7, 10);
-  row(7, 44, 112);   // dinding atas area kantor/musholla L2 c44–c112
-  col(99, 7, 10);
+  col(227, 19, 25);
+  col(222, 22, 25);
+  col(220, 22, 25);
+  row(19, 228, 229);
+  col(187, 25, 28);
+  row(28, 187, 255);
+  col(200, 25, 28);
 
-  // ── Sekat vertikal area kantor L2 c49 dan c107–c109 ──────────────────────
-  col(49, 10, 20);
-  col(109, 10, 20);
-  col(107, 10, 20);
+  col(250, 15, 25);
+  col(190, 15, 25);
+  col(192, 15, 25);
 
-  // ── Dinding area kantor L2 kanan (c147–c228) ─────────────────────────────
-  // kan8–16 (kantor L2 area c167–c205)
-  // LoungeVVIP (l2_df1): r6–r10 c194–c199
-  // tangga5–7 (l2_ld5–7)
-  col(147, 7, 10);
-  row(7, 147, 300);  // dinding atas area kantor kanan L2
-  col(167, 7, 10);
-  col(201, 7, 16);
-  col(183, 10, 16);
-  row(10, 183, 201);
+  col(152, 25, 28);
+  row(28, 0, 152);
+  col(132, 25, 28);
+  col(98, 19, 28);
+  col(116, 19, 25);
+  row(25, 98, 116);
 
-  // ── Area tangga5–6 dan sekat L2 c210–c228 ────────────────────────────────
-  col(228, 7, 16);
-  col(210, 12, 16);
-  row(12, 210, 218);
-  row(16, 208, 210);
-  col(250, 7, 10);
+  col(71, 19, 28);
+  col(89, 19, 23);
+  row(23, 81, 89);
+  row(19, 89, 91);
+  col(49, 25, 28);
 
-  // ── Dinding kiri L2 area bawah (r24–r25 c1–c5) ───────────────────────────
-  row(24, 1, 5);
+  row(11, 294, 298);
 
-  // ── Separator vertikal antar lounge L2 (col pendek r30–r31) ─────────────
-  // Sekat kecil antara lounge3–22, satu per pasang lounge
-  col(20, 30, 31);   // antara lounge3 dan lounge4
-  col(44, 30, 31);   // antara lounge4 dan lounge5
-  col(68, 30, 31);   // antara lounge5/6 dan lounge7
-  col(92, 30, 31);   // antara lounge7/8 dan lounge9
-  col(116, 30, 31);  // antara lounge9/10 dan lounge11
-  col(140, 30, 31);  // antara lounge11/12 dan lounge13
-  col(164, 30, 31);  // antara lounge13 dan lounge14
-  col(188, 30, 31);  // antara lounge14/15 dan lounge16
-  col(212, 30, 31);  // antara lounge16/17 dan retail12
-  col(236, 30, 31);  // antara retail12 dan lounge18
-  col(260, 30, 31);  // antara lounge18/19 dan lounge20
-  col(284, 30, 31);  // antara lounge20/21 dan lounge22
+  col(279, 4, 5);
+  col(255, 4, 5);
+  col(231, 4, 5);
+  col(207, 4, 5);
+  col(183, 4, 5);
+  col(159, 4, 5);
+  col(135, 4, 5);
+  col(111, 4, 5);
+  col(87, 4, 5);
+  col(63, 4, 5);
+  col(39, 4, 5);
+  col(15, 4, 5);
+
 
   return Array.from(wallSet);
 }

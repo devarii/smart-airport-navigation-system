@@ -249,7 +249,7 @@ async function main() {
       },
     });
     console.log("   ✅ Admin selesai\n");
-  });
+  }, { timeout: 60000 });
 
   console.log("🎉 Seed selesai!");
 }
