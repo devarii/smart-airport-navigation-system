@@ -119,7 +119,7 @@ export async function PUT(
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse<{ message: string } | ApiError>> {
+): Promise<NextResponse<ApiSuccess<null> | ApiError>> {
   const session = await auth();
   if (!session) {
     return NextResponse.json(
@@ -139,6 +139,17 @@ export async function DELETE(
   }
 
   try {
+    const existing = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Kategori tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
     const facilityCount = await prisma.facility.count({
       where: { categoryId },
     });
@@ -153,22 +164,11 @@ export async function DELETE(
       );
     }
 
-    const existing = await prisma.category.findUnique({
-      where: { id: categoryId },
-    });
-
-    if (!existing) {
-      return NextResponse.json(
-        { success: false, error: "Kategori tidak ditemukan" },
-        { status: 404 }
-      );
-    }
-
     await prisma.category.delete({
       where: { id: categoryId },
     });
 
-    return NextResponse.json({ message: "Kategori berhasil dihapus" });
+    return NextResponse.json({ success: true, data: null, message: "Kategori berhasil dihapus" });
   } catch {
     return NextResponse.json(
       { success: false, error: "Gagal menghapus kategori" },
