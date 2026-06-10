@@ -165,6 +165,9 @@ export default function AdminCategoryBar() {
   const [activeId,     setActiveId]     = useState<number | null>(null);
   const [isSaving,     setIsSaving]     = useState(false);
 
+  // ── FIX: state untuk modal Add Kategori (dipindah dari page.tsx) ──────────
+  const [showAdd, setShowAdd] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 },
@@ -222,6 +225,7 @@ export default function AdminCategoryBar() {
     setCategories((prev) => {
       const exists = prev.find((c) => c.id === updated.id);
       if (exists) return prev.map((c) => (c.id === updated.id ? updated : c));
+      // ── FIX: kategori baru langsung masuk state lokal tanpa remount ────────
       return [...prev, updated];
     });
   }
@@ -230,9 +234,13 @@ export default function AdminCategoryBar() {
     setCategories((prev) => prev.filter((c) => c.id !== id));
   }
 
-  const visibleCategories = categories.filter(
-    (c) => c.terminals.length === 0 || c.terminals.includes(activeTerminal)
-  );
+  // ── FIX: di mode admin tampilkan SEMUA kategori tanpa filter terminal ──────
+  // Ini mencegah kategori baru tersembunyi karena terminal tidak cocok
+  const visibleCategories = isAdmin
+    ? categories
+    : categories.filter(
+        (c) => c.terminals.length === 0 || c.terminals.includes(activeTerminal)
+      );
 
   // Search selalu slot pertama, sisanya kategori
   const half             = Math.ceil((visibleCategories.length + 1) / 2);
@@ -271,6 +279,32 @@ export default function AdminCategoryBar() {
     </button>
   );
 
+  // ── FIX: tombol Add Kategori dipindah ke sini ─────────────────────────────
+  const renderAddButton = () => (
+    <button
+      onClick={() => setShowAdd(true)}
+      aria-label="Tambah kategori baru"
+      className="flex flex-col items-center gap-1 transition-all duration-150 active:scale-95"
+    >
+      <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gray-800 shadow-[0_2px_6px_rgba(0,0,0,0.20)] hover:scale-105 hover:bg-gray-700 transition-all duration-150">
+        <svg
+          className="w-6 h-6 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2.5}
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+      </div>
+      <span className="text-[10px] text-gray-500 font-medium leading-tight text-center">
+        Tambah
+      </span>
+    </button>
+  );
+
   return (
     <>
       <DndContext
@@ -303,11 +337,13 @@ export default function AdminCategoryBar() {
                   onDelete={setDeleteTarget}
                 />
               ))}
+              {/* ── FIX: tombol Add muncul di baris 1 setelah semua kategori baris 1 ── */}
+              {isAdmin && rowTwoCategories.length === 0 && renderAddButton()}
             </div>
           </SortableContext>
 
           {/* Baris 2 */}
-          {rowTwoCategories.length > 0 && (
+          {(rowTwoCategories.length > 0) && (
             <SortableContext
               items={rowTwoCategories.map((c) => c.id)}
               strategy={horizontalListSortingStrategy}
@@ -323,6 +359,8 @@ export default function AdminCategoryBar() {
                     onDelete={setDeleteTarget}
                   />
                 ))}
+                {/* ── FIX: tombol Add di baris 2 kalau ada baris 2 ── */}
+                {isAdmin && renderAddButton()}
               </div>
             </SortableContext>
           )}
@@ -333,6 +371,7 @@ export default function AdminCategoryBar() {
         </DragOverlay>
       </DndContext>
 
+      {/* Modal Edit kategori */}
       {editTarget && (
         <EditCategoryModal
           initialData={editTarget}
@@ -340,11 +379,25 @@ export default function AdminCategoryBar() {
           onSaved={handleSaved}
         />
       )}
+
+      {/* Modal Delete kategori */}
       {deleteTarget && (
         <DeleteConfirm
           category={deleteTarget}
           onClose={() => setDeleteTarget(null)}
           onDeleted={handleDeleted}
+        />
+      )}
+
+      {/* ── FIX: Modal Add kategori — onSaved langsung pakai handleSaved lokal ── */}
+      {showAdd && (
+        <EditCategoryModal
+          initialData={null}
+          onClose={() => setShowAdd(false)}
+          onSaved={(newCat) => {
+            handleSaved(newCat);
+            setShowAdd(false);
+          }}
         />
       )}
     </>

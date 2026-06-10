@@ -4,31 +4,25 @@ import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useMapStore } from "@/store/mapStore";
-import { useState } from "react";
 
 import MapCanvas from "@/components/map/mapCanvas";
 import TerminalSelector from "@/components/ui/terminalSelector";
 import RealtimeClock from "@/components/ui/realtimeClock";
 import AdminToggle from "@/components/admin/adminToggle";
 import AdminCategoryBar from "@/components/admin/adminCategoryBar";
-import EditCategoryModal from "@/components/admin/category/editCategoryModal";
 import EditFacilityModal from "@/components/admin/facility/editFacilityModal";
-
-// Import komponen AdminSearchModal yang sebelumnya terlewat
 import AdminSearchModal from "@/components/admin/adminSearchModal";
+import { useState } from "react";
 
 export default function AdminPage() {
-  const { data: session }     = useSession();
-  const mapMode               = useMapStore((s) => s.mapMode);
-  const isAdmin               = mapMode === "admin";
-  const adminSelectedFacility = useMapStore((s) => s.adminSelectedFacility);
-  
-  // Mengambil fungsi setter dari store untuk memproses fasilitas yang dipilih dari pencarian
+  const { data: session }        = useSession();
+  const mapMode                  = useMapStore((s) => s.mapMode);
+  const isAdmin                  = mapMode === "admin";
+  const adminSelectedFacility    = useMapStore((s) => s.adminSelectedFacility);
   const setAdminSelectedFacility = useMapStore((s) => s.setAdminSelectedFacility);
 
-  const [showAddCategory,    setShowAddCategory]    = useState(false);
+  // ── FIX: hapus showAddCategory & categoryBarKey — sudah dikelola di AdminCategoryBar ──
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
-  const [categoryBarKey,     setCategoryBarKey]     = useState(0);
 
   return (
     <main className="relative w-full h-screen flex flex-col overflow-hidden bg-gray-100">
@@ -89,24 +83,13 @@ export default function AdminPage() {
           />
         </div>
 
-        {/* Category bar versi admin */}
+        {/* ── FIX: AdminCategoryBar sekarang include tombol Add di dalamnya ── */}
         <div className="flex-1 flex justify-center">
-          <AdminCategoryBar key={categoryBarKey} />
+          <AdminCategoryBar />
         </div>
 
-        {/* Kanan: jam + Add Kategori */}
+        {/* Kanan: jam */}
         <div className="flex items-center gap-4 min-w-50 justify-end">
-          {isAdmin && (
-            <button
-              onClick={() => setShowAddCategory(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition"
-            >
-              <span>Add Kategori</span>
-              <span className="w-6 h-6 rounded-full bg-gray-800 text-white flex items-center justify-center text-base leading-none">
-                +
-              </span>
-            </button>
-          )}
           <RealtimeClock />
         </div>
       </div>
@@ -145,17 +128,6 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* ── Add Kategori Modal ── */}
-      {showAddCategory && (
-        <EditCategoryModal
-          onClose={() => setShowAddCategory(false)}
-          onSaved={() => {
-            setShowAddCategory(false);
-            setCategoryBarKey((k) => k + 1);
-          }}
-        />
       )}
 
       {/* ── Edit Facility Modal ── */}
