@@ -295,7 +295,7 @@ export default function SignInPage() {
           <div className="lp-brand">
             <div className="lp-brand-mark">
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="InJourney"
                 width={20}
                 height={20}

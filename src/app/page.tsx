@@ -86,7 +86,7 @@ export default function HomePage() {
       >
         <div className="flex items-center min-w-30">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="InJourney Airports"
             width={120}
             height={60}
