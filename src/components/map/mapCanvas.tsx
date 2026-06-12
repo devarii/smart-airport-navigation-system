@@ -70,14 +70,15 @@ const PREFIX_TO_CATEGORY: Record<string, string> = {
   fnb: "Food & Beverages",
   gd:  "Gate",
   lo:  "Lounge",
-  pr:  "Lounge",
+  pr:  "Event & Promotion",
   tl:  "Toilet & Nursery",
   ret: "Retail",
   ser: "Services",
-  kan: "Services",
-  mus: "Musholla",
-  df:  "Duty Free",
+  kan: "Office",
+  mus: "Musala",
+  df:  "Retail",
   arr: "Arrival",
+  nl:  "General Facilities",
 };
 
 function getCategoryName(destId: string): string | null {
