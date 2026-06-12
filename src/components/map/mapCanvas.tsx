@@ -73,7 +73,7 @@ const PREFIX_TO_CATEGORY: Record<string, string> = {
   pr:  "Event & Promotion",
   tl:  "Toilet & Nursery",
   ret: "Retail",
-  ser: "Services",
+  ll: "Services",
   kan: "Office",
   mus: "Musala",
   df:  "Retail",
