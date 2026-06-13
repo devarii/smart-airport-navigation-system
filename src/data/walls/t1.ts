@@ -21,7 +21,11 @@ export const STAIRCASE_L2: DestinationPoint = {
 function buildWalls(): string[] {
   const wallSet = new Set<string>();
 
-  const W = (r: number, c: number): void => { wallSet.add(`${r},${c}`); };
+  const W = (r: number, c: number): void => {
+    if (r >= 36) c += 1; // Lantai 1: geser kanan 4 poin, lalu kiri 3 poin (net +1)
+    c -= 1; // geser semua walls (semua lantai) ke kiri 1 poin
+    wallSet.add(`${r + 1},${c}`); // geser semua walls ke bawah 1 poin
+  };
   const row = (r: number, c1: number, c2: number): void => { for (let c = c1; c <= c2; c++) W(r, c); };
   const col = (c: number, r1: number, r2: number): void => { for (let r = r1; r <= r2; r++) W(r, c); };
   const box = (r1: number, c1: number, r2: number, c2: number): void => {
@@ -29,191 +33,174 @@ function buildWalls(): string[] {
   };
   void box;
 
-  // Koordinat tembok T1 setelah rotasi 180° per lantai
-// Lantai 2 (row 0–35): newR = 35 - r, newC = 299 - c
-// Lantai 1 (row 36–99): newR = 135 - r, newC = 299 - c
-
-// Ganti isi fungsi buildWalls() dengan koordinat berikut:
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // BATAS GRID (tidak dirotasi)
-  // ─────────────────────────────────────────────────────────────────────────
   row(0, 0, COLS - 1);
   row(ROWS - 1, 0, COLS - 1);
   col(0, 0, ROWS - 1);
   col(COLS - 1, 0, ROWS - 1);
 
-  // =========================================================================
-  // LANTAI 1 (rotasi 180°)
-  // =========================================================================
+  row(98, 4, 293);  // tenant: food10
+  row(45, 4, 293);  // tenant: kantor27
+  col(294, 45, 97);  // tenant: retail_new
+  col(4, 45, 97);  // tenant: kantor25
 
-  row(97, 4, 293);
-  row(45, 4, 293);
-  col(294, 45, 97);
-  col(4, 45, 97);
+  col(279, 96, 98);  // tenant: retail_new
+  row(91, 273, 278);  // tenant: retail_new
+  col(273, 67, 90);  // tenant: retail_new
+  row(67, 245, 293);  // tenant: kan_new
 
-  col(279, 96, 98);
-  row(91, 273, 278);
-  col(273, 65, 90);
-  row(65, 245, 293);
+  row(62, 249, 267);  // tenant: toilet1
+  row(54, 249, 265);  // tenant: toilet1
+  col(267, 54, 61);  // tenant: kantor1
+  col(249, 54, 61);  // tenant: kantor4
 
-  row(62, 253, 272);
-  row(54, 253, 272);
-  col(272, 54, 61);
-  col(253, 54, 61);
+  col(240, 70, 72);  // tenant: kan_new
+  row(71, 241, 243);  // tenant: kan_new
+  col(240, 68, 79);  // tenant: kan_new
+  row(68, 240, 243);  // tenant: kan_new
+  row(74, 241, 243);  // tenant: nolabel3
+  col(243, 74, 79);  // tenant: nolabel3
 
-  col(240, 68, 72);
-  row(71, 241, 243);
-  col(240, 66, 79);
-  row(66, 240, 243);
-  row(74, 241, 243);
-  col(243, 74, 79);
+  col(243, 55, 71);  // tenant: kan_new
+  row(54, 241, 243);  // tenant: Mechanical Room
+  row(54, 236, 238);  // tenant: toilet2
+  col(235, 54, 70);  // tenant: nolabel2
 
-  col(243, 55, 71);
-  row(54, 241, 243);
-  row(54, 236, 238);
-  col(235, 54, 68);
+  row(67, 190, 235);  // tenant: toilet2
+  row(67, 163, 188);  // tenant: nolabel15
+  col(190, 68, 71);  // tenant: nolabel15
+  col(188, 68, 71);  // tenant: nolabel15
 
-  row(65, 190, 235);
-  row(65, 163, 188);
-  col(190, 66, 69);
-  col(188, 66, 69);
+  col(163, 64, 69);  // tenant: nolabel20
+  row(64, 133, 163);  // tenant: toilet19
+  col(133, 64, 77);  // tenant: toilet14
 
-  col(163, 64, 67);
-  row(63, 133, 163);
-  col(133, 64, 77);
+  row(64, 194, 199);  // tenant: toilet18
+  row(64, 168, 192);  // tenant: toilet19
+  row(51, 168, 199);  // tenant: kantor40
+  col(199, 51, 63);  // tenant: nolabel11
+  col(168, 51, 63);  // tenant: kantor39
 
-  row(63, 194, 199);
-  row(63, 168, 192);
-  row(51, 168, 199);
-  col(199, 51, 62);
-  col(168, 51, 62);
+  row(86, 263, 273);  // tenant: toilet5
+  col(262, 85, 87);  // tenant: toilet5
+  row(92, 245, 273);  // tenant: promo1
+  row(92, 233, 240);  // tenant: food3
+  row(92, 221, 226);  // tenant: promo2
+  row(92, 193, 210);  // tenant: retail2
+  row(92, 159, 175);  // tenant: retail3
+  row(92, 111, 145);  // tenant: toilet6
+  row(92, 94, 107);  // tenant: food15
+  row(92, 70, 92);  // tenant: food17
+  row(92, 56, 66);  // tenant: food18
+  row(92, 42, 55);  // tenant: toilet8
+  row(92, 24, 36);  // tenant: lain8
 
-  row(86, 263, 273);
-  col(262, 85, 87);
-  row(92, 245, 273);
-  row(92, 233, 240);
-  row(92, 221, 226);
-  row(92, 193, 210);
-  row(92, 159, 175);
-  row(92, 111, 145);
-  row(92, 94, 107);
-  row(92, 70, 92);
-  row(92, 56, 66);
-  row(92, 42, 55);
-  row(92, 24, 36);
+  row(82, 236, 250);  // tenant: kantor6
+  col(234, 82, 87);  // tenant: kantor5
+  row(87, 234, 250);  // tenant: retail1
+  col(250, 84, 87);  // tenant: lain2
 
-  row(82, 235, 252);
-  col(236, 84, 87);
-  row(87, 237, 252);
-  col(252, 84, 87);
+  row(61, 222, 230);  // tenant: kantor14
+  row(58, 206, 221);  // tenant: kantor14
+  row(54, 204, 230);  // tenant: kantor15
+  col(230, 54, 61);  // tenant: kantor13
+  col(221, 58, 61);  // tenant: kantor14
+  col(203, 54, 61);  // tenant: kantor20
 
-  row(61, 223, 231);
-  row(58, 206, 222);
-  row(54, 205, 231);
-  col(231, 54, 61);
-  col(222, 58, 61);
-  col(205, 54, 61);
+  row(86, 230, 233);  // tenant: food23
+  row(87, 204, 210);  // tenant: food31
+  row(84, 201, 210);  // tenant: nolabel37
+  col(210, 85, 86);  // tenant: food31
+  col(204, 85, 86);  // tenant: nolabel37
 
-  row(86, 233, 235);
-  row(87, 204, 210);
-  row(84, 201, 210);
-  col(210, 85, 86);
-  col(204, 85, 86);
+  col(200, 84, 87);  // tenant: toilet22
+  col(191, 75, 82);  // tenant: food24
+  col(177, 75, 86);  // tenant: lain10
+  col(172, 83, 86);  // tenant: food25
+  col(196, 82, 86);  // tenant: toilet23
+  col(190, 82, 86);  // tenant: food24
+  row(75, 164, 205);  // tenant: musholla1
+  col(205, 75, 83);  // tenant: nolabel37
+  col(164, 75, 87);  // tenant: food9
 
-  col(200, 84, 87);
-  col(191, 74, 82);
-  col(177, 74, 85);
-  col(172, 83, 85);
-  col(196, 82, 85);
-  col(190, 82, 85);
-  row(74, 164, 205);
-  col(205, 75, 83);
-  col(164, 75, 87);
+  col(205, 71, 71);  // tenant: kantor20
+  col(161, 71, 71);  // tenant: nolabel21
+  row(71, 190, 204);  // tenant: nolabel15
+  row(71, 162, 188);  // tenant: nolabel15
+  row(69, 161, 162);  // tenant: nolabel20
+  col(205, 68, 71);  // tenant: kantor20
 
-  col(205, 69, 69);
-  col(161, 69, 69);
-  row(69, 190, 204);
-  row(69, 162, 188);
-  row(67, 161, 162);
-  col(205, 66, 69);
+  col(235, 71, 78);  // tenant: nolabel2
 
-  col(235, 69, 78);
+  row(87, 156, 164);  // tenant: nolabel23
+  row(87, 114, 143);  // tenant: toilet9
+  row(87, 70, 104);  // tenant: retail4
+  row(87, 42, 58);  // tenant: toilet15
+  row(87, 20, 33);  // tenant: lift1
+  row(87, 4, 20);  // tenant: retail15
+  row(82, 187, 193);  // tenant: food24
+  row(82, 175, 181);  // tenant: tangga1
 
-  row(87, 156, 162);
-  row(87, 114, 143);
-  row(87, 70, 104);
-  row(87, 42, 58);
-  row(87, 20, 33);
-  row(87, 4, 20);
-  row(82, 187, 193);
-  row(82, 175, 181);
+  col(157, 83, 86);  // tenant: nolabel24
+  row(83, 157, 162);  // tenant: nolabel23
 
-  col(157, 83, 86);
-  row(83, 157, 162);
+  col(129, 71, 77);  // tenant: toilet13
+  row(70, 127, 129);  // tenant: lain11
+  col(127, 53, 69);  // tenant: lain11
+  col(147, 53, 63);  // tenant: kantor21
+  row(53, 123, 146);  // tenant: kantor22
+  col(122, 53, 77);  // tenant: lain12
+  row(71, 123, 128);  // tenant: lain12
 
-  col(129, 69, 77);
-  row(68, 127, 129);
-  col(127, 53, 67);
-  col(147, 53, 62);
-  row(53, 123, 146);
-  col(122, 53, 77);
-  row(69, 123, 128);
+  row(70, 134, 161);  // tenant: nolabel21
+  row(67, 56, 121);  // tenant: nolabel29
 
-  row(68, 134, 161);
-  row(65, 56, 121);
+  row(67, 32, 53);  // tenant: nolabel29
+  row(68, 4, 23);  // tenant: kantor24
 
-  row(65, 32, 53);
-  row(66, 4, 23);
+  col(58, 73, 80);  // tenant: nolabel29
+  col(56, 67, 71);  // tenant: nolabel29
+  col(57, 61, 66);  // tenant: nolabel29
+  col(59, 57, 60);  // tenant: kantor41
+  row(60, 57, 59);  // tenant: nolabel31
+  col(54, 57, 67);  // tenant: nolabel29
 
-  col(58, 73, 80);
-  col(56, 65, 71);
-  col(57, 61, 64);
-  col(59, 57, 60);
-  row(60, 57, 59);
-  col(54, 57, 65);
+  row(80, 42, 58);  // tenant: toilet16
+  col(50, 67, 86);  // tenant: toilet16
+  col(42, 79, 92);  // tenant: lain6
 
-  row(80, 42, 58);
-  col(50, 65, 86);
-  col(42, 79, 92);
+  col(101, 84, 87);  // tenant: toilet12
+  col(104, 67, 73);  // tenant: nolabel28
+  col(99, 67, 72);  // tenant: nolabel28
 
-  col(101, 84, 87);
-  col(104, 65, 73);
-  col(99, 65, 70);
+  col(38, 51, 77);  // tenant: nolabel33
+  col(29, 51, 72);  // tenant: nolabel36
+  row(77, 31, 37);  // tenant: nolabel36
+  row(51, 29, 37);  // tenant: nolabel33
+  row(81, 24, 36);  // tenant: musholla3
+  col(23, 51, 86);  // tenant: lift1
+  row(51, 20, 22);  // tenant: toilet17
 
-  col(38, 51, 77);
-  col(29, 51, 70);
-  row(77, 31, 37);
-  row(51, 29, 37);
-  row(81, 24, 38);
-  col(23, 51, 86);
-  row(51, 20, 22);
+  col(108, 56, 61);  // tenant: musholla4
+  col(115, 56, 61);  // tenant: nolabel35
+  row(61, 108, 113);  // tenant: musholla4
+  row(56, 108, 115);  // tenant: musholla4
 
-  col(108, 56, 61);
-  col(115, 56, 61);
-  row(61, 108, 113);
-  row(56, 108, 115);
+  col(100, 56, 59);  // tenant: kantor45
+  col(85, 56, 59);  // tenant: kantor43
+  row(59, 85, 100);  // tenant: kantor43
+  row(56, 85, 98);  // tenant: kantor45
 
-  col(100, 56, 59);
-  col(85, 56, 59);
-  row(59, 85, 100);
-  row(56, 85, 98);
+  col(71, 56, 59);  // tenant: kantor42
+  col(64, 56, 59);  // tenant: kantor41
+  row(55, 64, 71);  // tenant: kantor42
 
-  col(71, 56, 59);
-  col(64, 56, 59);
-  row(55, 64, 71);
+  col(50, 55, 60);  // tenant: nolabel31
+  col(44, 55, 60);  // tenant: nolabel33
+  row(60, 44, 50);  // tenant: nolabel32
+  row(55, 44, 50);  // tenant: nolabel32
 
-  col(50, 55, 60);
-  col(44, 55, 60);
-  row(60, 44, 50);
-  row(55, 44, 50);
-
-  col(38, 82, 87);
-  row(87, 30, 38);
-
-  // =========================================================================
-  // LANTAI 2 (rotasi 180°)
-  // =========================================================================
+  col(38, 82, 87);  // tenant: food19
+  row(87, 30, 38);  // tenant: musholla3
 
   row(35, 0, 298);
   row(3, 293, 298);
@@ -371,8 +358,21 @@ function buildWalls(): string[] {
 
   col(250, 15, 18);
   col(222, 15, 19);
-  row(15, 222, 250);
-  row(18, 229, 250);
+  row(15, 222, 223);
+  row(15, 225, 229);
+  row(15, 231, 232);
+  row(15, 234, 237);
+  row(15, 239, 241);
+  row(15, 243, 245);
+  row(15, 247, 250);
+
+  col(225, 15, 18);
+  col(231, 15, 18);
+  col(234, 15, 18);
+  col(239, 15, 18);
+  col(243, 15, 18);
+
+  row(19, 229, 250);
   col(229, 17, 18);
   row(17, 225, 229);
   col(225, 17, 19);
@@ -380,8 +380,23 @@ function buildWalls(): string[] {
 
   col(220, 15, 22);
   col(192, 15, 18);
-  row(15, 192, 219);
-  row(18, 192, 217);
+  row(15, 192, 193);
+  row(15, 195, 196);
+  row(15, 198, 200);
+  row(15, 202, 202);
+  row(15, 205, 207);
+  row(15, 209, 215);
+  row(15, 217, 217);
+  row(15, 219, 219);
+
+  col(195, 15, 18);
+  col(198, 15, 18);
+  col(202, 15, 18);
+  col(205, 15, 18);
+  col(209, 15, 18);
+  col(217, 15, 18);
+
+  row(19, 192, 217);
   col(217, 19, 22);
   row(22, 217, 220);
 
@@ -389,17 +404,36 @@ function buildWalls(): string[] {
   col(161, 15, 24);
   row(24, 174, 179);
   row(24, 161, 169);
-  row(15, 161, 179);
+  row(15, 161, 164);
+  row(15, 166, 171);
+  row(15, 173, 177);
+  row(15, 179, 179);
+
+  col(169, 15, 24);
+  col(174, 15, 24);
+  row(19, 169, 174);
 
   col(152, 15, 24);
   col(149, 15, 24);
   row(24, 149, 152);
-  row(15, 149, 152);
+  row(15, 149, 150);
+  row(15, 152, 152);
 
   col(147, 15, 24);
   col(129, 15, 18);
-  row(15, 129, 146);
-  row(18, 129, 144);
+  row(15, 129, 130);
+  row(15, 132, 134);
+  row(15, 136, 137);
+  row(15, 139, 141);
+  row(15, 143, 144);
+  row(15, 146, 146);
+
+  col(132, 15, 18);
+  col(136, 15, 18);
+  col(139, 15, 18);
+  col(143, 15, 18);
+
+  row(19, 129, 144);
   col(144, 18, 24);
 
   col(129, 15, 24);
@@ -410,15 +444,47 @@ function buildWalls(): string[] {
 
   col(116, 15, 18);
   col(98, 15, 18);
-  row(18, 98, 116);
-  row(15, 98, 116);
+  row(19, 98, 116);
+  row(15, 98, 100);
+  row(15, 102, 104);
+  row(15, 106, 108);
+  row(15, 110, 112);
+  row(15, 114, 114);
+  row(15, 116, 116);
+
+  col(102, 15, 18);
+  col(107, 15, 18);
+  col(110, 15, 18);
+  col(114, 15, 18);
 
   row(15, 91, 95);
   col(91, 12, 15);
-  row(15, 28, 82);
+  row(15, 28, 31);
+  row(15, 33, 36);
+  row(15, 38, 41);
+  row(15, 43, 44);
+  row(15, 46, 50);
+  row(15, 52, 59);
+  row(15, 61, 63);
+  row(15, 65, 68);
+  row(15, 70, 75);
+  row(15, 77, 78);
+  row(15, 80, 82);
+  row(18, 72, 80);
+
+  col(33, 15, 18);
+  col(39, 15, 18);
+  col(44, 15, 18);
+  col(47, 15, 18);
+  col(53, 15, 24);
+  col(58, 15, 18);
+  col(62, 15, 18);
+  col(65, 15, 18);
+  col(78, 15, 18);
+  col(80, 15, 18);
 
   col(71, 15, 18);
-  row(18, 56, 71);
+  row(19, 56, 71);
   col(56, 18, 24);
   row(24, 47, 56);
   col(47, 19, 24);
@@ -426,12 +492,15 @@ function buildWalls(): string[] {
   col(32, 19, 26);
   row(26, 28, 32);
 
-  row(15, 0, 20);
+  row(15, 0, 13);
+  row(15, 15, 16);
+  row(15, 18, 20);
+  col(16, 15, 31);
   col(28, 15, 26);
-  col(20, 15, 28);
+  col(20, 15, 31);
 
   col(82, 12, 15);
-  col(95, 15, 28);
+  col(95, 15, 31);
 
   row(25, 224, 252);
   row(25, 192, 222);
@@ -441,26 +510,26 @@ function buildWalls(): string[] {
   col(222, 22, 25);
   col(220, 22, 25);
   row(19, 228, 229);
-  col(187, 25, 28);
-  row(28, 187, 255);
-  col(200, 25, 28);
+  col(187, 25, 31);
+  row(31, 187, 255);
+  col(200, 25, 31);
 
   col(250, 15, 25);
   col(190, 15, 25);
   col(192, 15, 25);
 
-  col(152, 25, 28);
-  row(28, 0, 152);
-  col(132, 25, 28);
-  col(98, 19, 28);
+  col(152, 25, 31);
+  row(31, 0, 152);
+  col(132, 25, 31);
+  col(98, 19, 31);
   col(116, 19, 25);
   row(25, 98, 116);
 
-  col(71, 19, 28);
+  col(71, 19, 31);
   col(89, 19, 23);
   row(23, 81, 89);
   row(19, 89, 91);
-  col(49, 25, 28);
+  col(49, 25, 29);
 
   row(11, 294, 298);
 
@@ -476,7 +545,6 @@ function buildWalls(): string[] {
   col(63, 4, 5);
   col(39, 4, 5);
   col(15, 4, 5);
-
 
   return Array.from(wallSet);
 }
