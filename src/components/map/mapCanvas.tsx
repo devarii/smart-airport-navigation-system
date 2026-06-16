@@ -79,6 +79,7 @@ const PREFIX_TO_CATEGORY: Record<string, string> = {
   df:  "Retail",
   arr: "Arrival",
   nl:  "General Facilities",
+  ld:  "General Facilities",
 };
 
 function getCategoryName(destId: string): string | null {
