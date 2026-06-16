@@ -1134,7 +1134,7 @@
       "label": "lift1",
       "r": 81,
       "c": 21,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 80,
         "c1": 25,
@@ -1641,7 +1641,7 @@
       "label": "Mechanical Room",
       "r": 59,
       "c": 255,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 54,
         "c1": 253,
@@ -1654,7 +1654,7 @@
       "label": "nolabel2",
       "r": 76,
       "c": 245,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 70,
         "c1": 240,
@@ -1667,7 +1667,7 @@
       "label": "nolabel3",
       "r": 75,
       "c": 248,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 73,
         "c1": 243.5,
@@ -1680,7 +1680,7 @@
       "label": "nolabel4",
       "r": 84,
       "c": 241,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 83,
         "c1": 240,
@@ -1693,7 +1693,7 @@
       "label": "nolabel5",
       "r": 85,
       "c": 239,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 83,
         "c1": 238,
@@ -1706,7 +1706,7 @@
       "label": "nolabel6",
       "r": 86,
       "c": 272,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 82,
         "c1": 265,
@@ -1719,7 +1719,7 @@
       "label": "nolabel7",
       "r": 92,
       "c": 239,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 91,
         "c1": 234,
@@ -1732,7 +1732,7 @@
       "label": "nolabel8",
       "r": 92,
       "c": 214,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 91,
         "c1": 211,
@@ -1745,7 +1745,7 @@
       "label": "nolabel9",
       "r": 92,
       "c": 94,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 91,
         "c1": 95,
@@ -1758,7 +1758,7 @@
       "label": "nolabel10",
       "r": 91,
       "c": 23,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 90,
         "c1": 27,
@@ -1771,7 +1771,7 @@
       "label": "nolabel11",
       "r": 64,
       "c": 207,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 55,
         "c1": 206,
@@ -1784,7 +1784,7 @@
       "label": "nolabel12",
       "r": 55,
       "c": 221,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 55,
         "c1": 209,
@@ -1797,7 +1797,7 @@
       "label": "nolabel14",
       "r": 73,
       "c": 190,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 67,
         "c1": 189.5,
@@ -1810,7 +1810,7 @@
       "label": "nolabel15",
       "r": 65,
       "c": 192,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 66.5,
         "c1": 192.5,
@@ -1823,7 +1823,7 @@
       "label": "nolabel16",
       "r": 73,
       "c": 180,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 66.5,
         "c1": 178.5,
@@ -1836,7 +1836,7 @@
       "label": "nolabel17",
       "r": 73,
       "c": 182,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 66.5,
         "c1": 180.5,
@@ -1849,7 +1849,7 @@
       "label": "nolabel18",
       "r": 65,
       "c": 178,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 52,
         "c1": 174.5,
@@ -1862,7 +1862,7 @@
       "label": "nolabel19",
       "r": 73,
       "c": 172,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 66.5,
         "c1": 171,
@@ -1875,7 +1875,7 @@
       "label": "nolabel20",
       "r": 73,
       "c": 170,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 66.5,
         "c1": 166,
@@ -1888,7 +1888,7 @@
       "label": "nolabel21",
       "r": 73,
       "c": 164,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 66.5,
         "c1": 164,
@@ -1901,7 +1901,7 @@
       "label": "nolabel22",
       "r": 75,
       "c": 165,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 73,
         "c1": 165,
@@ -1914,7 +1914,7 @@
       "label": "nolabel23",
       "r": 84,
       "c": 167,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 84,
         "c1": 164,
@@ -1927,7 +1927,7 @@
       "label": "nolabel24",
       "r": 85,
       "c": 160,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 84,
         "c1": 161,
@@ -1940,7 +1940,7 @@
       "label": "nolabel25",
       "r": 82,
       "c": 164,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 82,
         "c1": 161,
@@ -1953,7 +1953,7 @@
       "label": "nolabel27",
       "r": 74,
       "c": 99,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 68,
         "c1": 101,
@@ -1966,7 +1966,7 @@
       "label": "nolabel28",
       "r": 74,
       "c": 102,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 68,
         "c1": 103,
@@ -1979,7 +1979,7 @@
       "label": "nolabel29",
       "r": 71,
       "c": 58,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 66,
         "c1": 59.5,
@@ -1992,7 +1992,7 @@
       "label": "nolabel30",
       "r": 72,
       "c": 54,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 66,
         "c1": 53,
@@ -2005,7 +2005,7 @@
       "label": "nolabel31",
       "r": 63,
       "c": 57,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 57.5,
         "c1": 58.5,
@@ -2018,7 +2018,7 @@
       "label": "nolabel32",
       "r": 61,
       "c": 50,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 55.5,
         "c1": 51,
@@ -2031,7 +2031,7 @@
       "label": "nolabel33",
       "r": 63,
       "c": 46,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 55.5,
         "c1": 47,
@@ -2044,7 +2044,7 @@
       "label": "nolabel34",
       "r": 58,
       "c": 194,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 52,
         "c1": 192,
@@ -2057,7 +2057,7 @@
       "label": "nolabel35",
       "r": 63,
       "c": 114,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 58,
         "c1": 115,
@@ -2070,7 +2070,7 @@
       "label": "nolabel36",
       "r": 75,
       "c": 29,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 71.5,
         "c1": 33.5,
@@ -2083,7 +2083,7 @@
       "label": "nolabel37",
       "r": 86,
       "c": 213,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 83,
         "c1": 210,
@@ -2096,7 +2096,7 @@
       "label": "tangga1",
       "r": 84,
       "c": 187,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 81,
         "c1": 185,
@@ -3318,7 +3318,7 @@
       "label": "nolabel1",
       "r": 15,
       "c": 248,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 16,
         "c1": 245,
@@ -3331,7 +3331,7 @@
       "label": "nolabel2",
       "r": 15,
       "c": 146,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 16,
         "c1": 144,
@@ -3344,7 +3344,7 @@
       "label": "nolabel3",
       "r": 16,
       "c": 13,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 16,
         "c1": 16,
@@ -3357,7 +3357,7 @@
       "label": "nolabel4",
       "r": 25,
       "c": 253,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 23,
         "c1": 250,
@@ -3370,7 +3370,7 @@
       "label": "nolabel5",
       "r": 15,
       "c": 168,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 16,
         "c1": 163,
@@ -3383,7 +3383,7 @@
       "label": "nolabel6",
       "r": 27,
       "c": 114,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 26,
         "c1": 115.5,
@@ -3396,7 +3396,7 @@
       "label": "nolabel7",
       "r": 27,
       "c": 116,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 26,
         "c1": 117,
@@ -3409,7 +3409,7 @@
       "label": "nolabel8",
       "r": 27,
       "c": 119,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 27,
         "c1": 120.5,
@@ -3422,7 +3422,7 @@
       "label": "nolabel9",
       "r": 27,
       "c": 121,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 27,
         "c1": 122.5,
@@ -3435,7 +3435,7 @@
       "label": "nolabel10",
       "r": 27,
       "c": 131,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 27,
         "c1": 133,
@@ -3448,7 +3448,7 @@
       "label": "nolabel11",
       "r": 15,
       "c": 35,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 16,
         "c1": 34,
@@ -3461,7 +3461,7 @@
       "label": "nolabel12",
       "r": 26,
       "c": 225,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 27,
         "c1": 220.5,
@@ -3474,7 +3474,7 @@
       "label": "tangga2",
       "r": 27,
       "c": 190,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 27,
         "c1": 188,
@@ -3487,7 +3487,7 @@
       "label": "tangga3",
       "r": 26,
       "c": 172,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 20,
         "c1": 169,
@@ -3500,7 +3500,7 @@
       "label": "tangga4",
       "r": 27,
       "c": 96,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 26,
         "c1": 96,
@@ -3513,7 +3513,7 @@
       "label": "tangga5",
       "r": 28,
       "c": 88,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 29,
         "c1": 88,
@@ -3526,7 +3526,7 @@
       "label": "tangga6",
       "r": 30,
       "c": 77,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 29,
         "c1": 73.5,
@@ -3539,7 +3539,7 @@
       "label": "tangga7",
       "r": 27,
       "c": 50,
-      "color": "#B1B1B1",
+      "color": "#3f72ff",
       "room": {
         "r1": 29,
         "c1": 47.5,
