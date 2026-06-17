@@ -23,6 +23,8 @@ import {
   FLOOR1_ROW_MIN as T2_FLOOR1_ROW_MIN,
 } from "@/data/walls/t2";
 
+import { resolveWalkableCoords } from "@/utils/resolveWalkable";
+
 const TERMINAL_DATA = {
   T1: {
     wallSet: buildWallSet(T1_WALL_DATA.walls), rows: T1_ROWS, cols: T1_COLS,
@@ -74,11 +76,23 @@ export default function RoutePanel() {
     const td = TERMINAL_DATA[activeTerminal];
     await new Promise<void>((r) => setTimeout(r, 30));
 
-    const destId = buildDestId(selectedFacility.code, selectedFacility.gridRow, td.floor1RowMin);
+    // Resolve koordinat walkable yang benar — menangani kasus facility yang
+    // datang dari searchModal (DB mentah) maupun dari mapCanvas (sudah di-resolve).
+    // Logika ini identik dengan handleDestinationClick di mapCanvas:
+    //   1. resolveNavigationAnchor → anchor tepi room dari JSON
+    //   2. nearestWalkable         → geser ke cell kosong terdekat
+    const resolved = resolveWalkableCoords(
+      selectedFacility.destId,
+      selectedFacility.gridRow,
+      selectedFacility.gridCol,
+      activeTerminal,
+    );
+
+    const destId = buildDestId(selectedFacility.code, resolved.r, td.floor1RowMin);
 
     const multiPath = astarWithStairs(
       td.startR, td.startC,
-      selectedFacility.gridRow, selectedFacility.gridCol,
+      resolved.r, resolved.c,
       destId, td.wallSet, td.rows, td.cols,
       td.staircaseL1, td.staircaseL2, td.floor1RowMin,
     );
