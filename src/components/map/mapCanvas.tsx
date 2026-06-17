@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  useEffect, useLayoutEffect, useRef, useMemo, useCallback, useState, useId, memo,
+  useEffect, useRef, useMemo, useCallback, useState, useId, memo,
 } from "react";
 import type { ReactNode } from "react";
 import DOMPurify from "isomorphic-dompurify";
@@ -196,6 +196,39 @@ function getRoomTransform(terminal: "T1" | "T2", dest: DestinationWithRoom) {
     return isFloor2 ? T1_ROOM_CALIBRATION.floor2 : T1_ROOM_CALIBRATION.floor1;
   }
   return isFloor2 ? T2_ROOM_CALIBRATION.floor2 : T2_ROOM_CALIBRATION.floor1;
+}
+
+// Perkiraan tinggi total bubble preview (card + tail + gap), dipakai sebagai
+// ambang batas saat memutuskan apakah bubble masih cukup ruang ditaruh di
+// ATAS pin, atau harus di-flip ke BAWAH supaya tidak terpotong oleh
+// overflow-hidden saat pin berada dekat tepi atas canvas.
+const BUBBLE_EST_HEIGHT = 100;
+const BUBBLE_EDGE_SAFE  = 8;
+
+/**
+ * Hitung posisi layar (dalam px, relatif ke kotak outer) dari sebuah titik
+ * SVG, lalu putuskan apakah bubble preview harus ditaruh di atas atau di
+ * bawah pin. Dipanggil sekali saat user tap pin (bukan terus-menerus saat
+ * pan), jadi cukup pakai getBoundingClientRect + snapshot pan/zoom state
+ * tanpa berdampak ke performa drag.
+ *
+ * Rumus mengikuti transform CSS `translate(x,y) scale(s)` dengan
+ * transform-origin "center center": P' = O + s*(P-O) + (x,y)
+ */
+function getBubblePlacement(
+  outerEl: HTMLDivElement | null,
+  pan: { x: number; y: number; scale: number },
+  svgX: number, svgY: number,
+  viewW: number, viewH: number,
+): "above" | "below" {
+  if (!outerEl) return "above";
+  const { width: W, height: H } = outerEl.getBoundingClientRect();
+  if (W === 0 || H === 0) return "above";
+
+  const py = (svgY / viewH) * H;
+  const pinScreenY = H / 2 + pan.scale * (py - H / 2) + pan.y;
+
+  return pinScreenY - BUBBLE_EST_HEIGHT < BUBBLE_EDGE_SAFE ? "below" : "above";
 }
 
 const makeSyntheticIdGenerator = () => {
@@ -693,21 +726,25 @@ interface BubblePreview {
   /** posisi pin dalam koordinat SVG (grid units * CELL) */
   svgX: number;
   svgY: number;
+  /** "above" (default) kalau ruang cukup, "below" kalau pin terlalu dekat tepi atas canvas */
+  placement: "above" | "below";
 }
 
 interface PinBubbleProps {
   bubble: BubblePreview;
   onConfirm: () => void;
   onDismiss: () => void;
-  /** ref container SVG untuk konversi koordinat SVG → layar */
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  /** dimensi viewBox SVG (svgW/svgH) — buat konversi svgX/svgY → posisi persen */
+  viewW: number;
+  viewH: number;
 }
 
-function PinBubble({ bubble, onConfirm, onDismiss, containerRef }: PinBubbleProps) {
-  const { facility, svgX, svgY } = bubble;
+function PinBubble({ bubble, onConfirm, onDismiss, viewW, viewH }: PinBubbleProps) {
+  const { facility, svgX, svgY, placement } = bubble;
   const cat   = facility.category;
   const color = cat?.color ?? "#64748b";
   const icon  = cat?.icon  ?? null;
+  const isBelow = placement === "below";
 
   const BUBBLE_W  = 200;
   const TAIL_H    = 8;
@@ -723,49 +760,48 @@ function PinBubble({ bubble, onConfirm, onDismiss, containerRef }: PinBubbleProp
     });
   }, [icon]);
 
-  // DOM measurement must happen after mount — never during render
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const inner = container.querySelector<HTMLDivElement>("[data-pan-inner]");
-    if (!inner) return;
-
-    const containerRect = container.getBoundingClientRect();
-    const innerRect     = inner.getBoundingClientRect();
-
-    const svgEl = inner.querySelector("svg");
-    const viewW = svgEl?.viewBox.baseVal.width  ?? innerRect.width;
-    const viewH = svgEl?.viewBox.baseVal.height ?? innerRect.height;
-
-    const pinScreenX = innerRect.left - containerRect.left + svgX * (innerRect.width  / viewW);
-    const pinScreenY = innerRect.top  - containerRect.top  + svgY * (innerRect.height / viewH);
-
-    const left = Math.max(4, Math.min(pinScreenX - BUBBLE_W / 2, containerRect.width - BUBBLE_W - 4));
-    const top  = pinScreenY - BUBBLE_UP - TAIL_H;
-
-    setPos({ left, top });
-  }, [containerRef, svgX, svgY]);
-
-  if (!pos) return null;
-
-  const { left, top } = pos;
+  // Posisi bubble dihitung sebagai persentase dari viewBox SVG, BUKAN dari
+  // getBoundingClientRect(). Karena bubble ini dirender sebagai child di
+  // dalam layer yang sama dengan transform pan/zoom (data-pan-inner), posisi
+  // persen ini otomatis ikut ter-translate/ter-scale bareng peta — tanpa
+  // perlu listen ke perubahan pan/zoom sama sekali (itu yang bikin bubble
+  // sebelumnya "freeze" saat user geser map, karena pan/zoom di-apply
+  // langsung ke DOM lewat rAF dan tidak men-trigger re-render React).
+  const leftPct = (svgX / viewW) * 100;
+  const topPct  = (svgY / viewH) * 100;
 
   return (
     <div
       style={{
-        position:    "absolute",
-        left:        left,
-        top:         top,
-        transform:   "translateY(-100%)",
+        position:  "absolute",
+        left:      `${leftPct}%`,
+        top:       `${topPct}%`,
+        transform: isBelow
+          ? `translate(-50%, ${BUBBLE_UP + TAIL_H}px)`
+          : `translate(-50%, calc(-100% - ${BUBBLE_UP + TAIL_H}px))`,
         zIndex:      30,
         width:       BUBBLE_W,
         pointerEvents: "auto",
       }}
       onClick={(e) => e.stopPropagation()}
     >
+      {/* Ekor segitiga: kalau "below" diletakkan SEBELUM card & mengarah ke atas
+          (nempel ke pin di atasnya); kalau "above" diletakkan SESUDAH card &
+          mengarah ke bawah (nempel ke pin di bawahnya). */}
+      {isBelow && (
+        <div
+          style={{
+            width: 0, height: 0,
+            borderLeft:   "7px solid transparent",
+            borderRight:  "7px solid transparent",
+            borderBottom: "8px solid white",
+            margin:       "0 auto",
+            filter:       "drop-shadow(0 -2px 2px rgba(0,0,0,0.08))",
+          }}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Bubble card */}
       <button
         onClick={onConfirm}
@@ -820,18 +856,19 @@ function PinBubble({ bubble, onConfirm, onDismiss, containerRef }: PinBubbleProp
         </svg>
       </button>
 
-      {/* Ekor segitiga */}
-      <div
-        style={{
-          width: 0, height: 0,
-          borderLeft:  "7px solid transparent",
-          borderRight: "7px solid transparent",
-          borderTop:   "8px solid white",
-          margin:      "0 auto",
-          filter:      "drop-shadow(0 2px 2px rgba(0,0,0,0.08))",
-        }}
-        aria-hidden="true"
-      />
+      {!isBelow && (
+        <div
+          style={{
+            width: 0, height: 0,
+            borderLeft:  "7px solid transparent",
+            borderRight: "7px solid transparent",
+            borderTop:   "8px solid white",
+            margin:      "0 auto",
+            filter:      "drop-shadow(0 2px 2px rgba(0,0,0,0.08))",
+          }}
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 }
@@ -864,7 +901,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   const isError   = status === "error";
 
   const outerRef = useRef<HTMLDivElement>(null);
-  const { innerRef, handlers, isDragging, didDrag } = usePanZoom(activeTerminal);
+  const { innerRef, handlers, isDragging, didDrag, getState } = usePanZoom(activeTerminal);
   const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
@@ -1041,12 +1078,15 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       }
 
       // Tap pin → tampilkan bubble preview dulu (bukan langsung POIDetail)
-      setPinBubble({ facility, svgX, svgY });
+      const placement = getBubblePlacement(
+        outerRef.current, getState(), svgX, svgY, cfg.cols * CELL, cfg.rows * CELL,
+      );
+      setPinBubble({ facility, svgX, svgY, placement });
     },
     [
       didDrag, facilityMap, facilityDestMap, facilityCodeMap,
       wallSet, cfg.rows, cfg.cols, mapMode, activeTerminal, categories,
-      setAdminSelectedFacility,
+      setAdminSelectedFacility, getState,
     ],
   );
 
@@ -1172,17 +1212,20 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           <PathRenderer />
           {children}
         </svg>
-      </div>
 
-      {/* BUBBLE PREVIEW — overlay HTML di atas peta */}
-      {pinBubble && (
-        <PinBubble
-          bubble={pinBubble}
-          onConfirm={handleBubbleConfirm}
-          onDismiss={handleBubbleDismiss}
-          containerRef={outerRef}
-        />
-      )}
+        {/* BUBBLE PREVIEW — HTML overlay, tapi tetap di dalam layer pan/zoom
+            yang sama dengan SVG, supaya ikut ter-translate/ter-scale saat
+            user geser/zoom map (lihat komentar di komponen PinBubble). */}
+        {pinBubble && (
+          <PinBubble
+            bubble={pinBubble}
+            onConfirm={handleBubbleConfirm}
+            onDismiss={handleBubbleDismiss}
+            viewW={svgW}
+            viewH={svgH}
+          />
+        )}
+      </div>
 
       {/* DEBUG TOGGLE — hanya di admin mode */}
       {isAdminMode && (
