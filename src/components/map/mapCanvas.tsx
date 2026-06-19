@@ -1,10 +1,9 @@
 "use client";
 
 import {
-  useEffect, useRef, useMemo, useCallback, useState, useId, memo,
+  useEffect, useLayoutEffect, useRef, useMemo, useCallback, useState, useId,
 } from "react";
 import type { ReactNode } from "react";
-import DOMPurify from "isomorphic-dompurify";
 import { useMapStore } from "@/store/mapStore";
 import { buildWallSet } from "@/lib/astar";
 import type { FacilityWithRelations, DestinationPoint, WallDataJson } from "@/types";
@@ -80,7 +79,6 @@ const PREFIX_TO_CATEGORY: Record<string, string> = {
   df:  "Retail",
   arr: "Arrival",
   nl:  "General Facilities",
-  ld:  "General Facilities",
 };
 
 function getCategoryName(destId: string): string | null {
@@ -196,39 +194,6 @@ function getRoomTransform(terminal: "T1" | "T2", dest: DestinationWithRoom) {
     return isFloor2 ? T1_ROOM_CALIBRATION.floor2 : T1_ROOM_CALIBRATION.floor1;
   }
   return isFloor2 ? T2_ROOM_CALIBRATION.floor2 : T2_ROOM_CALIBRATION.floor1;
-}
-
-// Perkiraan tinggi total bubble preview (card + tail + gap), dipakai sebagai
-// ambang batas saat memutuskan apakah bubble masih cukup ruang ditaruh di
-// ATAS pin, atau harus di-flip ke BAWAH supaya tidak terpotong oleh
-// overflow-hidden saat pin berada dekat tepi atas canvas.
-const BUBBLE_EST_HEIGHT = 100;
-const BUBBLE_EDGE_SAFE  = 8;
-
-/**
- * Hitung posisi layar (dalam px, relatif ke kotak outer) dari sebuah titik
- * SVG, lalu putuskan apakah bubble preview harus ditaruh di atas atau di
- * bawah pin. Dipanggil sekali saat user tap pin (bukan terus-menerus saat
- * pan), jadi cukup pakai getBoundingClientRect + snapshot pan/zoom state
- * tanpa berdampak ke performa drag.
- *
- * Rumus mengikuti transform CSS `translate(x,y) scale(s)` dengan
- * transform-origin "center center": P' = O + s*(P-O) + (x,y)
- */
-function getBubblePlacement(
-  outerEl: HTMLDivElement | null,
-  pan: { x: number; y: number; scale: number },
-  svgX: number, svgY: number,
-  viewW: number, viewH: number,
-): "above" | "below" {
-  if (!outerEl) return "above";
-  const { width: W, height: H } = outerEl.getBoundingClientRect();
-  if (W === 0 || H === 0) return "above";
-
-  const py = (svgY / viewH) * H;
-  const pinScreenY = H / 2 + pan.scale * (py - H / 2) + pan.y;
-
-  return pinScreenY - BUBBLE_EST_HEIGHT < BUBBLE_EDGE_SAFE ? "below" : "above";
 }
 
 const makeSyntheticIdGenerator = () => {
@@ -377,29 +342,20 @@ function useMapData(
 
         if (cancelled) return;
 
-        const facOk = isApiResponse(facBody, isFacilityArray) && facBody.success;
-        const catOk = isApiResponse(catBody, isCategoryArray) && catBody.success;
+        if (isApiResponse(facBody, isFacilityArray) && facBody.success)
+          setFacilities(facBody.data);
+        if (isApiResponse(catBody, isCategoryArray) && catBody.success)
+          setCategories(catBody.data);
 
-        // Kegagalan logis (HTTP 200 tapi success:false / bentuk respons tak sesuai)
-        // tidak boleh diam-diam dianggap berhasil — pengguna harus tahu data gagal dimuat.
-        if (!facOk || !catOk) {
-          throw new Error(
-            `Respons API tidak valid: facilities.success=${facOk}, categories.success=${catOk}`,
-          );
-        }
-
-        setFacilities(facBody.data);
-        setCategories(catBody.data);
         setStatus("success");
         setErrorMessage(null);
       } catch (err) {
         if (cancelled) return;
         if (err instanceof DOMException && err.name === "AbortError") return;
 
-        // Keamanan: jangan tampilkan detail error mentah (bisa berisi info backend)
-        // ke pengguna kiosk publik. Detail lengkap hanya dicatat ke console.
-        console.error("[MapCanvas] Fetch error:", err);
-        setErrorMessage("Gagal memuat data peta. Periksa koneksi internet Anda atau coba lagi.");
+        const message = err instanceof Error ? err.message : "Gagal memuat data peta.";
+        if (process.env.NODE_ENV !== "production") console.error("[MapCanvas] Fetch error:", err);
+        setErrorMessage(message);
         setStatus("error");
       } finally {
         clearTimeout(timeoutTimer);
@@ -726,82 +682,69 @@ interface BubblePreview {
   /** posisi pin dalam koordinat SVG (grid units * CELL) */
   svgX: number;
   svgY: number;
-  /** "above" (default) kalau ruang cukup, "below" kalau pin terlalu dekat tepi atas canvas */
-  placement: "above" | "below";
 }
 
 interface PinBubbleProps {
   bubble: BubblePreview;
   onConfirm: () => void;
   onDismiss: () => void;
-  /** dimensi viewBox SVG (svgW/svgH) — buat konversi svgX/svgY → posisi persen */
-  viewW: number;
-  viewH: number;
+  /** ref container SVG untuk konversi koordinat SVG → layar */
+  containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-function PinBubble({ bubble, onConfirm, onDismiss, viewW, viewH }: PinBubbleProps) {
-  const { facility, svgX, svgY, placement } = bubble;
+function PinBubble({ bubble, onConfirm, onDismiss, containerRef }: PinBubbleProps) {
+  const { facility, svgX, svgY } = bubble;
   const cat   = facility.category;
   const color = cat?.color ?? "#64748b";
   const icon  = cat?.icon  ?? null;
-  const isBelow = placement === "below";
 
   const BUBBLE_W  = 200;
   const TAIL_H    = 8;
   const BUBBLE_UP = 8;
 
-  // Keamanan: icon kategori bersumber dari data admin (DB) — markup SVG harus
-  // disanitasi sebelum di-render via dangerouslySetInnerHTML, untuk mencegah
-  // stored-XSS lewat atribut event (onload/onerror) di dalam SVG.
-  const sanitizedIcon = useMemo(() => {
-    if (!icon || !icon.trimStart().startsWith("<svg")) return null;
-    return DOMPurify.sanitize(icon, {
-      USE_PROFILES: { svg: true, svgFilters: true },
-    });
-  }, [icon]);
+  // DOM measurement must happen after mount — never during render
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
 
-  // Posisi bubble dihitung sebagai persentase dari viewBox SVG, BUKAN dari
-  // getBoundingClientRect(). Karena bubble ini dirender sebagai child di
-  // dalam layer yang sama dengan transform pan/zoom (data-pan-inner), posisi
-  // persen ini otomatis ikut ter-translate/ter-scale bareng peta — tanpa
-  // perlu listen ke perubahan pan/zoom sama sekali (itu yang bikin bubble
-  // sebelumnya "freeze" saat user geser map, karena pan/zoom di-apply
-  // langsung ke DOM lewat rAF dan tidak men-trigger re-render React).
-  const leftPct = (svgX / viewW) * 100;
-  const topPct  = (svgY / viewH) * 100;
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const inner = container.querySelector<HTMLDivElement>("[data-pan-inner]");
+    if (!inner) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const innerRect     = inner.getBoundingClientRect();
+
+    const svgEl = inner.querySelector("svg");
+    const viewW = svgEl?.viewBox.baseVal.width  ?? innerRect.width;
+    const viewH = svgEl?.viewBox.baseVal.height ?? innerRect.height;
+
+    const pinScreenX = innerRect.left - containerRect.left + svgX * (innerRect.width  / viewW);
+    const pinScreenY = innerRect.top  - containerRect.top  + svgY * (innerRect.height / viewH);
+
+    const left = Math.max(4, Math.min(pinScreenX - BUBBLE_W / 2, containerRect.width - BUBBLE_W - 4));
+    const top  = pinScreenY - BUBBLE_UP - TAIL_H;
+
+    setPos({ left, top });
+  }, [containerRef, svgX, svgY]);
+
+  if (!pos) return null;
+
+  const { left, top } = pos;
 
   return (
     <div
       style={{
-        position:  "absolute",
-        left:      `${leftPct}%`,
-        top:       `${topPct}%`,
-        transform: isBelow
-          ? `translate(-50%, ${BUBBLE_UP + TAIL_H}px)`
-          : `translate(-50%, calc(-100% - ${BUBBLE_UP + TAIL_H}px))`,
+        position:    "absolute",
+        left:        left,
+        top:         top,
+        transform:   "translateY(-100%)",
         zIndex:      30,
         width:       BUBBLE_W,
         pointerEvents: "auto",
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Ekor segitiga: kalau "below" diletakkan SEBELUM card & mengarah ke atas
-          (nempel ke pin di atasnya); kalau "above" diletakkan SESUDAH card &
-          mengarah ke bawah (nempel ke pin di bawahnya). */}
-      {isBelow && (
-        <div
-          style={{
-            width: 0, height: 0,
-            borderLeft:   "7px solid transparent",
-            borderRight:  "7px solid transparent",
-            borderBottom: "8px solid white",
-            margin:       "0 auto",
-            filter:       "drop-shadow(0 -2px 2px rgba(0,0,0,0.08))",
-          }}
-          aria-hidden="true"
-        />
-      )}
-
       {/* Bubble card */}
       <button
         onClick={onConfirm}
@@ -826,17 +769,16 @@ function PinBubble({ bubble, onConfirm, onDismiss, viewW, viewH }: PinBubbleProp
               {facility.category?.name?.slice(0, 2).toUpperCase() ?? "?"}
             </span>
           )}
-          {icon && sanitizedIcon && (
+          {icon && icon.trimStart().startsWith("<svg") && (
             <span
               className="w-4 h-4 [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-white"
-              aria-hidden="true"
-              dangerouslySetInnerHTML={{ __html: sanitizedIcon }}
+              dangerouslySetInnerHTML={{ __html: icon }}
             />
           )}
-          {icon && !sanitizedIcon && (
+          {icon && !icon.trimStart().startsWith("<svg") && (
             icon.startsWith("data:") || icon.startsWith("http") || icon.startsWith("/") || /\.(png|jpe?g|gif|webp|svg)$/i.test(icon)
-              ? <img src={icon} alt="" aria-hidden="true" className="w-4 h-4 object-contain" />
-              : <span aria-hidden="true" className="text-sm leading-none">{icon}</span>
+              ? <img src={icon} alt="" className="w-4 h-4 object-contain" />
+              : <span className="text-sm leading-none">{icon}</span>
           )}
         </div>
 
@@ -856,19 +798,18 @@ function PinBubble({ bubble, onConfirm, onDismiss, viewW, viewH }: PinBubbleProp
         </svg>
       </button>
 
-      {!isBelow && (
-        <div
-          style={{
-            width: 0, height: 0,
-            borderLeft:  "7px solid transparent",
-            borderRight: "7px solid transparent",
-            borderTop:   "8px solid white",
-            margin:      "0 auto",
-            filter:      "drop-shadow(0 2px 2px rgba(0,0,0,0.08))",
-          }}
-          aria-hidden="true"
-        />
-      )}
+      {/* Ekor segitiga */}
+      <div
+        style={{
+          width: 0, height: 0,
+          borderLeft:  "7px solid transparent",
+          borderRight: "7px solid transparent",
+          borderTop:   "8px solid white",
+          margin:      "0 auto",
+          filter:      "drop-shadow(0 2px 2px rgba(0,0,0,0.08))",
+        }}
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -901,7 +842,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
   const isError   = status === "error";
 
   const outerRef = useRef<HTMLDivElement>(null);
-  const { innerRef, handlers, isDragging, didDrag, getState } = usePanZoom(activeTerminal);
+  const { innerRef, handlers, isDragging, didDrag } = usePanZoom(activeTerminal);
   const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
@@ -919,35 +860,69 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
 
   const wallSet = useMemo(() => buildWallSet(cfg.wallData.walls), [cfg]);
 
-  // Performa: satu pass tunggal atas `facilities` untuk membangun semua index
-  // sekaligus (sebelumnya 4 useMemo terpisah = 4x iterasi penuh array yang sama).
-  const facilityIndexes = useMemo(() => {
-    const byCoord  = new Map<string, FacilityWithRelations>();
-    const byCode   = new Map<string, FacilityWithRelations>();
-    const byDestId = new Map<string, FacilityWithRelations>();
-    const colorBy  = new Map<string, string>();
+  // -- Resolve gridRow/gridCol untuk facility yang datang dari SearchModal ------
+  // SearchModal set selectedFacility langsung dari DB tanpa melewati
+  // resolveNavigationAnchor + nearestWalkable (berbeda dengan handleDestinationClick).
+  // useEffect ini mendeteksi kondisi tsb dan recalculate koordinat walkable
+  // yang benar, sehingga A* routing konsisten di semua jalur masuk.
+  useEffect(() => {
+    if (!selectedFacility) return;
 
-    for (const f of facilities) {
-      const coordKey = f.gridRow != null && f.gridCol != null ? `${f.gridRow},${f.gridCol}` : null;
+    // Cari DestinationPoint yang cocok di cfg terminal aktif
+    const dest = (cfg.destinations as DestinationPoint[]).find(
+      (d) =>
+        d.id === selectedFacility.code ||
+        d.id === (selectedFacility as FacilityWithRelations & { destId?: string }).destId ||
+        (d.r === selectedFacility.gridRow && d.c === selectedFacility.gridCol),
+    );
+    if (!dest) return;
 
-      if (coordKey)  byCoord.set(coordKey, f);
-      if (f.code)    byCode.set(f.code, f);
-      if (f.destId)  byDestId.set(f.destId, f);
+    const anchor   = resolveNavigationAnchor(dest, cfg.rows, cfg.cols, wallSet);
+    const walkable = nearestWalkable(anchor.r, anchor.c, cfg.rows, cfg.cols, wallSet);
 
-      const color = f.category?.color;
-      if (color) {
-        if (f.destId)  colorBy.set(f.destId, color);
-        if (f.code)    colorBy.set(f.code, color);
-        if (coordKey)  colorBy.set(coordKey, color);
-      }
+    // Hanya update jika koordinat berbeda -- hindari infinite loop
+    if (
+      selectedFacility.gridRow !== walkable.r ||
+      selectedFacility.gridCol !== walkable.c
+    ) {
+      setSelectedFacility({ ...selectedFacility, gridRow: walkable.r, gridCol: walkable.c });
     }
-    return { byCoord, byCode, byDestId, colorBy };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFacility?.id, cfg, wallSet]);
+  // Deps sengaja hanya selectedFacility.id (bukan seluruh objek) agar tidak loop,
+  // tapi tetap re-run saat terminal berubah (cfg/wallSet ikut berubah).
+
+
+  const facilityMap = useMemo(() => {
+    const map = new Map<string, FacilityWithRelations>();
+    for (const f of facilities) {
+      if (f.gridRow != null && f.gridCol != null)
+        map.set(`${f.gridRow},${f.gridCol}`, f);
+    }
+    return map;
   }, [facilities]);
 
-  const facilityMap     = facilityIndexes.byCoord;
-  const facilityCodeMap = facilityIndexes.byCode;
-  const facilityDestMap = facilityIndexes.byDestId;
-  const destColorMap    = facilityIndexes.colorBy;
+  const facilityCodeMap = useMemo(() => {
+    const map = new Map<string, FacilityWithRelations>();
+    for (const f of facilities) { if (f.code) map.set(f.code, f); }
+    return map;
+  }, [facilities]);
+
+  const facilityDestMap = useMemo(() => {
+    const map = new Map<string, FacilityWithRelations>();
+    for (const f of facilities) { if (f.destId) map.set(f.destId, f); }
+    return map;
+  }, [facilities]);
+
+  const destColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const f of facilities) {
+      if (f.destId && f.category?.color)                              map.set(f.destId, f.category.color);
+      if (f.code   && f.category?.color)                              map.set(f.code,   f.category.color);
+      if (f.gridRow != null && f.gridCol != null && f.category?.color) map.set(`${f.gridRow},${f.gridCol}`, f.category.color);
+    }
+    return map;
+  }, [facilities]);
 
   // Map nama kategori → id untuk fallback prefix-based
   const categoryIdByName = useMemo(() => {
@@ -969,7 +944,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       // Tidak ada filter aktif → semua abu-abu
       if (!activeCategorySet) return GRAY_DEFAULT;
       // Ada filter aktif → tampilkan warna kategori
-
       return destColorMap.get(dest.id) ?? destColorMap.get(`${dest.r},${dest.c}`) ?? dest.color;
     },
     [destColorMap, activeCategorySet],
@@ -997,24 +971,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
     return activeCategorySet.has(catId);
   }, [activeCategorySet, facilityDestMap, facilityMap, categoryIdByName]);
 
-  // Performa: cast + filter destinasi sekali per perubahan data, bukan 3x
-  // setiap render (room boxes, pin markers, dan debug overlay sebelumnya
-  // masing-masing melakukan map+filter terpisah atas array yang sama).
-  const allDestinations = useMemo(
-    () => cfg.destinations as DestinationWithRoom[],
-    [cfg.destinations],
-  );
-
-  const { roomDests, pointDests } = useMemo(() => {
-    const rooms: DestinationWithRoom[] = [];
-    const points: DestinationWithRoom[] = [];
-    for (const dest of allDestinations) {
-      if (!isVisible(dest)) continue;
-      (dest.room ? rooms : points).push(dest);
-    }
-    return { roomDests: rooms, pointDests: points };
-  }, [allDestinations, isVisible]);
-
   const handleDestinationClick = useCallback(
     (dest: DestinationPoint, svgX: number, svgY: number) => {
       if (didDrag.current) return;
@@ -1029,14 +985,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
         ?? facilityCodeMap.get(dest.id);
 
       if (mapMode === "admin") {
-        // NOTE (code quality): wallDestR/wallDestC belum jadi field formal di tipe
-        // FacilityWithRelations / parameter setAdminSelectedFacility, sehingga di sini
-        // perlu `as typeof ...` agar lolos excess-property check TypeScript. Akibatnya
-        // TS tidak lagi tahu field ini ada di object hasil — kalau dibaca lagi nanti
-        // (misal di editFacilityModal.tsx) butuh cast manual juga.
-        // Perbaikan formal: tambahkan `wallDestR`/`wallDestC` ke tipe yang relevan di
-        // src/types/index.ts dan ke signature setAdminSelectedFacility di mapStore.ts,
-        // lalu hapus cast ini.
         if (dbFacility && dbFacility.id > 0) {
           const facilityWithCoords =
             (dbFacility.gridRow == null || dbFacility.gridCol == null)
@@ -1078,15 +1026,12 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       }
 
       // Tap pin → tampilkan bubble preview dulu (bukan langsung POIDetail)
-      const placement = getBubblePlacement(
-        outerRef.current, getState(), svgX, svgY, cfg.cols * CELL, cfg.rows * CELL,
-      );
-      setPinBubble({ facility, svgX, svgY, placement });
+      setPinBubble({ facility, svgX, svgY });
     },
     [
       didDrag, facilityMap, facilityDestMap, facilityCodeMap,
       wallSet, cfg.rows, cfg.cols, mapMode, activeTerminal, categories,
-      setAdminSelectedFacility, getState,
+      setAdminSelectedFacility,
     ],
   );
 
@@ -1117,14 +1062,6 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
       aria-describedby={isLoading || isError ? loadingId : undefined}
       {...handlers}
     >
-      <style>{`
-        .map-focusable { outline: none; }
-        .map-focusable:focus-visible {
-          outline: 2.5px solid #2563eb;
-          outline-offset: 2px;
-          border-radius: 2px;
-        }
-      `}</style>
       <div
         ref={innerRef}
         data-pan-inner="true"
@@ -1159,25 +1096,64 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           )}
 
           {/* LAYER 2: Room boxes */}
-          {roomDests.map((dest, i) => {
+          {(cfg.destinations as DestinationWithRoom[]).map((dest, i) => {
+            if (!dest.room || !isVisible(dest)) return null;
+
+            const { r1, c1, r2, c2 } = dest.room;
+            const roomCal = getRoomTransform(activeTerminal, dest);
+            const x = c1 * CELL * roomCal.scaleX + roomCal.offsetX;
+            const y = r1 * CELL * roomCal.scaleY + roomCal.offsetY;
+            const w = (c2 - c1 + 1) * CELL * roomCal.scaleX;
+            const h = (r2 - r1 + 1) * CELL * roomCal.scaleY;
+            const hitPadX   = Math.max(0, (MIN_HIT - w) / 2);
+            const hitPadY   = Math.max(0, (MIN_HIT - h) / 2);
+            const showLabel = w >= 36 && h >= 18;
             const isSelected = isAdminMode
               ? adminSelectedFacility?.gridRow === dest.r && adminSelectedFacility?.gridCol === dest.c
               : selectedFacility?.code === dest.id || (selectedFacility?.gridRow === dest.r && selectedFacility?.gridCol === dest.c);
 
             return (
-              <RoomMarker
+              <g
                 key={`room-${dest.id}-${i}`}
-                dest={dest}
-                activeTerminal={activeTerminal}
-                color={getDestColor(dest)}
-                isSelected={isSelected}
-                onClick={(x, w, y) => handleDestinationClick(dest, x + w / 2, y)}
-              />
+                role="button" tabIndex={0}
+                aria-label={dest.label} aria-pressed={isSelected}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => { e.stopPropagation(); handleDestinationClick(dest, x + w / 2, y); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleDestinationClick(dest, x + w / 2, y); } }}
+              >
+                {(hitPadX > 0 || hitPadY > 0) && (
+                  <rect x={x - hitPadX} y={y - hitPadY} width={w + hitPadX * 2} height={h + hitPadY * 2} rx={3} fill="transparent" stroke="none" />
+                )}
+                <rect
+                  x={x} y={y} width={w} height={h} rx={3}
+                  fill={getDestColor(dest)}
+                  stroke={isSelected ? "#f39c12" : getDestColor(dest)}
+                  fillOpacity={isSelected ? 0.55 : 0.28}
+                  strokeWidth={isSelected ? 2.5 : 1.2}
+                  strokeOpacity={isSelected ? 1 : 0.75}
+                />
+                <rect x={x + 1} y={y + 1} width={Math.max(0, w - 2)} height={Math.max(0, h - 2)} rx={2} fill="none" stroke="white" strokeOpacity={0.3} strokeWidth={0.7} pointerEvents="none" />
+                {showLabel && (
+                  <text
+                    x={x + w / 2} y={y + h / 2}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize={Math.min(8, Math.max(5, h * 0.3))} fontWeight={700}
+                    fill={isSelected ? "#111827" : "#1a1a2e"} fillOpacity={0.85}
+                    pointerEvents="none" className="select-none" aria-hidden="true"
+                  >
+                    {dest.label}
+                  </text>
+                )}
+                {isSelected && (
+                  <rect x={x - 1} y={y - 1} width={w + 2} height={h + 2} rx={4} fill="none" stroke="#f39c12" strokeWidth={2} strokeDasharray="4 2" pointerEvents="none" />
+                )}
+              </g>
             );
           })}
 
           {/* LAYER 3: Map-pin markers */}
-          {pointDests.map((dest) => {
+          {(cfg.destinations as DestinationWithRoom[]).map((dest) => {
+            if (dest.room || !isVisible(dest)) return null;
             const cx = dest.c * CELL + CELL / 2;
             const cy = dest.r * CELL + CELL / 2;
             const isSelected = isAdminMode
@@ -1212,20 +1188,17 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           <PathRenderer />
           {children}
         </svg>
-
-        {/* BUBBLE PREVIEW — HTML overlay, tapi tetap di dalam layer pan/zoom
-            yang sama dengan SVG, supaya ikut ter-translate/ter-scale saat
-            user geser/zoom map (lihat komentar di komponen PinBubble). */}
-        {pinBubble && (
-          <PinBubble
-            bubble={pinBubble}
-            onConfirm={handleBubbleConfirm}
-            onDismiss={handleBubbleDismiss}
-            viewW={svgW}
-            viewH={svgH}
-          />
-        )}
       </div>
+
+      {/* BUBBLE PREVIEW — overlay HTML di atas peta */}
+      {pinBubble && (
+        <PinBubble
+          bubble={pinBubble}
+          onConfirm={handleBubbleConfirm}
+          onDismiss={handleBubbleDismiss}
+          containerRef={outerRef}
+        />
+      )}
 
       {/* DEBUG TOGGLE — hanya di admin mode */}
       {isAdminMode && (
@@ -1250,7 +1223,7 @@ export default function MapCanvas({ children }: { children?: ReactNode }) {
           viewBox={`0 0 ${cfg.cols * CELL} ${cfg.rows * CELL}`}
           preserveAspectRatio="none"
         >
-          {allDestinations.map((dest, i) => {
+          {(cfg.destinations as DestinationWithRoom[]).map((dest, i) => {
             const matched =
               facilityDestMap.has(dest.id) ||
               facilityMap.has(`${dest.r},${dest.c}`);
@@ -1307,73 +1280,12 @@ function FloorLabel({ x, y, label }: { x: number; y: number; label: string }) {
   );
 }
 
-interface RoomMarkerProps {
-  dest: DestinationWithRoom;
-  activeTerminal: "T1" | "T2";
-  color: string;
-  isSelected: boolean;
-  onClick: (x: number, w: number, y: number) => void;
-}
-
-// React.memo: room box hanya re-render kalau props-nya benar-benar berubah,
-// bukan setiap kali parent re-render (misal saat bubble preview dibuka/tutup).
-const RoomMarker = memo(function RoomMarker({ dest, activeTerminal, color, isSelected, onClick }: RoomMarkerProps) {
-  if (!dest.room) return null;
-  const { r1, c1, r2, c2 } = dest.room;
-  const roomCal = getRoomTransform(activeTerminal, dest);
-  const x = c1 * CELL * roomCal.scaleX + roomCal.offsetX;
-  const y = r1 * CELL * roomCal.scaleY + roomCal.offsetY;
-  const w = (c2 - c1 + 1) * CELL * roomCal.scaleX;
-  const h = (r2 - r1 + 1) * CELL * roomCal.scaleY;
-  const hitPadX   = Math.max(0, (MIN_HIT - w) / 2);
-  const hitPadY   = Math.max(0, (MIN_HIT - h) / 2);
-  const showLabel = w >= 36 && h >= 18;
-
-  return (
-    <g
-      role="button" tabIndex={0}
-      className="map-focusable"
-      aria-label={dest.label} aria-pressed={isSelected}
-      style={{ cursor: "pointer" }}
-      onClick={(e) => { e.stopPropagation(); onClick(x, w, y); }}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(x, w, y); } }}
-    >
-      {(hitPadX > 0 || hitPadY > 0) && (
-        <rect x={x - hitPadX} y={y - hitPadY} width={w + hitPadX * 2} height={h + hitPadY * 2} rx={3} fill="transparent" stroke="none" />
-      )}
-      <rect
-        x={x} y={y} width={w} height={h} rx={3}
-        fill={color}
-        stroke={isSelected ? "#f39c12" : color}
-        fillOpacity={isSelected ? 0.55 : 0.28}
-        strokeWidth={isSelected ? 2.5 : 1.2}
-        strokeOpacity={isSelected ? 1 : 0.75}
-      />
-      <rect x={x + 1} y={y + 1} width={Math.max(0, w - 2)} height={Math.max(0, h - 2)} rx={2} fill="none" stroke="white" strokeOpacity={0.3} strokeWidth={0.7} pointerEvents="none" />
-      {showLabel && (
-        <text
-          x={x + w / 2} y={y + h / 2}
-          textAnchor="middle" dominantBaseline="middle"
-          fontSize={Math.min(8, Math.max(5, h * 0.3))} fontWeight={700}
-          fill={isSelected ? "#111827" : "#1a1a2e"} fillOpacity={0.85}
-          pointerEvents="none" className="select-none" aria-hidden="true"
-        >
-          {dest.label}
-        </text>
-      )}
-      {isSelected && (
-        <rect x={x - 1} y={y - 1} width={w + 2} height={h + 2} rx={4} fill="none" stroke="#f39c12" strokeWidth={2} strokeDasharray="4 2" pointerEvents="none" />
-      )}
-    </g>
-  );
-});
-
 interface DestMarkerProps {
   cx: number; cy: number; color: string;
   label: string; isSelected: boolean; onClick: () => void;
 }
 
-const DestMarker = memo(function DestMarker({ cx, cy, color, label, isSelected, onClick }: DestMarkerProps) {
+function DestMarker({ cx, cy, color, label, isSelected, onClick }: DestMarkerProps) {
   // Map-pin teardrop — lebih mudah dibedakan & di-tap di layar sentuh
   const PH     = isSelected ? 17 : 14;   // total pin height
   const PR     = (PH * 0.72) / 2;        // radius kepala pin
@@ -1388,7 +1300,6 @@ const DestMarker = memo(function DestMarker({ cx, cy, color, label, isSelected, 
   return (
     <g
       role="button" tabIndex={0}
-      className="map-focusable"
       aria-label={label} aria-pressed={isSelected}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
@@ -1414,14 +1325,14 @@ const DestMarker = memo(function DestMarker({ cx, cy, color, label, isSelected, 
       <circle cx={cx} cy={headCY} r={PR * 0.32} fill="white" fillOpacity={0.95} pointerEvents="none" />
     </g>
   );
-});
+}
 
-const KioskMarker = memo(function KioskMarker({ cx, cy, color }: { cx: number; cy: number; color: string }) {
+function KioskMarker({ cx, cy, color }: { cx: number; cy: number; color: string }) {
   return (
     <g role="img" aria-label="Posisi Anda saat ini">
-      <circle cx={cx} cy={cy} r={14} fill={color} opacity={0.15} aria-hidden="true" />
-      <circle cx={cx} cy={cy} r={8}  fill={color} aria-hidden="true" />
-      <circle cx={cx} cy={cy} r={3}  fill="#ffffff" aria-hidden="true" />
+      <circle cx={cx} cy={cy} r={14} fill={color} opacity={0.15} />
+      <circle cx={cx} cy={cy} r={8}  fill={color} />
+      <circle cx={cx} cy={cy} r={3}  fill="#ffffff" />
       <text
         x={cx + 13} y={cy + 4}
         fontSize={8} fontWeight="700"
@@ -1432,4 +1343,4 @@ const KioskMarker = memo(function KioskMarker({ cx, cy, color }: { cx: number; c
       </text>
     </g>
   );
-});
+}
